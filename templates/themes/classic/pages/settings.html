@@ -1,0 +1,307 @@
+<div class="page-header">
+    <div class="page-header-title">
+        <h1>⚙️ Settings</h1>
+    </div>
+</div>
+
+<!-- Settings Tabs -->
+<div class="tabs-container">
+    <nav class="tabs-nav">
+        <a href="/settings/general" class="tab {{if eq .Tab "general"}}active{{end}}">
+            ⚙️ General
+        </a>
+        <a href="/settings/backup" class="tab {{if eq .Tab "backup"}}active{{end}}">
+            💾 Backup
+        </a>
+        <a href="/settings/caddy" class="tab {{if eq .Tab "caddy"}}active{{end}}">
+            🔧 Caddy
+        </a>
+        <a href="/settings/users" class="tab {{if eq .Tab "users"}}active{{end}}">
+            👥 Users
+        </a>
+    </nav>
+    
+    <div class="tab-content">
+        {{if eq .Tab "general"}}
+        <!-- General Settings -->
+        <div class="settings-section">
+            <h2>🌐 Language</h2>
+            <div class="form-group">
+                <select id="language" name="language" onchange="changeLanguage(this.value)">
+                    <option value="en">🇬🇧 English</option>
+                    <option value="cs">🇨🇿 Čeština</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="settings-section">
+            <h2>🎨 Theme</h2>
+            <div class="form-group">
+                <select id="theme" name="theme" onchange="changeTheme(this.value)">
+                    <option value="classic">Classic</option>
+                    <option value="modern" disabled>Modern (coming soon)</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="settings-section">
+            <h2>ℹ️ About</h2>
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">Version</span>
+                    <span class="info-value">v{{.Config.Version}}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Build Date</span>
+                    <span class="info-value">{{.Config.BuildDate}}</span>
+                </div>
+            </div>
+            <p class="text-muted mt-3">
+                CPM - Caddy Proxy Manager<br>
+                Web interface for managing Caddy reverse proxy.<br>
+                Built with Go and ❤️
+            </p>
+        </div>
+        
+        {{else if eq .Tab "backup"}}
+        <!-- Backup Settings -->
+        <div class="settings-section">
+            <h2>💾 Backup & Restore</h2>
+            <p class="text-muted">Create or restore a complete backup of your Caddy configuration.</p>
+            
+            <div class="form-row mt-4">
+                <div class="card flex-1">
+                    <h3>📥 Create Backup</h3>
+                    <p>Download a ZIP file with all configuration files.</p>
+                    <a href="/settings/backup/create" class="btn btn-primary">
+                        ⬇️ Download Backup
+                    </a>
+                </div>
+                
+                <div class="card flex-1">
+                    <h3>📤 Restore Backup</h3>
+                    <p>Upload a backup ZIP file to restore configuration.</p>
+                    <form action="/settings/backup/restore" method="POST" enctype="multipart/form-data">
+                        <input type="file" name="backup" accept=".zip" required>
+                        <button type="submit" class="btn btn-warning mt-2">
+                            ⬆️ Restore Backup
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="settings-section">
+            <h2>📋 Import / Export Rules</h2>
+            <p class="text-muted">Export rules as JSON or import from another CPM instance.</p>
+            
+            <div class="form-row mt-4">
+                <div class="card flex-1">
+                    <h3>📤 Export Rules</h3>
+                    <p>Download all proxy rules as JSON file.</p>
+                    <a href="/settings/export" class="btn btn-secondary">
+                        ⬇️ Export JSON
+                    </a>
+                </div>
+                
+                <div class="card flex-1">
+                    <h3>📥 Import Rules</h3>
+                    <p>Import rules from a JSON file.</p>
+                    <form action="/settings/import" method="POST" enctype="multipart/form-data">
+                        <input type="file" name="import_file" accept=".json" required>
+                        <label class="checkbox-label mt-2">
+                            <input type="checkbox" name="skip_existing" checked>
+                            Skip existing rules
+                        </label>
+                        <button type="submit" class="btn btn-secondary mt-2">
+                            ⬆️ Import Rules
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        {{else if eq .Tab "caddy"}}
+        <!-- Caddy Settings -->
+        <div class="settings-section">
+            <h2>🌐 Fallback Rule</h2>
+            <p class="text-muted">Default rule for unknown domains (wildcard).</p>
+            
+            {{if .FallbackExists}}
+            <form action="/settings/fallback" method="POST">
+                <textarea name="content" rows="10" class="code-editor">{{.FallbackContent}}</textarea>
+                <button type="submit" class="btn btn-primary mt-2">
+                    💾 Save Fallback
+                </button>
+            </form>
+            {{else}}
+            <div class="alert alert-warning">
+                Fallback rule not found.
+                <form action="/settings/fallback/create" method="POST" class="mt-2">
+                    <button type="submit" class="btn btn-primary">
+                        Create fallback.caddy
+                    </button>
+                </form>
+            </div>
+            {{end}}
+        </div>
+        
+        <div class="settings-section">
+            <h2>📄 Error Pages</h2>
+            <p class="text-muted">Custom HTML pages for error responses.</p>
+            
+            <div class="form-row mt-4">
+                <div class="card flex-1">
+                    <h3>403 Forbidden</h3>
+                    <form action="/settings/error-page/403" method="POST">
+                        <textarea name="content" rows="8" class="code-editor">{{.Error403}}</textarea>
+                        <button type="submit" class="btn btn-secondary btn-sm mt-2">
+                            💾 Save 403.html
+                        </button>
+                    </form>
+                </div>
+                
+                <div class="card flex-1">
+                    <h3>404 Not Found</h3>
+                    <form action="/settings/error-page/404" method="POST">
+                        <textarea name="content" rows="8" class="code-editor">{{.Error404}}</textarea>
+                        <button type="submit" class="btn btn-secondary btn-sm mt-2">
+                            💾 Save 404.html
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        {{else if eq .Tab "users"}}
+        <!-- Users Settings -->
+        <div class="settings-section">
+            <h2>👥 User Management</h2>
+            
+            <div class="form-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" 
+                           id="auth-enabled"
+                           {{if .AuthEnabled}}checked{{end}}
+                           onchange="toggleAuth(this.checked)">
+                    Enable Authentication
+                </label>
+            </div>
+            
+            {{if not .AuthEnabled}}
+            <div class="alert alert-info">
+                Authentication is disabled. Anyone can access the application.
+            </div>
+            {{end}}
+            
+            {{if not .Users}}
+            <div class="alert alert-warning">
+                No users created yet. Create at least one user to enable authentication.
+            </div>
+            {{end}}
+        </div>
+        
+        <!-- User List -->
+        {{if .Users}}
+        <div class="settings-section">
+            <h3>Existing Users</h3>
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Role</th>
+                            <th>Created</th>
+                            <th>Last Login</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{range .Users}}
+                        <tr>
+                            <td>
+                                {{.RoleIcon}} <strong>{{.Username}}</strong>
+                            </td>
+                            <td>{{.RoleDisplayName}}</td>
+                            <td>{{.CreatedAt.Format "2006-01-02"}}</td>
+                            <td>{{if .LastLogin.IsZero}}Never{{else}}{{.LastLogin.Format "2006-01-02 15:04"}}{{end}}</td>
+                            <td>
+                                <button class="btn btn-sm btn-secondary"
+                                        onclick="showPasswordModal('{{.Username}}')">
+                                    🔑 Password
+                                </button>
+                                <button class="btn btn-sm btn-danger"
+                                        hx-delete="/settings/users/{{.Username}}"
+                                        hx-confirm="Delete user {{.Username}}?">
+                                    🗑️ Delete
+                                </button>
+                            </td>
+                        </tr>
+                        {{end}}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {{end}}
+        
+        <!-- Add User Form -->
+        <div class="settings-section">
+            <h3>➕ Add New User</h3>
+            <form action="/settings/users" method="POST" class="user-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="new-username">Username</label>
+                        <input type="text" id="new-username" name="username" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="new-password">Password</label>
+                        <input type="password" id="new-password" name="password" required minlength="6">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="new-role">Role</label>
+                        <select id="new-role" name="role">
+                            {{range .AllRoles}}
+                            <option value="{{.}}">{{.}}</option>
+                            {{end}}
+                        </select>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">
+                    ➕ Create User
+                </button>
+            </form>
+        </div>
+        {{end}}
+    </div>
+</div>
+
+<script>
+function changeLanguage(lang) {
+    document.cookie = `lang=${lang};path=/;max-age=31536000`;
+    window.location.reload();
+}
+
+function changeTheme(theme) {
+    document.cookie = `theme=${theme};path=/;max-age=31536000`;
+    window.location.reload();
+}
+
+function toggleAuth(enabled) {
+    // TODO: API call to toggle auth
+    console.log('Toggle auth:', enabled);
+}
+
+function showPasswordModal(username) {
+    const newPassword = prompt(`Enter new password for ${username}:`);
+    if (newPassword && newPassword.length >= 6) {
+        fetch(`/settings/users/${username}/password`, {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: `password=${encodeURIComponent(newPassword)}`
+        }).then(() => window.location.reload());
+    }
+}
+</script>

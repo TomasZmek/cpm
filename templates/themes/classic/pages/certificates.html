@@ -1,0 +1,93 @@
+<div class="page-header">
+    <div class="page-header-title">
+        <h1>📜 SSL Certificates</h1>
+        <span class="badge">{{.Stats.total}} certificates</span>
+    </div>
+</div>
+
+<!-- Stats -->
+<div class="stats-bar">
+    <div class="stat-item stat-success">
+        <span class="stat-value">{{.Stats.valid}}</span>
+        <span class="stat-label">Valid</span>
+    </div>
+    <div class="stat-item stat-warning">
+        <span class="stat-value">{{.Stats.expiring}}</span>
+        <span class="stat-label">Expiring (30d)</span>
+    </div>
+    <div class="stat-item stat-danger">
+        <span class="stat-value">{{.Stats.critical}}</span>
+        <span class="stat-label">Critical (7d)</span>
+    </div>
+    <div class="stat-item stat-error">
+        <span class="stat-value">{{.Stats.expired}}</span>
+        <span class="stat-label">Expired</span>
+    </div>
+</div>
+
+<!-- Certificates List -->
+<div class="table-container">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Status</th>
+                <th>Domain</th>
+                <th>Issuer</th>
+                <th>Valid From</th>
+                <th>Expires</th>
+                <th>Days Left</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="certificates-list">
+            {{if .Certificates}}
+                {{range .Certificates}}
+                <tr class="cert-row cert-{{.Status}}">
+                    <td>
+                        <span class="cert-status-icon">{{.StatusIcon}}</span>
+                    </td>
+                    <td>
+                        <strong>{{.Domain}}</strong>
+                    </td>
+                    <td>{{.Issuer}}</td>
+                    <td>{{.NotBefore.Format "2006-01-02"}}</td>
+                    <td>{{.NotAfter.Format "2006-01-02"}}</td>
+                    <td>
+                        <span class="{{.StatusClass}}">
+                            {{if lt .DaysLeft 0}}
+                                Expired
+                            {{else if eq .DaysLeft 0}}
+                                Today
+                            {{else}}
+                                {{.DaysLeft}} days
+                            {{end}}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-danger"
+                                hx-delete="/certificates/{{.Domain}}"
+                                hx-confirm="Delete certificate for {{.Domain}}? This will trigger automatic renewal.">
+                            🔄 Force Renew
+                        </button>
+                    </td>
+                </tr>
+                {{end}}
+            {{else}}
+                <tr>
+                    <td colspan="7" class="text-center">
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📜</div>
+                            <h3>No Certificates Found</h3>
+                            <p>Certificates will appear here once Caddy obtains them.</p>
+                        </div>
+                    </td>
+                </tr>
+            {{end}}
+        </tbody>
+    </table>
+</div>
+
+<div class="info-box mt-4">
+    <h4>ℹ️ About Certificate Renewal</h4>
+    <p>Caddy automatically renews certificates before they expire. Use "Force Renew" only if you need to manually trigger renewal (e.g., after changing DNS settings).</p>
+</div>

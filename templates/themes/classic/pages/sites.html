@@ -1,0 +1,99 @@
+<div class="page-header">
+    <div class="page-header-title">
+        <h1>🔀 Proxy Rules</h1>
+        <span class="badge">{{.TotalSites}} rules</span>
+    </div>
+    <div class="page-header-actions">
+        <a href="/sites/new" class="btn btn-primary">
+            ➕ New Rule
+        </a>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="filters-bar">
+    <div class="search-box">
+        <input type="search" 
+               name="search" 
+               placeholder="Search domains, IP, port..." 
+               value="{{.Search}}"
+               hx-get="/htmx/sites/list"
+               hx-trigger="keyup changed delay:300ms"
+               hx-target="#sites-list"
+               hx-include="[name='tag']">
+    </div>
+    
+    {{if .AllTags}}
+    <select name="tag" 
+            hx-get="/htmx/sites/list"
+            hx-trigger="change"
+            hx-target="#sites-list"
+            hx-include="[name='search']">
+        <option value="">All Tags</option>
+        {{range .AllTags}}
+        <option value="{{.}}" {{if eq . $.SelectedTag}}selected{{end}}>{{.}}</option>
+        {{end}}
+    </select>
+    {{end}}
+</div>
+
+<!-- Sites List -->
+<div id="sites-list" class="sites-grid">
+    {{if .Sites}}
+        {{range .Sites}}
+        <div class="site-card">
+            <div class="site-card-header">
+                <div class="site-card-icon">{{.AccessIcon}}</div>
+                <div class="site-card-title">
+                    <h3>{{.PrimaryDomain}}</h3>
+                    {{if gt (len .Domains) 1}}
+                    <span class="text-muted">+{{sub (len .Domains) 1}} more</span>
+                    {{end}}
+                </div>
+                <div class="site-card-actions">
+                    <a href="/sites/{{.Filename}}/edit" class="btn btn-sm btn-secondary">Edit</a>
+                    <button class="btn btn-sm btn-danger"
+                            hx-delete="/sites/{{.Filename}}"
+                            hx-confirm="Delete rule for {{.PrimaryDomain}}?">
+                        Delete
+                    </button>
+                </div>
+            </div>
+            
+            <div class="site-card-body">
+                <div class="site-card-info">
+                    <span class="label">Target:</span>
+                    <code>{{.TargetURL}}</code>
+                </div>
+                
+                {{if .Tags}}
+                <div class="site-card-tags">
+                    {{range .Tags}}
+                    <span class="tag">{{.}}</span>
+                    {{end}}
+                </div>
+                {{end}}
+                
+                <div class="site-card-snippets">
+                    {{range .Snippets}}
+                    <span class="snippet-badge">{{.}}</span>
+                    {{end}}
+                </div>
+            </div>
+            
+            <div class="site-card-footer">
+                <span class="text-muted text-sm">
+                    Modified: {{timeAgo .ModifiedAt}}
+                </span>
+            </div>
+        </div>
+        {{end}}
+    {{else}}
+        <div class="empty-state">
+            <div class="empty-state-icon">📭</div>
+            <h3>No Proxy Rules</h3>
+            <p>Create your first proxy rule to get started.</p>
+            <a href="/sites/new" class="btn btn-primary">Create Rule</a>
+        </div>
+    {{end}}
+</div>

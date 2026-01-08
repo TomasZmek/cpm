@@ -1,0 +1,84 @@
+<div class="page-header">
+    <div class="page-header-title">
+        <h1>📝 Caddy Logs</h1>
+    </div>
+    <div class="page-header-actions">
+        <button class="btn btn-secondary" onclick="refreshLogs()">
+            🔄 Refresh
+        </button>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="filters-bar">
+    <div class="form-group">
+        <label for="log-filter">Filter:</label>
+        <input type="search" 
+               id="log-filter" 
+               name="filter"
+               value="{{.Filter}}"
+               placeholder="Search logs..."
+               onkeyup="filterLogs(this.value)">
+    </div>
+    
+    <div class="form-group">
+        <label for="log-lines">Lines:</label>
+        <select id="log-lines" name="lines" onchange="changeLinesCount(this.value)">
+            <option value="50" {{if eq .Lines 50}}selected{{end}}>50</option>
+            <option value="100" {{if eq .Lines 100}}selected{{end}}>100</option>
+            <option value="200" {{if eq .Lines 200}}selected{{end}}>200</option>
+            <option value="500" {{if eq .Lines 500}}selected{{end}}>500</option>
+        </select>
+    </div>
+    
+    <div class="form-group">
+        <label class="checkbox-label">
+            <input type="checkbox" id="auto-scroll" checked>
+            Auto-scroll
+        </label>
+    </div>
+</div>
+
+<!-- Log Viewer -->
+<div class="log-viewer" id="log-viewer">
+    <pre id="log-content">{{range .Logs}}{{.}}
+{{end}}</pre>
+</div>
+
+<script>
+let autoScroll = true;
+const logViewer = document.getElementById('log-viewer');
+const logContent = document.getElementById('log-content');
+
+document.getElementById('auto-scroll').addEventListener('change', function() {
+    autoScroll = this.checked;
+    if (autoScroll) {
+        logViewer.scrollTop = logViewer.scrollHeight;
+    }
+});
+
+function refreshLogs() {
+    const lines = document.getElementById('log-lines').value;
+    const filter = document.getElementById('log-filter').value;
+    window.location.href = `/logs?lines=${lines}&filter=${encodeURIComponent(filter)}`;
+}
+
+function changeLinesCount(lines) {
+    const filter = document.getElementById('log-filter').value;
+    window.location.href = `/logs?lines=${lines}&filter=${encodeURIComponent(filter)}`;
+}
+
+function filterLogs(query) {
+    // Client-side filtering
+    const lines = logContent.innerText.split('\n');
+    const filtered = query ? lines.filter(line => 
+        line.toLowerCase().includes(query.toLowerCase())
+    ) : lines;
+    logContent.innerText = filtered.join('\n');
+}
+
+// Auto-scroll on load
+if (autoScroll) {
+    logViewer.scrollTop = logViewer.scrollHeight;
+}
+</script>

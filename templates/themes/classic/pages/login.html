@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="{{.Lang}}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - CPM</title>
+    <link rel="stylesheet" href="/static/css/themes/classic.css">
+    <link rel="icon" type="image/svg+xml" href="/static/img/logo.svg">
+</head>
+<body class="login-page">
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <img src="/static/img/logo.svg" alt="CPM" class="login-logo">
+                <h1>CPM</h1>
+                <p>Caddy Proxy Manager</p>
+            </div>
+            
+            {{if .Error}}
+            <div class="alert alert-error">
+                {{.Error}}
+            </div>
+            {{end}}
+            
+            {{if .NeedsSetup}}
+            <div class="alert alert-info">
+                <strong>First Time Setup</strong><br>
+                Create your administrator account to get started.
+            </div>
+            {{end}}
+            
+            <form action="/login" method="POST" class="login-form">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" required autofocus>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-block">
+                    {{if .NeedsSetup}}
+                    Create Admin & Login
+                    {{else}}
+                    Login
+                    {{end}}
+                </button>
+            </form>
+            
+            <div class="login-footer">
+                <small>v{{.Version}}</small>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

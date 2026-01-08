@@ -1,0 +1,109 @@
+<h1>{{t .Lang "dashboard_title"}}</h1>
+
+<!-- Stats Grid -->
+<div class="stats-grid mb-4">
+    <div class="stat-card">
+        <div class="stat-value">{{.Stats.total}}</div>
+        <div class="stat-label">{{t .Lang "dashboard_rules"}}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value">{{.CertStats.total}}</div>
+        <div class="stat-label">{{t .Lang "dashboard_certificates"}}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value">{{.Stats.snippets}}</div>
+        <div class="stat-label">{{t .Lang "dashboard_snippets"}}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value">
+            {{if eq .CaddyStatus "running"}}
+                <span class="text-success">✓</span>
+            {{else}}
+                <span class="text-error">✗</span>
+            {{end}}
+        </div>
+        <div class="stat-label">{{t .Lang "dashboard_caddy_status"}}</div>
+    </div>
+</div>
+
+<div class="grid grid-2">
+    <!-- Alerts -->
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">{{t .Lang "dashboard_alerts"}}</h2>
+        </div>
+        {{if .Alerts}}
+        <div class="alerts">
+            {{range .Alerts}}
+            <div class="alert alert-{{.Type}}">
+                <span>{{.Icon}}</span>
+                <strong>{{.Title}}</strong>
+                <span>{{.Message}}</span>
+            </div>
+            {{end}}
+        </div>
+        {{else}}
+        <p class="text-muted">{{t .Lang "dashboard_no_alerts"}}</p>
+        {{end}}
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">{{t .Lang "dashboard_quick_actions"}}</h2>
+        </div>
+        <div class="flex flex-col gap-2">
+            <a href="/sites/new" class="btn btn-primary">
+                ➕ {{t .Lang "dashboard_new_rule"}}
+            </a>
+            <button 
+                class="btn btn-secondary"
+                hx-post="/caddy/reload"
+                hx-swap="outerHTML"
+            >
+                🔄 {{t .Lang "dashboard_reload"}}
+            </button>
+            <button 
+                class="btn btn-secondary"
+                hx-post="/caddy/validate"
+                hx-swap="outerHTML"
+            >
+                ✓ {{t .Lang "dashboard_validate"}}
+            </button>
+            <a href="/settings?tab=backup" class="btn btn-secondary">
+                💾 {{t .Lang "dashboard_backup"}}
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Changes -->
+<div class="card mt-4">
+    <div class="card-header">
+        <h2 class="card-title">{{t .Lang "dashboard_recent_changes"}}</h2>
+    </div>
+    {{if .RecentChanges}}
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Domain</th>
+                <th>Target</th>
+                <th>Modified</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{range .RecentChanges}}
+            <tr>
+                <td>
+                    <a href="/sites/{{.Filename}}/edit">{{.PrimaryDomain}}</a>
+                </td>
+                <td class="text-muted">{{.TargetURL}}</td>
+                <td class="text-muted">{{call $.TimeAgo .ModifiedAt}}</td>
+            </tr>
+            {{end}}
+        </tbody>
+    </table>
+    {{else}}
+    <p class="text-muted">{{t .Lang "dashboard_no_changes"}}</p>
+    {{end}}
+</div>

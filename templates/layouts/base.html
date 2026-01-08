@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="{{.Lang}}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.Title}} - CPM</title>
+    <link rel="stylesheet" href="{{.ThemeCSS}}">
+    <link rel="icon" type="image/svg+xml" href="/static/img/logo.svg">
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script defer src="https://unpkg.com/alpinejs@3.13.3/dist/cdn.min.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <img src="/static/img/logo.svg" alt="CPM">
+                <span>CPM</span>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <a href="/" class="{{if eq .Active "dashboard"}}active{{end}}">
+                    📊 {{t .Lang "nav_dashboard"}}
+                </a>
+                <a href="/sites" class="{{if eq .Active "sites"}}active{{end}}">
+                    🔀 {{t .Lang "nav_sites"}}
+                </a>
+                <a href="/snippets" class="{{if eq .Active "snippets"}}active{{end}}">
+                    ⚙️ {{t .Lang "nav_snippets"}}
+                </a>
+                <a href="/certificates" class="{{if eq .Active "certificates"}}active{{end}}">
+                    📜 {{t .Lang "nav_certificates"}}
+                </a>
+                <a href="/logs" class="{{if eq .Active "logs"}}active{{end}}">
+                    📝 {{t .Lang "nav_logs"}}
+                </a>
+                <a href="/settings" class="{{if eq .Active "settings"}}active{{end}}">
+                    ⚙️ {{t .Lang "nav_settings"}}
+                </a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                {{if .User}}
+                <div class="flex items-center gap-2 mb-2">
+                    <span>{{.User.RoleIcon}}</span>
+                    <span>{{.User.Username}}</span>
+                </div>
+                <form action="/logout" method="POST">
+                    <button type="submit" class="btn btn-secondary btn-sm">
+                        {{t .Lang "logout"}}
+                    </button>
+                </form>
+                {{end}}
+                <div class="text-muted mt-2" style="font-size: 0.75rem;">
+                    v{{.Version}}
+                </div>
+            </div>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Flash Messages -->
+            {{if .FlashMessage}}
+            <div id="flash-messages">
+                <div class="alert alert-{{.FlashType}}">
+                    {{.FlashMessage}}
+                </div>
+            </div>
+            {{end}}
+            
+            <!-- Page Content -->
+            {{embed}}
+        </main>
+    </div>
+    
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

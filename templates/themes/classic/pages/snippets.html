@@ -1,0 +1,235 @@
+<div class="page-header">
+    <div class="page-header-title">
+        <h1>⚙️ Snippets Manager</h1>
+    </div>
+</div>
+
+<p class="page-description">
+    Configure reusable Caddy snippets that can be imported into proxy rules.
+</p>
+
+<div class="snippets-grid">
+    <!-- Cloudflare DNS -->
+    <div class="snippet-card" x-data="{ expanded: false }">
+        <div class="snippet-card-header" @click="expanded = !expanded">
+            <div class="snippet-info">
+                <span class="snippet-icon">☁️</span>
+                <span class="snippet-name">Cloudflare DNS</span>
+                <span class="snippet-status {{if .Config.CloudflareDNS.Enabled}}enabled{{else}}disabled{{end}}">
+                    {{if .Config.CloudflareDNS.Enabled}}Enabled{{else}}Disabled{{end}}
+                </span>
+            </div>
+            <span class="expand-icon" :class="{ 'rotated': expanded }">▼</span>
+        </div>
+        
+        <div class="snippet-card-body" x-show="expanded" x-collapse>
+            <form action="/snippets/cloudflare_dns" method="POST" hx-boost="true">
+                <input type="hidden" name="_method" value="PUT">
+                
+                <label class="checkbox-label">
+                    <input type="checkbox" name="enabled" {{if .Config.CloudflareDNS.Enabled}}checked{{end}}>
+                    Enable Cloudflare DNS Challenge
+                </label>
+                
+                <div class="form-group mt-3">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="use_env" {{if .Config.CloudflareDNS.UseEnv}}checked{{end}}>
+                        Use CF_API_TOKEN environment variable
+                    </label>
+                </div>
+                
+                <div class="form-group">
+                    <label for="cf_api_token">API Token (if not using env)</label>
+                    <input type="password" 
+                           id="cf_api_token" 
+                           name="api_token" 
+                           value="{{.Config.CloudflareDNS.APIToken}}"
+                           placeholder="Enter Cloudflare API token">
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-sm">Save</button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Internal Only -->
+    <div class="snippet-card" x-data="{ expanded: false }">
+        <div class="snippet-card-header" @click="expanded = !expanded">
+            <div class="snippet-info">
+                <span class="snippet-icon">🔒</span>
+                <span class="snippet-name">Internal Only</span>
+                <span class="snippet-status {{if .Config.InternalOnly.Enabled}}enabled{{else}}disabled{{end}}">
+                    {{if .Config.InternalOnly.Enabled}}Enabled{{else}}Disabled{{end}}
+                </span>
+            </div>
+            <span class="expand-icon" :class="{ 'rotated': expanded }">▼</span>
+        </div>
+        
+        <div class="snippet-card-body" x-show="expanded" x-collapse>
+            <form action="/snippets/internal_only" method="POST" hx-boost="true">
+                <input type="hidden" name="_method" value="PUT">
+                
+                <label class="checkbox-label">
+                    <input type="checkbox" name="enabled" {{if .Config.InternalOnly.Enabled}}checked{{end}}>
+                    Enable Internal Network Restriction
+                </label>
+                
+                <div class="form-group mt-3">
+                    <label for="allowed_networks">Allowed Networks (CIDR)</label>
+                    <textarea id="allowed_networks" 
+                              name="allowed_networks" 
+                              rows="4"
+                              placeholder="192.168.0.0/16&#10;172.16.0.0/12&#10;10.0.0.0/8">{{range .Config.InternalOnly.AllowedNetworks}}{{.}}
+{{end}}</textarea>
+                    <small class="form-help">One network per line in CIDR notation</small>
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-sm">Save</button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Security Headers -->
+    <div class="snippet-card" x-data="{ expanded: false }">
+        <div class="snippet-card-header" @click="expanded = !expanded">
+            <div class="snippet-info">
+                <span class="snippet-icon">🛡️</span>
+                <span class="snippet-name">Security Headers</span>
+                <span class="snippet-status {{if .Config.SecurityHeaders.Enabled}}enabled{{else}}disabled{{end}}">
+                    {{if .Config.SecurityHeaders.Enabled}}Enabled{{else}}Disabled{{end}}
+                </span>
+            </div>
+            <span class="expand-icon" :class="{ 'rotated': expanded }">▼</span>
+        </div>
+        
+        <div class="snippet-card-body" x-show="expanded" x-collapse>
+            <form action="/snippets/security_headers" method="POST" hx-boost="true">
+                <input type="hidden" name="_method" value="PUT">
+                
+                <label class="checkbox-label">
+                    <input type="checkbox" name="enabled" {{if .Config.SecurityHeaders.Enabled}}checked{{end}}>
+                    Enable Security Headers
+                </label>
+                
+                <div class="form-row mt-3">
+                    <div class="form-group">
+                        <label for="hsts_max_age">HSTS Max Age (seconds)</label>
+                        <input type="number" id="hsts_max_age" name="hsts_max_age" 
+                               value="{{.Config.SecurityHeaders.HSTSMaxAge}}">
+                    </div>
+                    
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="hsts_include_subdomains" 
+                               {{if .Config.SecurityHeaders.HSTSIncludeSubdomains}}checked{{end}}>
+                        Include Subdomains
+                    </label>
+                </div>
+                
+                <div class="form-row">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="x_content_type_options" 
+                               {{if .Config.SecurityHeaders.XContentTypeOptions}}checked{{end}}>
+                        X-Content-Type-Options: nosniff
+                    </label>
+                    
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="hide_server" 
+                               {{if .Config.SecurityHeaders.HideServer}}checked{{end}}>
+                        Hide Server Header
+                    </label>
+                </div>
+                
+                <div class="form-group">
+                    <label for="x_frame_options">X-Frame-Options</label>
+                    <select id="x_frame_options" name="x_frame_options">
+                        <option value="DENY" {{if eq .Config.SecurityHeaders.XFrameOptions "DENY"}}selected{{end}}>DENY</option>
+                        <option value="SAMEORIGIN" {{if eq .Config.SecurityHeaders.XFrameOptions "SAMEORIGIN"}}selected{{end}}>SAMEORIGIN</option>
+                        <option value="" {{if eq .Config.SecurityHeaders.XFrameOptions ""}}selected{{end}}>Not set</option>
+                    </select>
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-sm">Save</button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Compression -->
+    <div class="snippet-card" x-data="{ expanded: false }">
+        <div class="snippet-card-header" @click="expanded = !expanded">
+            <div class="snippet-info">
+                <span class="snippet-icon">📦</span>
+                <span class="snippet-name">Compression</span>
+                <span class="snippet-status {{if .Config.Compression.Enabled}}enabled{{else}}disabled{{end}}">
+                    {{if .Config.Compression.Enabled}}Enabled{{else}}Disabled{{end}}
+                </span>
+            </div>
+            <span class="expand-icon" :class="{ 'rotated': expanded }">▼</span>
+        </div>
+        
+        <div class="snippet-card-body" x-show="expanded" x-collapse>
+            <form action="/snippets/compression" method="POST" hx-boost="true">
+                <input type="hidden" name="_method" value="PUT">
+                
+                <label class="checkbox-label">
+                    <input type="checkbox" name="enabled" {{if .Config.Compression.Enabled}}checked{{end}}>
+                    Enable Compression
+                </label>
+                
+                <div class="form-row mt-3">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="zstd" {{if .Config.Compression.Zstd}}checked{{end}}>
+                        Zstd
+                    </label>
+                    
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="gzip" {{if .Config.Compression.Gzip}}checked{{end}}>
+                        Gzip
+                    </label>
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-sm">Save</button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Rate Limit -->
+    <div class="snippet-card" x-data="{ expanded: false }">
+        <div class="snippet-card-header" @click="expanded = !expanded">
+            <div class="snippet-info">
+                <span class="snippet-icon">⏱️</span>
+                <span class="snippet-name">Rate Limit</span>
+                <span class="snippet-status {{if .Config.RateLimit.Enabled}}enabled{{else}}disabled{{end}}">
+                    {{if .Config.RateLimit.Enabled}}Enabled{{else}}Disabled{{end}}
+                </span>
+            </div>
+            <span class="expand-icon" :class="{ 'rotated': expanded }">▼</span>
+        </div>
+        
+        <div class="snippet-card-body" x-show="expanded" x-collapse>
+            <form action="/snippets/rate_limit" method="POST" hx-boost="true">
+                <input type="hidden" name="_method" value="PUT">
+                
+                <label class="checkbox-label">
+                    <input type="checkbox" name="enabled" {{if .Config.RateLimit.Enabled}}checked{{end}}>
+                    Enable Rate Limiting
+                </label>
+                
+                <div class="form-row mt-3">
+                    <div class="form-group">
+                        <label for="requests">Requests</label>
+                        <input type="number" id="requests" name="requests" 
+                               value="{{.Config.RateLimit.Requests}}">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="window_secs">Window (seconds)</label>
+                        <input type="number" id="window_secs" name="window_secs" 
+                               value="{{.Config.RateLimit.WindowSecs}}">
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-sm">Save</button>
+            </form>
+        </div>
+    </div>
+</div>

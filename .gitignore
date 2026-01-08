@@ -1,0 +1,52 @@
+# Binaries
+bin/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+cpm
+
+# Test binary
+*.test
+
+# Output of the go coverage tool
+*.out
+
+# Go workspace file
+go.work
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Development
+tmp/
+.air.toml
+
+# Config files (local development)
+.env
+.env.local
+*.local.yaml
+*.local.json
+
+# Caddy config (for local testing)
+caddy-config/
+caddy-data/
+
+# Generated files
+*_templ.go
+
+# Logs
+*.log
+logs/
+
+# Build cache
+.cache/

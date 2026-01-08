@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="cpmGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00ADD8;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#007D9C;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background circle -->
+  <circle cx="100" cy="100" r="95" fill="url(#cpmGradient)" />
+  
+  <!-- Main box -->
+  <rect x="40" y="60" width="120" height="60" rx="8" ry="8" fill="white" />
+  
+  <!-- CPM Text -->
+  <text x="100" y="102" font-family="Arial, sans-serif" font-size="36" font-weight="bold" fill="#00ADD8" text-anchor="middle">CPM</text>
+  
+  <!-- Arrows left -->
+  <polygon points="25,90 10,90 20,80" fill="white" />
+  <polygon points="25,90 10,90 20,100" fill="white" />
+  <rect x="10" y="87" width="20" height="6" fill="white" />
+  
+  <!-- Arrows right -->
+  <polygon points="175,90 190,90 180,80" fill="white" />
+  <polygon points="175,90 190,90 180,100" fill="white" />
+  <rect x="170" y="87" width="20" height="6" fill="white" />
+  
+  <!-- PROXY MANAGER text -->
+  <text x="100" y="145" font-family="Arial, sans-serif" font-size="14" font-weight="500" fill="white" text-anchor="middle" letter-spacing="2">PROXY MANAGER</text>
+</svg>
