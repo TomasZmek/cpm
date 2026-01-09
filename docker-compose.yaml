@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  # ===========================================
+  # CADDY SERVER - Reverse Proxy
+  # ===========================================
+  caddy:
+    image: serfriz/caddy-cloudflare:latest
+    container_name: caddy_proxy
+    restart: unless-stopped
+    
+    # Povolíme kontejneru měnit síťová nastavení
+    cap_add:
+      - NET_ADMIN
+    
+    # Automatické nastavení MTU při startu
+    command: >
+      sh -c "ip link set eth0 mtu 1400 && 
+             caddy run --config /etc/caddy/Caddyfile --adapter caddyfile"
+    
+    networks:
+      npm_macvlan:
+        ipv4_address: 192.168.50.201
+    
+    # Veřejné DNS pro Cloudflare
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
+
+    environment:
+      # Pro Caddy Cloudflare plugin
+      - CLOUDFLARE_API_TOKEN=${CF_API_TOKEN}
+      # Pro snippets.caddy (používá {env.CF_API_TOKEN})
+      - CF_API_TOKEN=${CF_API_TOKEN}
+      
+    volumes:
+      - ${CADDY_CONFIG_PATH}:/etc/caddy/
+      - ${CADDY_CONFIG_PATH}/data:/data
+      - ${CADDY_CONFIG_PATH}/config:/config
+      - ${CADDY_CONFIG_PATH}/pages:/usr/share/caddy/pages
+
+  # ===========================================
+  # CPM - Caddy Proxy Manager v3.0.0 (Go)
+  # ===========================================
+  cpm:
+    image: cpm:3.0.0
+    container_name: cpm
+    restart: unless-stopped
+    depends_on:
+      - caddy
+    ports:
+      - "8501:8501"
+    # PRO SYNOLOGY - jedna z těchto možností:
+    # Možnost 1: privileged mode (funguje vždy, méně bezpečné)
+    privileged: true
+    # Možnost 2: user root (pokud privileged nechceš)
+    # user: "0:0"
+    volumes:
+      - ${CADDY_CONFIG_PATH}:/caddy-config
+      - ${CADDY_CONFIG_PATH}/data:/caddy-data
+      - ${CADDY_CONFIG_PATH}/pages:/usr/share/caddy/pages
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - CONTAINER_NAME=caddy_proxy
+      - DEFAULT_IP=192.168.50.201
+      - PORT=8501
+
+networks:
+  npm_macvlan:
+    external: true
+    name: npm_npm_macvlan

@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"strings"
+
 	"github.com/TomasZmek/cpm/internal/config"
 	"github.com/TomasZmek/cpm/internal/services"
 	"github.com/gofiber/fiber/v2"
@@ -60,21 +62,51 @@ func ErrorHandler(c *fiber.Ctx, err error) error {
 	}
 
 	// For regular requests, show error page
-	return c.Status(code).Render("error", fiber.Map{
-		"Code":    code,
-		"Message": err.Error(),
-	})
+	lang := "en"
+	if l, ok := c.Locals("lang").(string); ok && l != "" {
+		lang = l
+	}
+
+	return c.Status(code).Render("pages/error", fiber.Map{
+		"Code":     code,
+		"Message":  err.Error(),
+		"Title":    "Error",
+		"Lang":     lang,
+		"ThemeCSS": "/static/css/themes/classic.css",
+		"Version":  "3.0.0",
+	}, "layouts/base")
 }
 
 // isAPIRequest checks if request is an API request
 func isAPIRequest(c *fiber.Ctx) bool {
 	return c.Get("Accept") == "application/json" ||
-		c.Path()[:4] == "/api"
+		strings.HasPrefix(c.Path(), "/api")
 }
 
 // getCurrentUser returns the current user from context
 func (h *Handler) getCurrentUser(c *fiber.Ctx) interface{} {
 	return c.Locals("user")
+}
+
+// baseData returns common template data
+func (h *Handler) baseData(c *fiber.Ctx, title string) fiber.Map {
+	lang := "en"
+	if l, ok := c.Locals("lang").(string); ok && l != "" {
+		lang = l
+	}
+
+	themeCSS := "/static/css/themes/classic.css"
+	if css, ok := c.Locals("themeCSS").(string); ok && css != "" {
+		themeCSS = css
+	}
+
+	return fiber.Map{
+		"Title":    title,
+		"Lang":     lang,
+		"ThemeCSS": themeCSS,
+		"Version":  h.config.Version,
+		"User":     c.Locals("user"),
+	}
 }
 
 // Flash messages helper

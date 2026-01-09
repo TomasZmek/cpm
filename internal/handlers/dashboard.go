@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"github.com/TomasZmek/cpm/internal/services"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -75,15 +74,13 @@ func (h *Handler) Dashboard(c *fiber.Ctx) error {
 	stats["snippets"] = len(availableSnippets)
 	stats["caddy_status"] = caddyStatus
 
-	data := fiber.Map{
-		"Title":         "Dashboard",
-		"Stats":         stats,
-		"CertStats":     certStats,
-		"RecentChanges": recentChanges,
-		"Alerts":        alerts,
-		"CaddyStatus":   caddyStatus,
-		"TimeAgo":       services.TimeAgo,
-	}
+	data := h.baseData(c, "Dashboard")
+	data["Stats"] = stats
+	data["CertStats"] = certStats
+	data["RecentChanges"] = recentChanges
+	data["Alerts"] = alerts
+	data["CaddyStatus"] = caddyStatus
+	data["Active"] = "dashboard"
 
 	return c.Render("pages/dashboard", data, "layouts/base")
 }

@@ -98,7 +98,7 @@
                     <a href="/sites/{{.Filename}}/edit">{{.PrimaryDomain}}</a>
                 </td>
                 <td class="text-muted">{{.TargetURL}}</td>
-                <td class="text-muted">{{call $.TimeAgo .ModifiedAt}}</td>
+                <td class="text-muted">{{timeAgo .ModifiedAt}}</td>
             </tr>
             {{end}}
         </tbody>

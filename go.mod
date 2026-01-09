@@ -3,15 +3,10 @@ module github.com/TomasZmek/cpm
 go 1.22
 
 require (
-	github.com/a-h/templ v0.2.778
 	github.com/docker/docker v27.0.3+incompatible
 	github.com/gofiber/fiber/v2 v2.52.5
 	github.com/gofiber/template/html/v2 v2.1.2
-	github.com/gorilla/sessions v1.3.0
-	github.com/nicksnyder/go-i18n/v2 v2.4.0
 	golang.org/x/crypto v0.26.0
-	golang.org/x/text v0.17.0
-	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
@@ -28,7 +23,6 @@ require (
 	github.com/gofiber/utils v1.1.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/google/uuid v1.6.0 // indirect
-	github.com/gorilla/securecookie v1.1.2 // indirect
 	github.com/klauspost/compress v1.17.9 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
@@ -49,6 +43,7 @@ require (
 	go.opentelemetry.io/otel/metric v1.28.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.28.0 // indirect
 	go.opentelemetry.io/otel/trace v1.28.0 // indirect
+	golang.org/x/net v0.28.0 // indirect
 	golang.org/x/sys v0.24.0 // indirect
 	golang.org/x/time v0.6.0 // indirect
 	gotest.tools/v3 v3.5.1 // indirect

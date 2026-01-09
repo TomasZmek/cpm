@@ -1,0 +1,31 @@
+<div class="error-page">
+    <div class="error-code">{{.Code}}</div>
+    <div class="error-message">{{.Message}}</div>
+    <div class="error-actions mt-4">
+        <a href="/" class="btn btn-primary">
+            ← {{t .Lang "back_to_dashboard"}}
+        </a>
+    </div>
+</div>
+
+<style>
+.error-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 50vh;
+    text-align: center;
+}
+.error-code {
+    font-size: 6rem;
+    font-weight: bold;
+    color: var(--color-error, #e74c3c);
+    line-height: 1;
+}
+.error-message {
+    font-size: 1.5rem;
+    color: var(--color-muted, #666);
+    margin-top: 1rem;
+}
+</style>

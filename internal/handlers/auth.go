@@ -19,11 +19,15 @@ func (h *Handler) LoginPage(c *fiber.Ctx) error {
 	// Check if no users exist (first setup)
 	needsSetup := !h.authService.HasUsers()
 
-	return c.Render("pages/login", fiber.Map{
-		"Title":      "Login",
+	data := fiber.Map{
 		"NeedsSetup": needsSetup,
 		"Error":      c.Query("error"),
-	}, "layouts/base")
+		"Version":    h.config.Version,
+		"Lang":       "en",
+	}
+
+	// Login page has its own HTML structure, no layout needed
+	return c.Render("pages/login", data)
 }
 
 // Login handles the login form submission
@@ -166,6 +170,39 @@ func (h *Handler) UserUpdatePassword(c *fiber.Ctx) error {
 
 	if c.Get("HX-Request") == "true" {
 		return c.SendString("OK")
+	}
+
+	return c.Redirect("/settings/users")
+}
+
+// ToggleAuth enables or disables authentication
+func (h *Handler) ToggleAuth(c *fiber.Ctx) error {
+	enabled := c.FormValue("enabled") == "true" || c.FormValue("enabled") == "on"
+
+	var err error
+	if enabled {
+		err = h.authService.Enable()
+	} else {
+		err = h.authService.Disable()
+	}
+
+	if err != nil {
+		if c.Get("HX-Request") == "true" {
+			return c.Status(fiber.StatusBadRequest).SendString(err.Error())
+		}
+		setFlash(c, "error", err.Error())
+		return c.Redirect("/settings/users")
+	}
+
+	if enabled {
+		setFlash(c, "success", "Authentication enabled")
+	} else {
+		setFlash(c, "success", "Authentication disabled")
+	}
+
+	if c.Get("HX-Request") == "true" {
+		c.Set("HX-Redirect", "/settings/users")
+		return c.SendStatus(fiber.StatusOK)
 	}
 
 	return c.Redirect("/settings/users")

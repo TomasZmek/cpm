@@ -18,12 +18,13 @@ func (h *Handler) LogsPage(c *fiber.Ctx) error {
 		logs = []string{"Error fetching logs: " + err.Error()}
 	}
 
-	return c.Render("pages/logs", fiber.Map{
-		"Title":    "Caddy Logs",
-		"Logs":     logs,
-		"Lines":    lines,
-		"LogCount": len(logs),
-	}, "layouts/base")
+	data := h.baseData(c, "Caddy Logs")
+	data["Logs"] = logs
+	data["Lines"] = lines
+	data["LogCount"] = len(logs)
+	data["Active"] = "logs"
+
+	return c.Render("pages/logs", data, "layouts/base")
 }
 
 // HTMXLogsStream streams logs via Server-Sent Events

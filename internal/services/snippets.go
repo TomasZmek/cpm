@@ -37,9 +37,71 @@ func (s *SnippetsService) GetConfig() (*models.SnippetConfig, error) {
 		return nil, fmt.Errorf("failed to read config: %w", err)
 	}
 
+	// First try new format
 	var cfg models.SnippetConfig
 	if err := json.Unmarshal(content, &cfg); err != nil {
-		return nil, fmt.Errorf("failed to parse config: %w", err)
+		// Try to parse with flexible basic_auth format for migration
+		var rawCfg map[string]json.RawMessage
+		if jsonErr := json.Unmarshal(content, &rawCfg); jsonErr != nil {
+			return nil, fmt.Errorf("failed to parse config: %w", err)
+		}
+
+		// Parse each section manually
+		cfg = *models.DefaultSnippetConfig()
+
+		if raw, ok := rawCfg["cloudflare_dns"]; ok {
+			json.Unmarshal(raw, &cfg.CloudflareDNS)
+		}
+		if raw, ok := rawCfg["internal_only"]; ok {
+			json.Unmarshal(raw, &cfg.InternalOnly)
+		}
+		if raw, ok := rawCfg["security_headers"]; ok {
+			json.Unmarshal(raw, &cfg.SecurityHeaders)
+		}
+		if raw, ok := rawCfg["compression"]; ok {
+			json.Unmarshal(raw, &cfg.Compression)
+		}
+		if raw, ok := rawCfg["rate_limit"]; ok {
+			json.Unmarshal(raw, &cfg.RateLimit)
+		}
+
+		// Handle basic_auth specially - might be old format
+		if raw, ok := rawCfg["basic_auth"]; ok {
+			// Try new format first
+			var basicAuth models.BasicAuthConfig
+			if err := json.Unmarshal(raw, &basicAuth); err != nil {
+				// Try old format with array users
+				var oldFormat struct {
+					Enabled bool `json:"enabled"`
+					Users   []struct {
+						Username     string `json:"username"`
+						PasswordHash string `json:"password_hash"`
+					} `json:"users"`
+				}
+				if err := json.Unmarshal(raw, &oldFormat); err == nil {
+					cfg.BasicAuth.Enabled = oldFormat.Enabled
+					cfg.BasicAuth.Users = make(map[string]string)
+					for _, u := range oldFormat.Users {
+						cfg.BasicAuth.Users[u.Username] = u.PasswordHash
+					}
+				}
+			} else {
+				cfg.BasicAuth = basicAuth
+			}
+		}
+
+		// Ensure Users map is initialized
+		if cfg.BasicAuth.Users == nil {
+			cfg.BasicAuth.Users = make(map[string]string)
+		}
+
+		// Save in new format for future
+		s.SaveConfig(&cfg)
+	}
+
+	// Ensure Users map is initialized
+	if cfg.BasicAuth.Users == nil {
+		cfg.BasicAuth.Users = make(map[string]string)
 	}
 
 	return &cfg, nil

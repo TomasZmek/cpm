@@ -31,16 +31,15 @@ COPY --from=builder /app/cpm .
 COPY --from=builder /app/web ./web
 COPY --from=builder /app/templates ./templates
 
-# Create non-root user
-RUN adduser -D -H -s /sbin/nologin cpm
-USER cpm
+# Note: Running as root to access docker.sock
+# For production, consider adding user to docker group instead
 
 # Expose port
-EXPOSE 8080
+EXPOSE 8501
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD wget -qO- http://localhost:8080/health || exit 1
+    CMD wget -qO- http://localhost:8501/health || exit 1
 
 # Run
 ENTRYPOINT ["./cpm"]

@@ -14,13 +14,14 @@ func (h *Handler) CertificatesList(c *fiber.Ctx) error {
 	stats := h.certService.GetStats()
 	flashType, flashMsg := getFlash(c)
 
-	return c.Render("pages/certificates", fiber.Map{
-		"Title":        "SSL Certificates",
-		"Certificates": certs,
-		"Stats":        stats,
-		"FlashType":    flashType,
-		"FlashMessage": flashMsg,
-	}, "layouts/base")
+	data := h.baseData(c, "SSL Certificates")
+	data["Certificates"] = certs
+	data["Stats"] = stats
+	data["FlashType"] = flashType
+	data["FlashMessage"] = flashMsg
+	data["Active"] = "certificates"
+
+	return c.Render("pages/certificates", data, "layouts/base")
 }
 
 // CertificateDelete deletes a certificate to force renewal

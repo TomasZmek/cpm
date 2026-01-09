@@ -6,6 +6,92 @@
     <title>Login - CPM</title>
     <link rel="stylesheet" href="/static/css/themes/classic.css">
     <link rel="icon" type="image/svg+xml" href="/static/img/logo.svg">
+    <style>
+        .login-page {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        }
+        .login-container {
+            width: 100%;
+            max-width: 400px;
+            padding: 1rem;
+        }
+        .login-card {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+        .login-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .login-logo {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 1rem;
+        }
+        .login-header h1 {
+            margin: 0;
+            color: #1a1a2e;
+            font-size: 1.5rem;
+        }
+        .login-header p {
+            margin: 0.25rem 0 0;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        .login-form .form-group {
+            margin-bottom: 1rem;
+        }
+        .login-form label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #333;
+        }
+        .login-form input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+        .login-form input:focus {
+            outline: none;
+            border-color: #2196f3;
+            box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+        }
+        .btn-block {
+            width: 100%;
+            padding: 0.75rem;
+            font-size: 1rem;
+        }
+        .login-footer {
+            text-align: center;
+            margin-top: 1.5rem;
+            color: #999;
+        }
+        .alert {
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+        }
+        .alert-error {
+            background: #fee;
+            color: #c00;
+            border: 1px solid #fcc;
+        }
+        .alert-info {
+            background: #e3f2fd;
+            color: #1565c0;
+            border: 1px solid #90caf9;
+        }
+    </style>
 </head>
 <body class="login-page">
     <div class="login-container">

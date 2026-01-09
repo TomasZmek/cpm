@@ -36,13 +36,12 @@ func (h *Handler) SettingsUsers(c *fiber.Ctx) error {
 func (h *Handler) renderSettingsTab(c *fiber.Ctx, tab string) error {
 	flashType, flashMsg := getFlash(c)
 
-	data := fiber.Map{
-		"Title":        "Settings",
-		"ActiveTab":    tab,
-		"FlashType":    flashType,
-		"FlashMessage": flashMsg,
-		"Config":       h.config,
-	}
+	data := h.baseData(c, "Settings")
+	data["ActiveTab"] = tab
+	data["FlashType"] = flashType
+	data["FlashMessage"] = flashMsg
+	data["Config"] = h.config
+	data["Active"] = "settings"
 
 	// Tab-specific data
 	switch tab {

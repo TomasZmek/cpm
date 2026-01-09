@@ -18,7 +18,7 @@ const (
 // User represents an application user
 type User struct {
 	Username     string    `json:"username"`
-	PasswordHash string    `json:"-"`
+	PasswordHash string    `json:"password_hash"`
 	Role         Role      `json:"role"`
 	CreatedAt    time.Time `json:"created_at"`
 	LastLogin    time.Time `json:"last_login"`

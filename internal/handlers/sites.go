@@ -30,17 +30,18 @@ func (h *Handler) SitesList(c *fiber.Ctx) error {
 
 	flashType, flashMsg := getFlash(c)
 
-	return c.Render("pages/sites", fiber.Map{
-		"Title":             "Proxy Rules",
-		"Sites":             filteredSites,
-		"TotalSites":        len(sites),
-		"AllTags":           allTags,
-		"SelectedTag":       tag,
-		"Search":            search,
-		"AvailableSnippets": availableSnippets,
-		"FlashType":         flashType,
-		"FlashMessage":      flashMsg,
-	}, "layouts/base")
+	data := h.baseData(c, "Proxy Rules")
+	data["Sites"] = filteredSites
+	data["TotalSites"] = len(sites)
+	data["AllTags"] = allTags
+	data["SelectedTag"] = tag
+	data["Search"] = search
+	data["AvailableSnippets"] = availableSnippets
+	data["FlashType"] = flashType
+	data["FlashMessage"] = flashMsg
+	data["Active"] = "sites"
+
+	return c.Render("pages/sites", data, "layouts/base")
 }
 
 // SiteNew renders the new site form
@@ -49,15 +50,16 @@ func (h *Handler) SiteNew(c *fiber.Ctx) error {
 	templates := models.GetServiceTemplates()
 	categories := models.GetTemplateCategories()
 
-	return c.Render("pages/site_form", fiber.Map{
-		"Title":             "New Proxy Rule",
-		"IsNew":             true,
-		"Site":              &models.Site{},
-		"DefaultIP":         h.config.DefaultIP,
-		"AvailableSnippets": availableSnippets,
-		"Templates":         templates,
-		"Categories":        categories,
-	}, "layouts/base")
+	data := h.baseData(c, "New Proxy Rule")
+	data["IsNew"] = true
+	data["Site"] = &models.Site{}
+	data["DefaultIP"] = h.config.DefaultIP
+	data["AvailableSnippets"] = availableSnippets
+	data["Templates"] = templates
+	data["Categories"] = categories
+	data["Active"] = "sites"
+
+	return c.Render("pages/site_form", data, "layouts/base")
 }
 
 // SiteCreate creates a new site
@@ -124,10 +126,11 @@ func (h *Handler) SiteDetail(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusNotFound, "Site not found")
 	}
 
-	return c.Render("pages/site_detail", fiber.Map{
-		"Title": site.PrimaryDomain(),
-		"Site":  site,
-	}, "layouts/base")
+	data := h.baseData(c, site.PrimaryDomain())
+	data["Site"] = site
+	data["Active"] = "sites"
+
+	return c.Render("pages/site_detail", data, "layouts/base")
 }
 
 // SiteEdit renders the edit form
@@ -141,13 +144,14 @@ func (h *Handler) SiteEdit(c *fiber.Ctx) error {
 
 	availableSnippets, _ := h.snippetsService.GetAvailableSnippets()
 
-	return c.Render("pages/site_form", fiber.Map{
-		"Title":             "Edit: " + site.PrimaryDomain(),
-		"IsNew":             false,
-		"Site":              site,
-		"DefaultIP":         h.config.DefaultIP,
-		"AvailableSnippets": availableSnippets,
-	}, "layouts/base")
+	data := h.baseData(c, "Edit: "+site.PrimaryDomain())
+	data["IsNew"] = false
+	data["Site"] = site
+	data["DefaultIP"] = h.config.DefaultIP
+	data["AvailableSnippets"] = availableSnippets
+	data["Active"] = "sites"
+
+	return c.Render("pages/site_form", data, "layouts/base")
 }
 
 // SiteUpdate updates an existing site

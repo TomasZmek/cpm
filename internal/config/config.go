@@ -33,7 +33,7 @@ type Config struct {
 // Load loads configuration from environment variables
 func Load() (*Config, error) {
 	cfg := &Config{
-		Port:          getEnvInt("PORT", 8080),
+		Port:          getEnvInt("PORT", 8501),
 		Host:          getEnv("HOST", "0.0.0.0"),
 		ConfigDir:     getEnv("CADDY_CONFIG_PATH", "/caddy-config"),
 		DataDir:       getEnv("CADDY_DATA_PATH", "/caddy-data"),

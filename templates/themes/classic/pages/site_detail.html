@@ -1,0 +1,86 @@
+<div class="page-header">
+    <h1>{{.Site.PrimaryDomain}}</h1>
+    <div class="page-actions">
+        <a href="/sites/{{.Site.Filename}}/edit" class="btn btn-primary">
+            ✏️ {{t .Lang "edit"}}
+        </a>
+        <button 
+            class="btn btn-danger"
+            hx-delete="/sites/{{.Site.Filename}}"
+            hx-confirm="{{t .Lang "confirm_delete"}}"
+        >
+            🗑️ {{t .Lang "delete"}}
+        </button>
+    </div>
+</div>
+
+<div class="grid grid-2">
+    <!-- Site Info -->
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">{{t .Lang "site_info"}}</h2>
+        </div>
+        <div class="card-body">
+            <table class="table">
+                <tr>
+                    <th>{{t .Lang "domains"}}</th>
+                    <td>
+                        {{range .Site.Domains}}
+                        <span class="badge">{{.}}</span>
+                        {{end}}
+                    </td>
+                </tr>
+                <tr>
+                    <th>{{t .Lang "target"}}</th>
+                    <td>
+                        {{if .Site.IsHTTPSBackend}}https{{else}}http{{end}}://{{.Site.TargetIP}}:{{.Site.TargetPort}}
+                    </td>
+                </tr>
+                <tr>
+                    <th>{{t .Lang "options"}}</th>
+                    <td>
+                        {{if .Site.IsInternal}}<span class="badge badge-warning">Internal</span>{{end}}
+                        {{if .Site.EnableWebSocket}}<span class="badge badge-info">WebSocket</span>{{end}}
+                        {{if .Site.IsHTTPSBackend}}<span class="badge badge-success">HTTPS Backend</span>{{end}}
+                    </td>
+                </tr>
+                {{if .Site.Tags}}
+                <tr>
+                    <th>{{t .Lang "tags"}}</th>
+                    <td>
+                        {{range .Site.Tags}}
+                        <span class="badge badge-secondary">{{.}}</span>
+                        {{end}}
+                    </td>
+                </tr>
+                {{end}}
+                {{if .Site.Snippets}}
+                <tr>
+                    <th>{{t .Lang "snippets"}}</th>
+                    <td>
+                        {{range .Site.Snippets}}
+                        <span class="badge badge-primary">{{.}}</span>
+                        {{end}}
+                    </td>
+                </tr>
+                {{end}}
+            </table>
+        </div>
+    </div>
+
+    <!-- Raw Config -->
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">{{t .Lang "raw_config"}}</h2>
+        </div>
+        <div class="card-body">
+            <pre class="code-block">{{.Site.RawContent}}</pre>
+        </div>
+    </div>
+</div>
+
+<div class="mt-4">
+    <a href="/sites" class="btn btn-secondary">
+        ← {{t .Lang "back_to_list"}}
+    </a>
+</div>

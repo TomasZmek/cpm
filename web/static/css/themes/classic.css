@@ -225,57 +225,402 @@ a:hover {
 
 /* Forms */
 .form-group {
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--space-5);
 }
 
-.form-label {
+.form-label,
+label {
   display: block;
   margin-bottom: var(--space-2);
-  font-weight: 500;
+  font-weight: 600;
   color: var(--gray-700);
+  font-size: 0.875rem;
 }
 
 .form-input,
 .form-select,
-.form-textarea {
+.form-textarea,
+input[type="text"],
+input[type="password"],
+input[type="email"],
+input[type="number"],
+input[type="url"],
+input[type="tel"],
+input[type="date"],
+input[type="time"],
+input[type="search"],
+select,
+textarea {
   width: 100%;
-  padding: var(--space-2) var(--space-3);
-  font-size: 1rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  padding: 0.75rem 1rem;
+  font-size: 0.95rem;
+  border: 2px solid var(--gray-200);
+  border-radius: var(--radius-lg);
   background: white;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition: all 0.2s ease;
+  color: var(--gray-800);
+}
+
+.form-input:hover,
+.form-select:hover,
+.form-textarea:hover,
+input[type="text"]:hover,
+input[type="password"]:hover,
+input[type="email"]:hover,
+input[type="number"]:hover,
+input[type="url"]:hover,
+input[type="tel"]:hover,
+input[type="date"]:hover,
+input[type="time"]:hover,
+input[type="search"]:hover,
+select:hover,
+textarea:hover {
+  border-color: var(--gray-300);
 }
 
 .form-input:focus,
 .form-select:focus,
-.form-textarea:focus {
+.form-textarea:focus,
+input[type="text"]:focus,
+input[type="password"]:focus,
+input[type="email"]:focus,
+input[type="number"]:focus,
+input[type="url"]:focus,
+input[type="tel"]:focus,
+input[type="date"]:focus,
+input[type="time"]:focus,
+input[type="search"]:focus,
+select:focus,
+textarea:focus {
   outline: none;
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(0, 173, 216, 0.1);
+  box-shadow: 0 0 0 4px rgba(0, 173, 216, 0.15);
 }
 
-.form-textarea {
-  min-height: 100px;
+.form-input::placeholder,
+input::placeholder,
+textarea::placeholder {
+  color: var(--gray-400);
+}
+
+.form-textarea,
+textarea {
+  min-height: 120px;
   resize: vertical;
+  line-height: 1.6;
 }
 
-.form-checkbox {
+/* Inline input with label */
+.form-inline {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.form-inline label {
+  margin-bottom: 0;
+  white-space: nowrap;
+}
+
+.form-inline input,
+.form-inline select {
+  flex: 1;
+}
+
+/* Checkboxes and Radio buttons */
+.form-checkbox,
+.checkbox-label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  cursor: pointer;
+  user-select: none;
+  font-weight: 400;
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+  width: 1.25rem;
+  height: 1.25rem;
+  accent-color: var(--primary);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* Custom styled checkbox */
+.checkbox-custom {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  cursor: pointer;
+  padding: 0.5rem 0;
+}
+
+.checkbox-custom input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.checkbox-custom .checkmark {
+  width: 1.375rem;
+  height: 1.375rem;
+  border: 2px solid var(--gray-300);
+  border-radius: var(--radius-sm);
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.checkbox-custom:hover .checkmark {
+  border-color: var(--primary);
+}
+
+.checkbox-custom input:checked + .checkmark {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+.checkbox-custom input:checked + .checkmark::after {
+  content: "✓";
+  color: white;
+  font-size: 0.875rem;
+  font-weight: bold;
+}
+
+.checkbox-custom input:focus + .checkmark {
+  box-shadow: 0 0 0 3px rgba(0, 173, 216, 0.2);
+}
+
+/* Form sections */
+.form-section {
+  background: var(--gray-50);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  margin-bottom: var(--space-5);
+  border: 1px solid var(--gray-100);
+}
+
+.form-section-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--gray-800);
+  margin: 0 0 var(--space-4) 0;
   display: flex;
   align-items: center;
   gap: var(--space-2);
 }
 
-.form-checkbox input {
-  width: 1.25rem;
-  height: 1.25rem;
-  accent-color: var(--primary);
+/* Form row - side by side inputs */
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-4);
 }
 
+/* Input with icon */
+.input-group {
+  position: relative;
+}
+
+.input-group input {
+  padding-left: 2.75rem;
+}
+
+.input-group-icon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--gray-400);
+  pointer-events: none;
+}
+
+/* Form hint/help text */
 .form-hint {
+  font-size: 0.8rem;
+  color: var(--gray-500);
+  margin-top: var(--space-2);
+  line-height: 1.4;
+}
+
+/* Snippet checkboxes - inline pills */
+.snippet-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.snippet-option {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0.5rem 1rem;
+  background: white;
+  border: 2px solid var(--gray-200);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.2s;
   font-size: 0.875rem;
-  color: var(--text-muted);
-  margin-top: var(--space-1);
+}
+
+.snippet-option:hover {
+  border-color: var(--primary-light);
+  background: var(--gray-50);
+}
+
+.snippet-option input {
+  width: 1rem;
+  height: 1rem;
+}
+
+.snippet-option input:checked + span {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.snippet-option:has(input:checked) {
+  border-color: var(--primary);
+  background: rgba(0, 173, 216, 0.08);
+}
+
+/* Details/Summary accordion */
+details {
+  background: var(--gray-50);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--space-4);
+  border: 1px solid var(--gray-200);
+}
+
+details > summary {
+  padding: var(--space-4);
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--gray-700);
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+details > summary::-webkit-details-marker {
+  display: none;
+}
+
+details > summary::before {
+  content: "▶";
+  font-size: 0.75rem;
+  transition: transform 0.2s;
+}
+
+details[open] > summary::before {
+  transform: rotate(90deg);
+}
+
+details[open] > summary {
+  border-bottom: 1px solid var(--gray-200);
+}
+
+details > div,
+details > .details-content {
+  padding: var(--space-4);
+}
+
+/* Page header */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-6);
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+
+.page-header h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--gray-800);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+/* Settings sections */
+.settings-section {
+  background: white;
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  margin-bottom: var(--space-5);
+  box-shadow: var(--shadow);
+}
+
+.settings-section h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--gray-800);
+  margin: 0 0 var(--space-4) 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.settings-section h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--gray-700);
+  margin: 0 0 var(--space-3) 0;
+}
+
+/* Tabs navigation */
+.tabs-nav {
+  display: flex;
+  gap: var(--space-1);
+  border-bottom: 2px solid var(--gray-200);
+  margin-bottom: var(--space-5);
+}
+
+.tabs-nav .tab {
+  padding: var(--space-3) var(--space-5);
+  font-weight: 500;
+  color: var(--gray-500);
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.tabs-nav .tab:hover {
+  color: var(--gray-700);
+  background: var(--gray-50);
+}
+
+.tabs-nav .tab.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+  background: transparent;
+}
+
+/* Code editor textarea */
+.code-editor {
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Fira Code', monospace;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  background: var(--gray-800);
+  color: var(--gray-100);
+  border: none;
+  padding: var(--space-4);
+}
+
+.code-editor:focus {
+  box-shadow: 0 0 0 4px rgba(0, 173, 216, 0.2);
 }
 
 /* Alerts */

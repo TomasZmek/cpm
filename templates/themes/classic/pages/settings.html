@@ -7,22 +7,22 @@
 <!-- Settings Tabs -->
 <div class="tabs-container">
     <nav class="tabs-nav">
-        <a href="/settings/general" class="tab {{if eq .Tab "general"}}active{{end}}">
+        <a href="/settings/general" class="tab {{if eq .ActiveTab "general"}}active{{end}}">
             ⚙️ General
         </a>
-        <a href="/settings/backup" class="tab {{if eq .Tab "backup"}}active{{end}}">
+        <a href="/settings/backup" class="tab {{if eq .ActiveTab "backup"}}active{{end}}">
             💾 Backup
         </a>
-        <a href="/settings/caddy" class="tab {{if eq .Tab "caddy"}}active{{end}}">
+        <a href="/settings/caddy" class="tab {{if eq .ActiveTab "caddy"}}active{{end}}">
             🔧 Caddy
         </a>
-        <a href="/settings/users" class="tab {{if eq .Tab "users"}}active{{end}}">
+        <a href="/settings/users" class="tab {{if eq .ActiveTab "users"}}active{{end}}">
             👥 Users
         </a>
     </nav>
     
     <div class="tab-content">
-        {{if eq .Tab "general"}}
+        {{if eq .ActiveTab "general"}}
         <!-- General Settings -->
         <div class="settings-section">
             <h2>🌐 Language</h2>
@@ -63,7 +63,7 @@
             </p>
         </div>
         
-        {{else if eq .Tab "backup"}}
+        {{else if eq .ActiveTab "backup"}}
         <!-- Backup Settings -->
         <div class="settings-section">
             <h2>💾 Backup & Restore</h2>
@@ -121,7 +121,7 @@
             </div>
         </div>
         
-        {{else if eq .Tab "caddy"}}
+        {{else if eq .ActiveTab "caddy"}}
         <!-- Caddy Settings -->
         <div class="settings-section">
             <h2>🌐 Fallback Rule</h2>
@@ -129,7 +129,7 @@
             
             {{if .FallbackExists}}
             <form action="/settings/fallback" method="POST">
-                <textarea name="content" rows="10" class="code-editor">{{.FallbackContent}}</textarea>
+                <textarea name="content" rows="10" class="code-editor">{{.Fallback}}</textarea>
                 <button type="submit" class="btn btn-primary mt-2">
                     💾 Save Fallback
                 </button>
@@ -154,7 +154,7 @@
                 <div class="card flex-1">
                     <h3>403 Forbidden</h3>
                     <form action="/settings/error-page/403" method="POST">
-                        <textarea name="content" rows="8" class="code-editor">{{.Error403}}</textarea>
+                        <textarea name="content" rows="8" class="code-editor">{{.ErrorPage403}}</textarea>
                         <button type="submit" class="btn btn-secondary btn-sm mt-2">
                             💾 Save 403.html
                         </button>
@@ -164,7 +164,7 @@
                 <div class="card flex-1">
                     <h3>404 Not Found</h3>
                     <form action="/settings/error-page/404" method="POST">
-                        <textarea name="content" rows="8" class="code-editor">{{.Error404}}</textarea>
+                        <textarea name="content" rows="8" class="code-editor">{{.ErrorPage404}}</textarea>
                         <button type="submit" class="btn btn-secondary btn-sm mt-2">
                             💾 Save 404.html
                         </button>
@@ -173,20 +173,21 @@
             </div>
         </div>
         
-        {{else if eq .Tab "users"}}
+        {{else if eq .ActiveTab "users"}}
         <!-- Users Settings -->
         <div class="settings-section">
             <h2>👥 User Management</h2>
             
-            <div class="form-group">
+            <form action="/settings/auth/toggle" method="POST" class="form-group">
                 <label class="checkbox-label">
                     <input type="checkbox" 
-                           id="auth-enabled"
+                           name="enabled"
+                           value="true"
                            {{if .AuthEnabled}}checked{{end}}
-                           onchange="toggleAuth(this.checked)">
+                           onchange="this.form.submit()">
                     Enable Authentication
                 </label>
-            </div>
+            </form>
             
             {{if not .AuthEnabled}}
             <div class="alert alert-info">
@@ -262,7 +263,7 @@
                     <div class="form-group">
                         <label for="new-role">Role</label>
                         <select id="new-role" name="role">
-                            {{range .AllRoles}}
+                            {{range .Roles}}
                             <option value="{{.}}">{{.}}</option>
                             {{end}}
                         </select>
@@ -287,11 +288,6 @@ function changeLanguage(lang) {
 function changeTheme(theme) {
     document.cookie = `theme=${theme};path=/;max-age=31536000`;
     window.location.reload();
-}
-
-function toggleAuth(enabled) {
-    // TODO: API call to toggle auth
-    console.log('Toggle auth:', enabled);
 }
 
 function showPasswordModal(username) {

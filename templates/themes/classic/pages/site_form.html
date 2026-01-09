@@ -1,55 +1,11 @@
 <div class="page-header">
-    <div class="page-header-title">
-        <h1>{{if .IsNew}}➕ New Rule{{else}}✏️ Edit: {{.Site.PrimaryDomain}}{{end}}</h1>
-    </div>
-    <div class="page-header-actions">
-        <a href="/sites" class="btn btn-secondary">← Back</a>
-    </div>
+    <h1>{{if .IsNew}}➕ New Rule{{else}}✏️ Edit: {{.Site.PrimaryDomain}}{{end}}</h1>
+    <a href="/sites" class="btn btn-secondary">← Back</a>
 </div>
-
-{{if .IsNew}}
-<!-- Template Selector (only for new rules) -->
-<div class="tabs" x-data="{ mode: 'scratch' }">
-    <div class="tab-buttons">
-        <button @click="mode = 'scratch'" :class="{ 'active': mode === 'scratch' }">
-            📝 From Scratch
-        </button>
-        <button @click="mode = 'template'" :class="{ 'active': mode === 'template' }">
-            📋 From Template
-        </button>
-    </div>
-    
-    <!-- Template Selection -->
-    <div x-show="mode === 'template'" class="template-selector">
-        <div class="form-group">
-            <label>Category</label>
-            <select x-model="selectedCategory" @change="selectedTemplate = null">
-                <option value="">Select category...</option>
-                {{range .Categories}}
-                <option value="{{.ID}}">{{.Icon}} {{.Name}}</option>
-                {{end}}
-            </select>
-        </div>
-        
-        <div class="templates-grid">
-            {{range .Templates}}
-            <div class="template-card" 
-                 x-show="selectedCategory === '{{.Category}}'"
-                 @click="selectTemplate('{{.ID}}')">
-                <div class="template-icon">{{.Icon}}</div>
-                <div class="template-name">{{.Name}}</div>
-                <div class="template-desc">{{.Description}}</div>
-            </div>
-            {{end}}
-        </div>
-    </div>
-</div>
-{{end}}
 
 <!-- Main Form -->
 <form action="{{if .IsNew}}/sites{{else}}/sites/{{.Site.Filename}}{{end}}" 
       method="POST"
-      hx-boost="true"
       class="site-form">
     
     {{if not .IsNew}}
@@ -57,7 +13,7 @@
     {{end}}
     
     <div class="form-section">
-        <h2>🌐 Domain Configuration</h2>
+        <div class="form-section-title">🌐 Domain Configuration</div>
         
         <div class="form-group">
             <label for="domains">Domains *</label>
@@ -67,15 +23,15 @@
                    value="{{.Site.DomainsString}}"
                    placeholder="example.com, www.example.com"
                    required>
-            <small class="form-help">Separate multiple domains with comma or space</small>
+            <div class="form-hint">Separate multiple domains with comma or space</div>
         </div>
     </div>
     
     <div class="form-section">
-        <h2>🎯 Backend Target</h2>
+        <div class="form-section-title">🎯 Backend Target</div>
         
         <div class="form-row">
-            <div class="form-group flex-2">
+            <div class="form-group">
                 <label for="target_ip">IP Address *</label>
                 <input type="text" 
                        id="target_ip" 
@@ -85,7 +41,7 @@
                        required>
             </div>
             
-            <div class="form-group flex-1">
+            <div class="form-group">
                 <label for="target_port">Port *</label>
                 <input type="text" 
                        id="target_port" 
@@ -96,27 +52,27 @@
             </div>
         </div>
         
-        <div class="form-row">
+        <div class="form-group">
             <label class="checkbox-label">
                 <input type="checkbox" 
                        name="is_https_backend" 
                        {{if .Site.IsHTTPSBackend}}checked{{end}}>
-                🔒 HTTPS Backend (skip certificate verification)
+                <span>🔒 HTTPS Backend (skip certificate verification)</span>
             </label>
         </div>
     </div>
     
     <div class="form-section">
-        <h2>⚙️ Snippets</h2>
+        <div class="form-section-title">⚙️ Snippets</div>
         
-        <div class="snippets-selector">
+        <div class="snippet-options">
             {{range .AvailableSnippets}}
-            <label class="checkbox-card">
+            <label class="snippet-option">
                 <input type="checkbox" 
                        name="snippets" 
                        value="{{.}}"
                        {{if contains $.Site.Snippets .}}checked{{end}}>
-                <span class="checkbox-card-content">
+                <span>
                     {{if eq . "cloudflare_dns"}}☁️{{end}}
                     {{if eq . "internal_only"}}🔒{{end}}
                     {{if eq . "security_headers"}}🛡️{{end}}
@@ -131,7 +87,7 @@
     </div>
     
     <div class="form-section">
-        <h2>🏷️ Tags</h2>
+        <div class="form-section-title">🏷️ Tags</div>
         
         <div class="form-group">
             <input type="text" 
@@ -139,48 +95,54 @@
                    name="tags" 
                    value="{{join .Site.Tags ", "}}"
                    placeholder="production, web, api">
-            <small class="form-help">Organize rules with comma-separated tags</small>
+            <div class="form-hint">Organize rules with comma-separated tags</div>
         </div>
     </div>
     
-    <details class="form-section collapsible">
-        <summary><h2>⚡ Advanced Options</h2></summary>
-        
-        <div class="form-row">
-            <label class="checkbox-label">
-                <input type="checkbox" 
-                       name="enable_websocket" 
-                       {{if .Site.EnableWebSocket}}checked{{end}}>
-                🔌 Enable WebSocket Support
-            </label>
+    <details>
+        <summary>⚡ Advanced Options</summary>
+        <div class="details-content">
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" 
+                               name="enable_websocket" 
+                               {{if .Site.EnableWebSocket}}checked{{end}}>
+                        <span>🔌 Enable WebSocket Support</span>
+                    </label>
+                </div>
+                
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" 
+                               name="is_internal" 
+                               {{if .Site.IsInternal}}checked{{end}}>
+                        <span>🏠 Internal Only (LAN access)</span>
+                    </label>
+                </div>
+            </div>
             
-            <label class="checkbox-label">
-                <input type="checkbox" 
-                       name="is_internal" 
-                       {{if .Site.IsInternal}}checked{{end}}>
-                🏠 Internal Only (LAN access)
-            </label>
-        </div>
-        
-        <div class="form-group">
-            <label for="health_check_path">Health Check Path</label>
-            <input type="text" 
-                   id="health_check_path" 
-                   name="health_check_path" 
-                   value="{{.Site.HealthCheckPath}}"
-                   placeholder="/health">
-        </div>
-        
-        <div class="form-group">
-            <label for="extra_config">Extra Caddy Configuration</label>
-            <textarea id="extra_config" 
-                      name="extra_config" 
-                      rows="4"
-                      placeholder="Additional Caddy directives...">{{.Site.ExtraConfig}}</textarea>
+            <div class="form-group">
+                <label for="health_check_path">Health Check Path</label>
+                <input type="text" 
+                       id="health_check_path" 
+                       name="health_check_path" 
+                       value="{{.Site.HealthCheckPath}}"
+                       placeholder="/health">
+            </div>
+            
+            <div class="form-group">
+                <label for="extra_config">Extra Caddy Configuration</label>
+                <textarea id="extra_config" 
+                          name="extra_config" 
+                          rows="4"
+                          class="code-editor"
+                          placeholder="Additional Caddy directives...">{{.Site.ExtraConfig}}</textarea>
+            </div>
         </div>
     </details>
     
-    <div class="form-actions">
+    <div class="form-actions" style="display: flex; gap: 1rem; margin-top: 2rem;">
         <a href="/sites" class="btn btn-secondary">Cancel</a>
         <button type="submit" class="btn btn-primary">
             {{if .IsNew}}Create Rule{{else}}Save Changes{{end}}

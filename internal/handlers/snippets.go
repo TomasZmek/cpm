@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"strconv"
 	"strings"
 
 	"github.com/TomasZmek/cpm/internal/models"
@@ -18,13 +19,14 @@ func (h *Handler) SnippetsList(c *fiber.Ctx) error {
 
 	flashType, flashMsg := getFlash(c)
 
-	return c.Render("pages/snippets", fiber.Map{
-		"Title":         "Snippets Manager",
-		"Config":        cfg,
-		"KnownSnippets": knownSnippets,
-		"FlashType":     flashType,
-		"FlashMessage":  flashMsg,
-	}, "layouts/base")
+	data := h.baseData(c, "Snippets Manager")
+	data["Config"] = cfg
+	data["KnownSnippets"] = knownSnippets
+	data["FlashType"] = flashType
+	data["FlashMessage"] = flashMsg
+	data["Active"] = "snippets"
+
+	return c.Render("pages/snippets", data, "layouts/base")
 }
 
 // SnippetUpdate updates a specific snippet configuration
@@ -49,7 +51,7 @@ func (h *Handler) SnippetUpdate(c *fiber.Ctx) error {
 
 	case "security_headers":
 		cfg.SecurityHeaders.Enabled = c.FormValue("enabled") == "on"
-		cfg.SecurityHeaders.HSTSMaxAge = c.FormInt("hsts_max_age", 31536000)
+		cfg.SecurityHeaders.HSTSMaxAge = formInt(c, "hsts_max_age", 31536000)
 		cfg.SecurityHeaders.HSTSIncludeSubdomains = c.FormValue("hsts_include_subdomains") == "on"
 		cfg.SecurityHeaders.XContentTypeOptions = c.FormValue("x_content_type_options") == "on"
 		cfg.SecurityHeaders.XFrameOptions = c.FormValue("x_frame_options")
@@ -63,8 +65,8 @@ func (h *Handler) SnippetUpdate(c *fiber.Ctx) error {
 
 	case "rate_limit":
 		cfg.RateLimit.Enabled = c.FormValue("enabled") == "on"
-		cfg.RateLimit.Requests = c.FormInt("requests", 100)
-		cfg.RateLimit.WindowSecs = c.FormInt("window_secs", 60)
+		cfg.RateLimit.Requests = formInt(c, "requests", 100)
+		cfg.RateLimit.WindowSecs = formInt(c, "window_secs", 60)
 
 	case "basic_auth":
 		cfg.BasicAuth.Enabled = c.FormValue("enabled") == "on"
@@ -118,4 +120,14 @@ func parseNetworks(input string) []string {
 		}
 	}
 	return networks
+}
+
+// formInt parses form value as int with default
+func formInt(c *fiber.Ctx, key string, defaultVal int) int {
+	if v := c.FormValue(key); v != "" {
+		if i, err := strconv.Atoi(v); err == nil {
+			return i
+		}
+	}
+	return defaultVal
 }
