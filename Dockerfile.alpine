@@ -14,17 +14,17 @@ RUN go mod download
 COPY . .
 
 # Build binary - static linking
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s -extldflags '-static'" -o cpm ./cmd/cpm
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o cpm ./cmd/cpm
 
-# Final stage - scratch (minimal, no CVEs)
-FROM scratch
+# Final stage - Alpine edge with all updates
+FROM alpine:edge
 
 WORKDIR /app
 
-# Copy certificates for HTTPS
-COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-# Copy timezone data
-COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
+# Update all packages to latest and install only essentials
+RUN apk upgrade --no-cache && \
+    apk add --no-cache ca-certificates tzdata && \
+    rm -rf /var/cache/apk/*
 
 # Copy binary
 COPY --from=builder /app/cpm .
@@ -36,8 +36,9 @@ COPY --from=builder /app/templates ./templates
 # Expose port
 EXPOSE 8501
 
-# Note: scratch image has no shell, so no HEALTHCHECK with wget
-# Use external health checks (Docker Compose, Kubernetes, etc.)
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD wget -qO- http://localhost:8501/health || exit 1
 
 # Run
 ENTRYPOINT ["./cpm"]
