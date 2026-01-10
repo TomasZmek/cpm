@@ -1,11 +1,11 @@
 <div class="page-header">
     <div class="page-header-title">
-        <h1>⚙️ Snippets Manager</h1>
+        <h1>⚙️ {{t .Lang "snippets_title"}}</h1>
     </div>
 </div>
 
 <p class="page-description">
-    Configure reusable Caddy snippets that can be imported into proxy rules.
+    {{t .Lang "snippets_description"}}
 </p>
 
 <div class="snippets-grid">
@@ -14,9 +14,9 @@
         <div class="snippet-card-header" @click="expanded = !expanded">
             <div class="snippet-info">
                 <span class="snippet-icon">☁️</span>
-                <span class="snippet-name">Cloudflare DNS</span>
+                <span class="snippet-name">{{t .Lang "snippets_cloudflare"}}</span>
                 <span class="snippet-status {{if .Config.CloudflareDNS.Enabled}}enabled{{else}}disabled{{end}}">
-                    {{if .Config.CloudflareDNS.Enabled}}Enabled{{else}}Disabled{{end}}
+                    {{if .Config.CloudflareDNS.Enabled}}{{t .Lang "snippets_enabled"}}{{else}}{{t .Lang "snippets_disabled"}}{{end}}
                 </span>
             </div>
             <span class="expand-icon" :class="{ 'rotated': expanded }">▼</span>
@@ -28,26 +28,26 @@
                 
                 <label class="checkbox-label">
                     <input type="checkbox" name="enabled" {{if .Config.CloudflareDNS.Enabled}}checked{{end}}>
-                    Enable Cloudflare DNS Challenge
+                    {{t .Lang "snippets_enable_cloudflare"}}
                 </label>
                 
                 <div class="form-group mt-3">
                     <label class="checkbox-label">
                         <input type="checkbox" name="use_env" {{if .Config.CloudflareDNS.UseEnv}}checked{{end}}>
-                        Use CF_API_TOKEN environment variable
+                        {{t .Lang "snippets_use_env"}}
                     </label>
                 </div>
                 
                 <div class="form-group">
-                    <label for="cf_api_token">API Token (if not using env)</label>
+                    <label for="cf_api_token">{{t .Lang "snippets_api_token"}}</label>
                     <input type="password" 
                            id="cf_api_token" 
                            name="api_token" 
                            value="{{.Config.CloudflareDNS.APIToken}}"
-                           placeholder="Enter Cloudflare API token">
+                           placeholder="{{t .Lang "snippets_api_token_placeholder"}}">
                 </div>
                 
-                <button type="submit" class="btn btn-primary btn-sm">Save</button>
+                <button type="submit" class="btn btn-primary btn-sm">{{t .Lang "save"}}</button>
             </form>
         </div>
     </div>
@@ -57,9 +57,9 @@
         <div class="snippet-card-header" @click="expanded = !expanded">
             <div class="snippet-info">
                 <span class="snippet-icon">🔒</span>
-                <span class="snippet-name">Internal Only</span>
+                <span class="snippet-name">{{t .Lang "snippets_internal"}}</span>
                 <span class="snippet-status {{if .Config.InternalOnly.Enabled}}enabled{{else}}disabled{{end}}">
-                    {{if .Config.InternalOnly.Enabled}}Enabled{{else}}Disabled{{end}}
+                    {{if .Config.InternalOnly.Enabled}}{{t .Lang "snippets_enabled"}}{{else}}{{t .Lang "snippets_disabled"}}{{end}}
                 </span>
             </div>
             <span class="expand-icon" :class="{ 'rotated': expanded }">▼</span>
@@ -71,20 +71,20 @@
                 
                 <label class="checkbox-label">
                     <input type="checkbox" name="enabled" {{if .Config.InternalOnly.Enabled}}checked{{end}}>
-                    Enable Internal Network Restriction
+                    {{t .Lang "snippets_enable_internal"}}
                 </label>
                 
                 <div class="form-group mt-3">
-                    <label for="allowed_networks">Allowed Networks (CIDR)</label>
+                    <label for="allowed_networks">{{t .Lang "snippets_allowed_networks"}}</label>
                     <textarea id="allowed_networks" 
                               name="allowed_networks" 
                               rows="4"
                               placeholder="192.168.0.0/16&#10;172.16.0.0/12&#10;10.0.0.0/8">{{range .Config.InternalOnly.AllowedNetworks}}{{.}}
 {{end}}</textarea>
-                    <small class="form-help">One network per line in CIDR notation</small>
+                    <small class="form-help">{{t .Lang "snippets_networks_help"}}</small>
                 </div>
                 
-                <button type="submit" class="btn btn-primary btn-sm">Save</button>
+                <button type="submit" class="btn btn-primary btn-sm">{{t .Lang "save"}}</button>
             </form>
         </div>
     </div>
@@ -94,9 +94,9 @@
         <div class="snippet-card-header" @click="expanded = !expanded">
             <div class="snippet-info">
                 <span class="snippet-icon">🛡️</span>
-                <span class="snippet-name">Security Headers</span>
+                <span class="snippet-name">{{t .Lang "snippets_security"}}</span>
                 <span class="snippet-status {{if .Config.SecurityHeaders.Enabled}}enabled{{else}}disabled{{end}}">
-                    {{if .Config.SecurityHeaders.Enabled}}Enabled{{else}}Disabled{{end}}
+                    {{if .Config.SecurityHeaders.Enabled}}{{t .Lang "snippets_enabled"}}{{else}}{{t .Lang "snippets_disabled"}}{{end}}
                 </span>
             </div>
             <span class="expand-icon" :class="{ 'rotated': expanded }">▼</span>
@@ -108,12 +108,12 @@
                 
                 <label class="checkbox-label">
                     <input type="checkbox" name="enabled" {{if .Config.SecurityHeaders.Enabled}}checked{{end}}>
-                    Enable Security Headers
+                    {{t .Lang "snippets_enable_security"}}
                 </label>
                 
                 <div class="form-row mt-3">
                     <div class="form-group">
-                        <label for="hsts_max_age">HSTS Max Age (seconds)</label>
+                        <label for="hsts_max_age">{{t .Lang "snippets_hsts_max_age"}}</label>
                         <input type="number" id="hsts_max_age" name="hsts_max_age" 
                                value="{{.Config.SecurityHeaders.HSTSMaxAge}}">
                     </div>
@@ -121,7 +121,7 @@
                     <label class="checkbox-label">
                         <input type="checkbox" name="hsts_include_subdomains" 
                                {{if .Config.SecurityHeaders.HSTSIncludeSubdomains}}checked{{end}}>
-                        Include Subdomains
+                        {{t .Lang "snippets_include_subdomains"}}
                     </label>
                 </div>
                 
@@ -135,20 +135,20 @@
                     <label class="checkbox-label">
                         <input type="checkbox" name="hide_server" 
                                {{if .Config.SecurityHeaders.HideServer}}checked{{end}}>
-                        Hide Server Header
+                        {{t .Lang "snippets_hide_server"}}
                     </label>
                 </div>
                 
                 <div class="form-group">
-                    <label for="x_frame_options">X-Frame-Options</label>
+                    <label for="x_frame_options">{{t .Lang "snippets_x_frame_options"}}</label>
                     <select id="x_frame_options" name="x_frame_options">
                         <option value="DENY" {{if eq .Config.SecurityHeaders.XFrameOptions "DENY"}}selected{{end}}>DENY</option>
                         <option value="SAMEORIGIN" {{if eq .Config.SecurityHeaders.XFrameOptions "SAMEORIGIN"}}selected{{end}}>SAMEORIGIN</option>
-                        <option value="" {{if eq .Config.SecurityHeaders.XFrameOptions ""}}selected{{end}}>Not set</option>
+                        <option value="" {{if eq .Config.SecurityHeaders.XFrameOptions ""}}selected{{end}}>{{t .Lang "not_set"}}</option>
                     </select>
                 </div>
                 
-                <button type="submit" class="btn btn-primary btn-sm">Save</button>
+                <button type="submit" class="btn btn-primary btn-sm">{{t .Lang "save"}}</button>
             </form>
         </div>
     </div>
@@ -158,9 +158,9 @@
         <div class="snippet-card-header" @click="expanded = !expanded">
             <div class="snippet-info">
                 <span class="snippet-icon">📦</span>
-                <span class="snippet-name">Compression</span>
+                <span class="snippet-name">{{t .Lang "snippets_compression"}}</span>
                 <span class="snippet-status {{if .Config.Compression.Enabled}}enabled{{else}}disabled{{end}}">
-                    {{if .Config.Compression.Enabled}}Enabled{{else}}Disabled{{end}}
+                    {{if .Config.Compression.Enabled}}{{t .Lang "snippets_enabled"}}{{else}}{{t .Lang "snippets_disabled"}}{{end}}
                 </span>
             </div>
             <span class="expand-icon" :class="{ 'rotated': expanded }">▼</span>
@@ -172,22 +172,22 @@
                 
                 <label class="checkbox-label">
                     <input type="checkbox" name="enabled" {{if .Config.Compression.Enabled}}checked{{end}}>
-                    Enable Compression
+                    {{t .Lang "snippets_enable_compression"}}
                 </label>
                 
                 <div class="form-row mt-3">
                     <label class="checkbox-label">
                         <input type="checkbox" name="zstd" {{if .Config.Compression.Zstd}}checked{{end}}>
-                        Zstd
+                        {{t .Lang "snippets_zstd"}}
                     </label>
                     
                     <label class="checkbox-label">
                         <input type="checkbox" name="gzip" {{if .Config.Compression.Gzip}}checked{{end}}>
-                        Gzip
+                        {{t .Lang "snippets_gzip"}}
                     </label>
                 </div>
                 
-                <button type="submit" class="btn btn-primary btn-sm">Save</button>
+                <button type="submit" class="btn btn-primary btn-sm">{{t .Lang "save"}}</button>
             </form>
         </div>
     </div>
@@ -197,9 +197,9 @@
         <div class="snippet-card-header" @click="expanded = !expanded">
             <div class="snippet-info">
                 <span class="snippet-icon">⏱️</span>
-                <span class="snippet-name">Rate Limit</span>
+                <span class="snippet-name">{{t .Lang "snippets_rate_limit"}}</span>
                 <span class="snippet-status {{if .Config.RateLimit.Enabled}}enabled{{else}}disabled{{end}}">
-                    {{if .Config.RateLimit.Enabled}}Enabled{{else}}Disabled{{end}}
+                    {{if .Config.RateLimit.Enabled}}{{t .Lang "snippets_enabled"}}{{else}}{{t .Lang "snippets_disabled"}}{{end}}
                 </span>
             </div>
             <span class="expand-icon" :class="{ 'rotated': expanded }">▼</span>
@@ -211,24 +211,24 @@
                 
                 <label class="checkbox-label">
                     <input type="checkbox" name="enabled" {{if .Config.RateLimit.Enabled}}checked{{end}}>
-                    Enable Rate Limiting
+                    {{t .Lang "snippets_enable_rate_limit"}}
                 </label>
                 
                 <div class="form-row mt-3">
                     <div class="form-group">
-                        <label for="requests">Requests</label>
+                        <label for="requests">{{t .Lang "snippets_requests"}}</label>
                         <input type="number" id="requests" name="requests" 
                                value="{{.Config.RateLimit.Requests}}">
                     </div>
                     
                     <div class="form-group">
-                        <label for="window_secs">Window (seconds)</label>
+                        <label for="window_secs">{{t .Lang "snippets_window"}}</label>
                         <input type="number" id="window_secs" name="window_secs" 
                                value="{{.Config.RateLimit.WindowSecs}}">
                     </div>
                 </div>
                 
-                <button type="submit" class="btn btn-primary btn-sm">Save</button>
+                <button type="submit" class="btn btn-primary btn-sm">{{t .Lang "save"}}</button>
             </form>
         </div>
     </div>

@@ -1,6 +1,6 @@
 <div class="page-header">
-    <h1>{{if .IsNew}}➕ New Rule{{else}}✏️ Edit: {{.Site.PrimaryDomain}}{{end}}</h1>
-    <a href="/sites" class="btn btn-secondary">← Back</a>
+    <h1>{{if .IsNew}}➕ {{t .Lang "sites_new"}}{{else}}✏️ {{t .Lang "edit"}}: {{.Site.PrimaryDomain}}{{end}}</h1>
+    <a href="/sites" class="btn btn-secondary">← {{t .Lang "back"}}</a>
 </div>
 
 <!-- Main Form -->
@@ -13,26 +13,26 @@
     {{end}}
     
     <div class="form-section">
-        <div class="form-section-title">🌐 Domain Configuration</div>
+        <div class="form-section-title">🌐 {{t .Lang "domain_config"}}</div>
         
         <div class="form-group">
-            <label for="domains">Domains *</label>
+            <label for="domains">{{t .Lang "sites_domain"}} *</label>
             <input type="text" 
                    id="domains" 
                    name="domains" 
                    value="{{.Site.DomainsString}}"
                    placeholder="example.com, www.example.com"
                    required>
-            <div class="form-hint">Separate multiple domains with comma or space</div>
+            <div class="form-hint">{{t .Lang "domains_hint"}}</div>
         </div>
     </div>
     
     <div class="form-section">
-        <div class="form-section-title">🎯 Backend Target</div>
+        <div class="form-section-title">🎯 {{t .Lang "backend_target"}}</div>
         
         <div class="form-row">
             <div class="form-group">
-                <label for="target_ip">IP Address *</label>
+                <label for="target_ip">{{t .Lang "sites_ip"}} *</label>
                 <input type="text" 
                        id="target_ip" 
                        name="target_ip" 
@@ -42,7 +42,7 @@
             </div>
             
             <div class="form-group">
-                <label for="target_port">Port *</label>
+                <label for="target_port">{{t .Lang "sites_port"}} *</label>
                 <input type="text" 
                        id="target_port" 
                        name="target_port" 
@@ -57,13 +57,13 @@
                 <input type="checkbox" 
                        name="is_https_backend" 
                        {{if .Site.IsHTTPSBackend}}checked{{end}}>
-                <span>🔒 HTTPS Backend (skip certificate verification)</span>
+                <span>🔒 {{t .Lang "sites_https_backend"}}</span>
             </label>
         </div>
     </div>
     
     <div class="form-section">
-        <div class="form-section-title">⚙️ Snippets</div>
+        <div class="form-section-title">⚙️ {{t .Lang "sites_snippets"}}</div>
         
         <div class="snippet-options">
             {{range .AvailableSnippets}}
@@ -87,7 +87,7 @@
     </div>
     
     <div class="form-section">
-        <div class="form-section-title">🏷️ Tags</div>
+        <div class="form-section-title">🏷️ {{t .Lang "sites_tags"}}</div>
         
         <div class="form-group">
             <input type="text" 
@@ -95,12 +95,12 @@
                    name="tags" 
                    value="{{join .Site.Tags ", "}}"
                    placeholder="production, web, api">
-            <div class="form-hint">Organize rules with comma-separated tags</div>
+            <div class="form-hint">{{t .Lang "tags_hint"}}</div>
         </div>
     </div>
     
     <details>
-        <summary>⚡ Advanced Options</summary>
+        <summary>⚡ {{t .Lang "advanced_options"}}</summary>
         <div class="details-content">
             <div class="form-row">
                 <div class="form-group">
@@ -108,7 +108,7 @@
                         <input type="checkbox" 
                                name="enable_websocket" 
                                {{if .Site.EnableWebSocket}}checked{{end}}>
-                        <span>🔌 Enable WebSocket Support</span>
+                        <span>🔌 {{t .Lang "sites_websocket"}}</span>
                     </label>
                 </div>
                 
@@ -117,13 +117,13 @@
                         <input type="checkbox" 
                                name="is_internal" 
                                {{if .Site.IsInternal}}checked{{end}}>
-                        <span>🏠 Internal Only (LAN access)</span>
+                        <span>🏠 {{t .Lang "sites_internal"}}</span>
                     </label>
                 </div>
             </div>
             
             <div class="form-group">
-                <label for="health_check_path">Health Check Path</label>
+                <label for="health_check_path">{{t .Lang "sites_health_check"}}</label>
                 <input type="text" 
                        id="health_check_path" 
                        name="health_check_path" 
@@ -132,20 +132,20 @@
             </div>
             
             <div class="form-group">
-                <label for="extra_config">Extra Caddy Configuration</label>
+                <label for="extra_config">{{t .Lang "sites_extra_config"}}</label>
                 <textarea id="extra_config" 
                           name="extra_config" 
                           rows="4"
                           class="code-editor"
-                          placeholder="Additional Caddy directives...">{{.Site.ExtraConfig}}</textarea>
+                          placeholder="{{t .Lang "extra_config_placeholder"}}">{{.Site.ExtraConfig}}</textarea>
             </div>
         </div>
     </details>
     
     <div class="form-actions" style="display: flex; gap: 1rem; margin-top: 2rem;">
-        <a href="/sites" class="btn btn-secondary">Cancel</a>
+        <a href="/sites" class="btn btn-secondary">{{t .Lang "cancel"}}</a>
         <button type="submit" class="btn btn-primary">
-            {{if .IsNew}}Create Rule{{else}}Save Changes{{end}}
+            {{if .IsNew}}{{t .Lang "sites_create"}}{{else}}{{t .Lang "save"}}{{end}}
         </button>
     </div>
 </form>

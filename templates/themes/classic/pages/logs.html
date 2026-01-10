@@ -1,10 +1,10 @@
 <div class="page-header">
     <div class="page-header-title">
-        <h1>📝 Caddy Logs</h1>
+        <h1>📝 {{t .Lang "logs_title"}}</h1>
     </div>
     <div class="page-header-actions">
         <button class="btn btn-secondary" onclick="refreshLogs()">
-            🔄 Refresh
+            🔄 {{t .Lang "logs_refresh"}}
         </button>
     </div>
 </div>
@@ -12,17 +12,17 @@
 <!-- Filters -->
 <div class="filters-bar">
     <div class="form-group">
-        <label for="log-filter">Filter:</label>
+        <label for="log-filter">{{t .Lang "filter"}}:</label>
         <input type="search" 
                id="log-filter" 
                name="filter"
                value="{{.Filter}}"
-               placeholder="Search logs..."
+               placeholder="{{t .Lang "logs_search"}}"
                onkeyup="filterLogs(this.value)">
     </div>
     
     <div class="form-group">
-        <label for="log-lines">Lines:</label>
+        <label for="log-lines">{{t .Lang "logs_lines"}}:</label>
         <select id="log-lines" name="lines" onchange="changeLinesCount(this.value)">
             <option value="50" {{if eq .Lines 50}}selected{{end}}>50</option>
             <option value="100" {{if eq .Lines 100}}selected{{end}}>100</option>
@@ -34,7 +34,7 @@
     <div class="form-group">
         <label class="checkbox-label">
             <input type="checkbox" id="auto-scroll" checked>
-            Auto-scroll
+            {{t .Lang "auto_scroll"}}
         </label>
     </div>
 </div>

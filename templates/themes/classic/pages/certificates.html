@@ -1,7 +1,7 @@
 <div class="page-header">
     <div class="page-header-title">
-        <h1>📜 SSL Certificates</h1>
-        <span class="badge">{{.Stats.total}} certificates</span>
+        <h1>📜 {{t .Lang "certs_title"}}</h1>
+        <span class="badge">{{.Stats.total}} {{t .Lang "certs_count"}}</span>
     </div>
 </div>
 
@@ -9,19 +9,19 @@
 <div class="stats-bar">
     <div class="stat-item stat-success">
         <span class="stat-value">{{.Stats.valid}}</span>
-        <span class="stat-label">Valid</span>
+        <span class="stat-label">{{t .Lang "certs_valid"}}</span>
     </div>
     <div class="stat-item stat-warning">
         <span class="stat-value">{{.Stats.expiring}}</span>
-        <span class="stat-label">Expiring (30d)</span>
+        <span class="stat-label">{{t .Lang "certs_expiring"}}</span>
     </div>
     <div class="stat-item stat-danger">
         <span class="stat-value">{{.Stats.critical}}</span>
-        <span class="stat-label">Critical (7d)</span>
+        <span class="stat-label">{{t .Lang "certs_critical"}}</span>
     </div>
     <div class="stat-item stat-error">
         <span class="stat-value">{{.Stats.expired}}</span>
-        <span class="stat-label">Expired</span>
+        <span class="stat-label">{{t .Lang "certs_expired"}}</span>
     </div>
 </div>
 
@@ -30,13 +30,13 @@
     <table class="table">
         <thead>
             <tr>
-                <th>Status</th>
-                <th>Domain</th>
-                <th>Issuer</th>
-                <th>Valid From</th>
-                <th>Expires</th>
-                <th>Days Left</th>
-                <th>Actions</th>
+                <th>{{t .Lang "status"}}</th>
+                <th>{{t .Lang "certs_domain"}}</th>
+                <th>{{t .Lang "certs_issuer"}}</th>
+                <th>{{t .Lang "valid_from"}}</th>
+                <th>{{t .Lang "certs_expires"}}</th>
+                <th>{{t .Lang "certs_days_left"}}</th>
+                <th>{{t .Lang "actions"}}</th>
             </tr>
         </thead>
         <tbody id="certificates-list">
@@ -55,19 +55,19 @@
                     <td>
                         <span class="{{.StatusClass}}">
                             {{if lt .DaysLeft 0}}
-                                Expired
+                                {{t $.Lang "certs_expired"}}
                             {{else if eq .DaysLeft 0}}
-                                Today
+                                {{t $.Lang "today"}}
                             {{else}}
-                                {{.DaysLeft}} days
+                                {{.DaysLeft}} {{t $.Lang "days"}}
                             {{end}}
                         </span>
                     </td>
                     <td>
                         <button class="btn btn-sm btn-danger"
                                 hx-delete="/certificates/{{.Domain}}"
-                                hx-confirm="Delete certificate for {{.Domain}}? This will trigger automatic renewal.">
-                            🔄 Force Renew
+                                hx-confirm="{{t $.Lang "certs_confirm_delete"}} {{.Domain}}?">
+                            🔄 {{t $.Lang "certs_force_renew"}}
                         </button>
                     </td>
                 </tr>
@@ -77,8 +77,8 @@
                     <td colspan="7" class="text-center">
                         <div class="empty-state">
                             <div class="empty-state-icon">📜</div>
-                            <h3>No Certificates Found</h3>
-                            <p>Certificates will appear here once Caddy obtains them.</p>
+                            <h3>{{t .Lang "certs_empty_title"}}</h3>
+                            <p>{{t .Lang "certs_empty_desc"}}</p>
                         </div>
                     </td>
                 </tr>
@@ -88,6 +88,6 @@
 </div>
 
 <div class="info-box mt-4">
-    <h4>ℹ️ About Certificate Renewal</h4>
-    <p>Caddy automatically renews certificates before they expire. Use "Force Renew" only if you need to manually trigger renewal (e.g., after changing DNS settings).</p>
+    <h4>ℹ️ {{t .Lang "certs_about_title"}}</h4>
+    <p>{{t .Lang "certs_about_desc"}}</p>
 </div>

@@ -1,11 +1,11 @@
 <div class="page-header">
     <div class="page-header-title">
-        <h1>🔀 Proxy Rules</h1>
-        <span class="badge">{{.TotalSites}} rules</span>
+        <h1>🔀 {{t .Lang "sites_title"}}</h1>
+        <span class="badge">{{.TotalSites}} {{t .Lang "rules"}}</span>
     </div>
     <div class="page-header-actions">
         <a href="/sites/new" class="btn btn-primary">
-            ➕ New Rule
+            ➕ {{t .Lang "sites_new"}}
         </a>
     </div>
 </div>
@@ -15,7 +15,7 @@
     <div class="search-box">
         <input type="search" 
                name="search" 
-               placeholder="Search domains, IP, port..." 
+               placeholder="{{t .Lang "sites_search"}}" 
                value="{{.Search}}"
                hx-get="/htmx/sites/list"
                hx-trigger="keyup changed delay:300ms"
@@ -29,7 +29,7 @@
             hx-trigger="change"
             hx-target="#sites-list"
             hx-include="[name='search']">
-        <option value="">All Tags</option>
+        <option value="">{{t .Lang "sites_all_tags"}}</option>
         {{range .AllTags}}
         <option value="{{.}}" {{if eq . $.SelectedTag}}selected{{end}}>{{.}}</option>
         {{end}}
@@ -47,22 +47,22 @@
                 <div class="site-card-title">
                     <h3>{{.PrimaryDomain}}</h3>
                     {{if gt (len .Domains) 1}}
-                    <span class="text-muted">+{{sub (len .Domains) 1}} more</span>
+                    <span class="text-muted">+{{sub (len .Domains) 1}} {{t $.Lang "more"}}</span>
                     {{end}}
                 </div>
                 <div class="site-card-actions">
-                    <a href="/sites/{{.Filename}}/edit" class="btn btn-sm btn-secondary">Edit</a>
+                    <a href="/sites/{{.Filename}}/edit" class="btn btn-sm btn-secondary">{{t $.Lang "edit"}}</a>
                     <button class="btn btn-sm btn-danger"
                             hx-delete="/sites/{{.Filename}}"
-                            hx-confirm="Delete rule for {{.PrimaryDomain}}?">
-                        Delete
+                            hx-confirm="{{t $.Lang "sites_confirm_delete"}} {{.PrimaryDomain}}?">
+                        {{t $.Lang "delete"}}
                     </button>
                 </div>
             </div>
             
             <div class="site-card-body">
                 <div class="site-card-info">
-                    <span class="label">Target:</span>
+                    <span class="label">{{t $.Lang "sites_target"}}:</span>
                     <code>{{.TargetURL}}</code>
                 </div>
                 
@@ -83,7 +83,7 @@
             
             <div class="site-card-footer">
                 <span class="text-muted text-sm">
-                    Modified: {{timeAgo .ModifiedAt}}
+                    {{t $.Lang "modified"}}: {{timeAgo .ModifiedAt}}
                 </span>
             </div>
         </div>
@@ -91,9 +91,9 @@
     {{else}}
         <div class="empty-state">
             <div class="empty-state-icon">📭</div>
-            <h3>No Proxy Rules</h3>
-            <p>Create your first proxy rule to get started.</p>
-            <a href="/sites/new" class="btn btn-primary">Create Rule</a>
+            <h3>{{t .Lang "sites_empty_title"}}</h3>
+            <p>{{t .Lang "sites_empty_desc"}}</p>
+            <a href="/sites/new" class="btn btn-primary">{{t .Lang "sites_create"}}</a>
         </div>
     {{end}}
 </div>

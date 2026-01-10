@@ -1,6 +1,6 @@
 <div class="page-header">
     <div class="page-header-title">
-        <h1>⚙️ Settings</h1>
+        <h1>⚙️ {{t .Lang "settings_title"}}</h1>
     </div>
 </div>
 
@@ -8,16 +8,16 @@
 <div class="tabs-container">
     <nav class="tabs-nav">
         <a href="/settings/general" class="tab {{if eq .ActiveTab "general"}}active{{end}}">
-            ⚙️ General
+            ⚙️ {{t .Lang "settings_general"}}
         </a>
         <a href="/settings/backup" class="tab {{if eq .ActiveTab "backup"}}active{{end}}">
-            💾 Backup
+            💾 {{t .Lang "settings_backup"}}
         </a>
         <a href="/settings/caddy" class="tab {{if eq .ActiveTab "caddy"}}active{{end}}">
-            🔧 Caddy
+            🔧 {{t .Lang "settings_caddy"}}
         </a>
         <a href="/settings/users" class="tab {{if eq .ActiveTab "users"}}active{{end}}">
-            👥 Users
+            👥 {{t .Lang "settings_users"}}
         </a>
     </nav>
     
@@ -25,17 +25,17 @@
         {{if eq .ActiveTab "general"}}
         <!-- General Settings -->
         <div class="settings-section">
-            <h2>🌐 Language</h2>
+            <h2>🌐 {{t .Lang "settings_language"}}</h2>
             <div class="form-group">
                 <select id="language" name="language" onchange="changeLanguage(this.value)">
-                    <option value="en">🇬🇧 English</option>
-                    <option value="cs">🇨🇿 Čeština</option>
+                    <option value="en" {{if eq .Lang "en"}}selected{{end}}>🇬🇧 English</option>
+                    <option value="cs" {{if eq .Lang "cs"}}selected{{end}}>🇨🇿 Čeština</option>
                 </select>
             </div>
         </div>
         
         <div class="settings-section">
-            <h2>🎨 Theme</h2>
+            <h2>🎨 {{t .Lang "settings_theme"}}</h2>
             <div class="form-group">
                 <select id="theme" name="theme" onchange="changeTheme(this.value)">
                     <option value="classic">Classic</option>
@@ -45,20 +45,20 @@
         </div>
         
         <div class="settings-section">
-            <h2>ℹ️ About</h2>
+            <h2>ℹ️ {{t .Lang "about"}}</h2>
             <div class="info-grid">
                 <div class="info-item">
-                    <span class="info-label">Version</span>
+                    <span class="info-label">{{t .Lang "app_version"}}</span>
                     <span class="info-value">v{{.Config.Version}}</span>
                 </div>
                 <div class="info-item">
-                    <span class="info-label">Build Date</span>
+                    <span class="info-label">{{t .Lang "build_date"}}</span>
                     <span class="info-value">{{.Config.BuildDate}}</span>
                 </div>
             </div>
             <p class="text-muted mt-3">
                 CPM - Caddy Proxy Manager<br>
-                Web interface for managing Caddy reverse proxy.<br>
+                {{t .Lang "about_description"}}<br>
                 Built with Go and ❤️
             </p>
         </div>
@@ -66,25 +66,25 @@
         {{else if eq .ActiveTab "backup"}}
         <!-- Backup Settings -->
         <div class="settings-section">
-            <h2>💾 Backup & Restore</h2>
-            <p class="text-muted">Create or restore a complete backup of your Caddy configuration.</p>
+            <h2>💾 {{t .Lang "backup_restore"}}</h2>
+            <p class="text-muted">{{t .Lang "backup_description"}}</p>
             
             <div class="form-row mt-4">
                 <div class="card flex-1">
-                    <h3>📥 Create Backup</h3>
-                    <p>Download a ZIP file with all configuration files.</p>
+                    <h3>📥 {{t .Lang "backup_create"}}</h3>
+                    <p>{{t .Lang "backup_create_desc"}}</p>
                     <a href="/settings/backup/create" class="btn btn-primary">
-                        ⬇️ Download Backup
+                        ⬇️ {{t .Lang "backup_download"}}
                     </a>
                 </div>
                 
                 <div class="card flex-1">
-                    <h3>📤 Restore Backup</h3>
-                    <p>Upload a backup ZIP file to restore configuration.</p>
+                    <h3>📤 {{t .Lang "backup_restore_title"}}</h3>
+                    <p>{{t .Lang "backup_restore_desc"}}</p>
                     <form action="/settings/backup/restore" method="POST" enctype="multipart/form-data">
                         <input type="file" name="backup" accept=".zip" required>
                         <button type="submit" class="btn btn-warning mt-2">
-                            ⬆️ Restore Backup
+                            ⬆️ {{t .Lang "backup_upload"}}
                         </button>
                     </form>
                 </div>
@@ -92,29 +92,29 @@
         </div>
         
         <div class="settings-section">
-            <h2>📋 Import / Export Rules</h2>
-            <p class="text-muted">Export rules as JSON or import from another CPM instance.</p>
+            <h2>📋 {{t .Lang "import_export"}}</h2>
+            <p class="text-muted">{{t .Lang "import_export_desc"}}</p>
             
             <div class="form-row mt-4">
                 <div class="card flex-1">
-                    <h3>📤 Export Rules</h3>
-                    <p>Download all proxy rules as JSON file.</p>
+                    <h3>📤 {{t .Lang "export_rules"}}</h3>
+                    <p>{{t .Lang "export_rules_desc"}}</p>
                     <a href="/settings/export" class="btn btn-secondary">
-                        ⬇️ Export JSON
+                        ⬇️ {{t .Lang "export_json"}}
                     </a>
                 </div>
                 
                 <div class="card flex-1">
-                    <h3>📥 Import Rules</h3>
-                    <p>Import rules from a JSON file.</p>
+                    <h3>📥 {{t .Lang "import_rules"}}</h3>
+                    <p>{{t .Lang "import_rules_desc"}}</p>
                     <form action="/settings/import" method="POST" enctype="multipart/form-data">
                         <input type="file" name="import_file" accept=".json" required>
                         <label class="checkbox-label mt-2">
                             <input type="checkbox" name="skip_existing" checked>
-                            Skip existing rules
+                            {{t .Lang "skip_existing"}}
                         </label>
                         <button type="submit" class="btn btn-secondary mt-2">
-                            ⬆️ Import Rules
+                            ⬆️ {{t .Lang "import_upload"}}
                         </button>
                     </form>
                 </div>
@@ -124,22 +124,22 @@
         {{else if eq .ActiveTab "caddy"}}
         <!-- Caddy Settings -->
         <div class="settings-section">
-            <h2>🌐 Fallback Rule</h2>
-            <p class="text-muted">Default rule for unknown domains (wildcard).</p>
+            <h2>🌐 {{t .Lang "fallback_rule"}}</h2>
+            <p class="text-muted">{{t .Lang "fallback_description"}}</p>
             
             {{if .FallbackExists}}
             <form action="/settings/fallback" method="POST">
                 <textarea name="content" rows="10" class="code-editor">{{.Fallback}}</textarea>
                 <button type="submit" class="btn btn-primary mt-2">
-                    💾 Save Fallback
+                    💾 {{t .Lang "save"}}
                 </button>
             </form>
             {{else}}
             <div class="alert alert-warning">
-                Fallback rule not found.
+                {{t .Lang "fallback_not_found"}}
                 <form action="/settings/fallback/create" method="POST" class="mt-2">
                     <button type="submit" class="btn btn-primary">
-                        Create fallback.caddy
+                        {{t .Lang "create"}} fallback.caddy
                     </button>
                 </form>
             </div>
@@ -147,8 +147,8 @@
         </div>
         
         <div class="settings-section">
-            <h2>📄 Error Pages</h2>
-            <p class="text-muted">Custom HTML pages for error responses.</p>
+            <h2>📄 {{t .Lang "error_pages"}}</h2>
+            <p class="text-muted">{{t .Lang "error_pages_description"}}</p>
             
             <div class="form-row mt-4">
                 <div class="card flex-1">
@@ -156,7 +156,7 @@
                     <form action="/settings/error-page/403" method="POST">
                         <textarea name="content" rows="8" class="code-editor">{{.ErrorPage403}}</textarea>
                         <button type="submit" class="btn btn-secondary btn-sm mt-2">
-                            💾 Save 403.html
+                            💾 {{t .Lang "save"}} 403.html
                         </button>
                     </form>
                 </div>
@@ -166,7 +166,7 @@
                     <form action="/settings/error-page/404" method="POST">
                         <textarea name="content" rows="8" class="code-editor">{{.ErrorPage404}}</textarea>
                         <button type="submit" class="btn btn-secondary btn-sm mt-2">
-                            💾 Save 404.html
+                            💾 {{t .Lang "save"}} 404.html
                         </button>
                     </form>
                 </div>
@@ -176,7 +176,7 @@
         {{else if eq .ActiveTab "users"}}
         <!-- Users Settings -->
         <div class="settings-section">
-            <h2>👥 User Management</h2>
+            <h2>👥 {{t .Lang "user_management"}}</h2>
             
             <form action="/settings/auth/toggle" method="POST" class="form-group">
                 <label class="checkbox-label">
@@ -185,19 +185,19 @@
                            value="true"
                            {{if .AuthEnabled}}checked{{end}}
                            onchange="this.form.submit()">
-                    Enable Authentication
+                    {{t .Lang "enable_auth"}}
                 </label>
             </form>
             
             {{if not .AuthEnabled}}
             <div class="alert alert-info">
-                Authentication is disabled. Anyone can access the application.
+                {{t .Lang "auth_disabled_warning"}}
             </div>
             {{end}}
             
             {{if not .Users}}
             <div class="alert alert-warning">
-                No users created yet. Create at least one user to enable authentication.
+                {{t .Lang "no_users_warning"}}
             </div>
             {{end}}
         </div>
@@ -205,16 +205,16 @@
         <!-- User List -->
         {{if .Users}}
         <div class="settings-section">
-            <h3>Existing Users</h3>
+            <h3>{{t .Lang "existing_users"}}</h3>
             <div class="table-container">
                 <table class="table">
                     <thead>
                         <tr>
-                            <th>Username</th>
-                            <th>Role</th>
-                            <th>Created</th>
-                            <th>Last Login</th>
-                            <th>Actions</th>
+                            <th>{{t .Lang "username"}}</th>
+                            <th>{{t .Lang "role"}}</th>
+                            <th>{{t .Lang "created"}}</th>
+                            <th>{{t .Lang "last_login"}}</th>
+                            <th>{{t .Lang "actions"}}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -225,16 +225,16 @@
                             </td>
                             <td>{{.RoleDisplayName}}</td>
                             <td>{{.CreatedAt.Format "2006-01-02"}}</td>
-                            <td>{{if .LastLogin.IsZero}}Never{{else}}{{.LastLogin.Format "2006-01-02 15:04"}}{{end}}</td>
+                            <td>{{if .LastLogin.IsZero}}{{t $.Lang "never"}}{{else}}{{.LastLogin.Format "2006-01-02 15:04"}}{{end}}</td>
                             <td>
                                 <button class="btn btn-sm btn-secondary"
                                         onclick="showPasswordModal('{{.Username}}')">
-                                    🔑 Password
+                                    🔑 {{t $.Lang "password"}}
                                 </button>
                                 <button class="btn btn-sm btn-danger"
                                         hx-delete="/settings/users/{{.Username}}"
-                                        hx-confirm="Delete user {{.Username}}?">
-                                    🗑️ Delete
+                                        hx-confirm="{{t $.Lang "confirm_delete_user"}} {{.Username}}?">
+                                    🗑️ {{t $.Lang "delete"}}
                                 </button>
                             </td>
                         </tr>
@@ -247,21 +247,21 @@
         
         <!-- Add User Form -->
         <div class="settings-section">
-            <h3>➕ Add New User</h3>
+            <h3>➕ {{t .Lang "add_user"}}</h3>
             <form action="/settings/users" method="POST" class="user-form">
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="new-username">Username</label>
+                        <label for="new-username">{{t .Lang "username"}}</label>
                         <input type="text" id="new-username" name="username" required>
                     </div>
                     
                     <div class="form-group">
-                        <label for="new-password">Password</label>
+                        <label for="new-password">{{t .Lang "password"}}</label>
                         <input type="password" id="new-password" name="password" required minlength="6">
                     </div>
                     
                     <div class="form-group">
-                        <label for="new-role">Role</label>
+                        <label for="new-role">{{t .Lang "role"}}</label>
                         <select id="new-role" name="role">
                             {{range .Roles}}
                             <option value="{{.}}">{{.}}</option>
@@ -271,7 +271,7 @@
                 </div>
                 
                 <button type="submit" class="btn btn-primary">
-                    ➕ Create User
+                    ➕ {{t .Lang "create_user"}}
                 </button>
             </form>
         </div>
@@ -281,12 +281,12 @@
 
 <script>
 function changeLanguage(lang) {
-    document.cookie = `lang=${lang};path=/;max-age=31536000`;
+    document.cookie = `cpm_lang=${lang};path=/;max-age=31536000`;
     window.location.reload();
 }
 
 function changeTheme(theme) {
-    document.cookie = `theme=${theme};path=/;max-age=31536000`;
+    document.cookie = `cpm_theme=${theme};path=/;max-age=31536000`;
     window.location.reload();
 }
 
