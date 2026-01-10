@@ -1,0 +1,130 @@
+<div class="page-header">
+    <div class="page-header-title">
+        <h1>🔐 {{t .Lang "migrate_title"}}</h1>
+    </div>
+    <div class="page-header-actions">
+        <a href="/settings/wildcard" class="btn btn-secondary">
+            ← {{t .Lang "back"}}
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h2>*.{{.Domain}}</h2>
+    </div>
+    <div class="card-body">
+        <div class="alert alert-info">
+            <strong>ℹ️ {{t .Lang "migrate_info_title"}}</strong><br>
+            {{t .Lang "migrate_info_desc"}}
+        </div>
+
+        <form action="/settings/wildcard/migrate/{{.Domain}}" method="POST">
+            <!-- Sites to migrate -->
+            <div class="settings-section">
+                <h3>📁 {{t .Lang "migrate_sites_title"}}</h3>
+                {{if .MigrationInfo.MatchingSites}}
+                <p class="text-muted">{{t .Lang "migrate_sites_desc"}}</p>
+                <div class="migrate-list">
+                    {{range .MigrationInfo.MatchingSites}}
+                    <div class="migrate-item">
+                        <span class="migrate-icon">📄</span>
+                        <span class="migrate-name">{{.}}</span>
+                    </div>
+                    {{end}}
+                </div>
+                <div class="form-group mt-3">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="migrate_sites" checked>
+                        {{t .Lang "migrate_sites_checkbox"}} ({{len .MigrationInfo.MatchingSites}} {{t .Lang "files"}})
+                    </label>
+                </div>
+                {{else}}
+                <p class="text-muted">{{t .Lang "migrate_no_sites"}}</p>
+                {{end}}
+            </div>
+
+            <!-- Certificates to delete -->
+            <div class="settings-section">
+                <h3>🔒 {{t .Lang "migrate_certs_title"}}</h3>
+                {{if .MigrationInfo.Certificates}}
+                <p class="text-muted">{{t .Lang "migrate_certs_desc"}}</p>
+                <div class="migrate-list">
+                    {{range .MigrationInfo.Certificates}}
+                    <div class="migrate-item">
+                        <span class="migrate-icon">🔒</span>
+                        <span class="migrate-name">{{.}}</span>
+                    </div>
+                    {{end}}
+                </div>
+                <div class="form-group mt-3">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="delete_certs" checked>
+                        {{t .Lang "migrate_certs_checkbox"}} ({{len .MigrationInfo.Certificates}} {{t .Lang "certificates"}})
+                    </label>
+                </div>
+                {{else}}
+                <p class="text-muted">{{t .Lang "migrate_no_certs"}}</p>
+                {{end}}
+            </div>
+
+            <!-- Backup notice -->
+            <div class="alert alert-warning">
+                <strong>💾 {{t .Lang "migrate_backup_title"}}</strong><br>
+                {{t .Lang "migrate_backup_desc"}}
+            </div>
+
+            <!-- Actions -->
+            <div class="form-actions">
+                {{if or .MigrationInfo.MatchingSites .MigrationInfo.Certificates}}
+                <button type="submit" class="btn btn-primary">
+                    🚀 {{t .Lang "migrate_execute"}}
+                </button>
+                {{end}}
+                <a href="/settings/wildcard" class="btn btn-secondary">
+                    {{t .Lang "migrate_skip"}}
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+.migrate-list {
+    background: var(--gray-50);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius);
+    padding: 1rem;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.migrate-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.migrate-item:last-child {
+    border-bottom: none;
+}
+
+.migrate-icon {
+    font-size: 1.2rem;
+}
+
+.migrate-name {
+    font-family: monospace;
+    font-size: 0.9rem;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--gray-200);
+}
+</style>

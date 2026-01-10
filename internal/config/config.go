@@ -31,7 +31,7 @@ type Config struct {
 }
 
 // Load loads configuration from environment variables
-func Load() (*Config, error) {
+func Load(version, buildDate string) (*Config, error) {
 	cfg := &Config{
 		Port:          getEnvInt("PORT", 8501),
 		Host:          getEnv("HOST", "0.0.0.0"),
@@ -40,8 +40,8 @@ func Load() (*Config, error) {
 		ContainerName: getEnv("CONTAINER_NAME", "caddy"),
 		DefaultIP:     getEnv("DEFAULT_IP", "192.168.1.1"),
 		Theme:         getEnv("THEME", "classic"),
-		Version:       "3.0.0",
-		BuildDate:     "2026-01-07",
+		Version:       version,
+		BuildDate:     buildDate,
 	}
 
 	// Derived paths

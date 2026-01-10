@@ -17,6 +17,7 @@ type Handler struct {
 	authService     *services.AuthService
 	backupService   *services.BackupService
 	dockerService   *services.DockerService
+	wildcardService *services.WildcardService
 }
 
 // New creates a new Handler instance
@@ -28,6 +29,7 @@ func New(
 	authService *services.AuthService,
 	backupService *services.BackupService,
 	dockerService *services.DockerService,
+	wildcardService *services.WildcardService,
 ) *Handler {
 	return &Handler{
 		config:          cfg,
@@ -37,6 +39,7 @@ func New(
 		authService:     authService,
 		backupService:   backupService,
 		dockerService:   dockerService,
+		wildcardService: wildcardService,
 	}
 }
 
@@ -73,7 +76,7 @@ func ErrorHandler(c *fiber.Ctx, err error) error {
 		"Title":    "Error",
 		"Lang":     lang,
 		"ThemeCSS": "/static/css/themes/classic.css",
-		"Version":  "3.0.0",
+		"Version":  c.Locals("version"),
 	}, "layouts/base")
 }
 

@@ -16,6 +16,9 @@
         <a href="/settings/caddy" class="tab {{if eq .ActiveTab "caddy"}}active{{end}}">
             🔧 {{t .Lang "settings_caddy"}}
         </a>
+        <a href="/settings/wildcard" class="tab {{if eq .ActiveTab "wildcard"}}active{{end}}">
+            🔐 {{t .Lang "settings_wildcard"}}
+        </a>
         <a href="/settings/users" class="tab {{if eq .ActiveTab "users"}}active{{end}}">
             👥 {{t .Lang "settings_users"}}
         </a>
@@ -173,6 +176,126 @@
             </div>
         </div>
         
+        {{else if eq .ActiveTab "wildcard"}}
+        <!-- Wildcard SSL Settings -->
+        <div class="settings-section">
+            <h2>🔐 {{t .Lang "wildcard_title"}}</h2>
+            <p class="text-muted">{{t .Lang "wildcard_description"}}</p>
+            
+            <div class="alert alert-info mt-3">
+                <strong>ℹ️ {{t .Lang "wildcard_info_title"}}</strong><br>
+                {{t .Lang "wildcard_info_desc"}}
+            </div>
+        </div>
+        
+        <!-- Existing Wildcard Domains -->
+        {{if .WildcardDomains}}
+        <div class="settings-section">
+            <h3>{{t .Lang "wildcard_existing"}}</h3>
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>{{t .Lang "domain"}}</th>
+                            <th>{{t .Lang "wildcard_provider"}}</th>
+                            <th>Snippet</th>
+                            <th>{{t .Lang "actions"}}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{range .WildcardDomains}}
+                        <tr>
+                            <td><strong>*.{{.Domain}}</strong></td>
+                            <td>{{.Provider}}</td>
+                            <td><code>import wildcard-tls-{{.Domain | replace "." "-"}}</code></td>
+                            <td>
+                                <a href="/settings/wildcard/migrate/{{.Domain}}" class="btn btn-sm btn-primary">
+                                    🔄 {{t $.Lang "migrate_btn"}}
+                                </a>
+                                <button class="btn btn-sm btn-danger"
+                                        hx-post="/settings/wildcard/{{.Domain}}/delete"
+                                        hx-confirm="{{t $.Lang "wildcard_confirm_delete"}} *.{{.Domain}}?">
+                                    🗑️ {{t $.Lang "delete"}}
+                                </button>
+                            </td>
+                        </tr>
+                        {{end}}
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="alert alert-warning mt-3">
+                <strong>⚠️ {{t .Lang "wildcard_usage_title"}}</strong><br>
+                {{t .Lang "wildcard_usage_desc"}}
+                <pre class="code-block mt-2">import _wildcard.caddy
+
+subdomain.example.com {
+    import wildcard-tls-example-com
+    reverse_proxy localhost:8080
+}</pre>
+            </div>
+        </div>
+        {{end}}
+        
+        <!-- Add Wildcard Domain -->
+        <div class="settings-section">
+            <h3>➕ {{t .Lang "wildcard_add"}}</h3>
+            <form action="/settings/wildcard" method="POST" class="wildcard-form">
+                <div class="form-row">
+                    <div class="form-group flex-2">
+                        <label for="wildcard-domain">{{t .Lang "wildcard_domain"}}</label>
+                        <div class="input-group">
+                            <span class="input-prefix">*.</span>
+                            <input type="text" 
+                                   id="wildcard-domain" 
+                                   name="domain" 
+                                   placeholder="example.com"
+                                   required>
+                        </div>
+                        <small class="form-help">{{t .Lang "wildcard_domain_help"}}</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="wildcard-provider">{{t .Lang "wildcard_provider"}}</label>
+                        <select id="wildcard-provider" name="provider" required>
+                            <option value="cloudflare">Cloudflare</option>
+                            <option value="route53" disabled>AWS Route53 (soon)</option>
+                            <option value="digitalocean" disabled>DigitalOcean (soon)</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="use_env" id="use-env" checked onchange="toggleApiToken()">
+                        {{t .Lang "wildcard_use_env"}}
+                    </label>
+                    <small class="form-help">{{t .Lang "wildcard_env_help"}}</small>
+                </div>
+                
+                <div class="form-group" id="api-token-group" style="display: none;">
+                    <label for="api-token">{{t .Lang "wildcard_api_token"}}</label>
+                    <input type="password" 
+                           id="api-token" 
+                           name="api_token" 
+                           placeholder="{{t .Lang "wildcard_api_token_placeholder"}}">
+                    <small class="form-help">{{t .Lang "wildcard_api_token_help"}}</small>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">
+                    ➕ {{t .Lang "wildcard_add_btn"}}
+                </button>
+            </form>
+        </div>
+        
+        <script>
+        function toggleApiToken() {
+            const useEnv = document.getElementById('use-env').checked;
+            const tokenGroup = document.getElementById('api-token-group');
+            tokenGroup.style.display = useEnv ? 'none' : 'block';
+        }
+        </script>
+        
         {{else if eq .ActiveTab "users"}}
         <!-- Users Settings -->
         <div class="settings-section">
@@ -232,7 +355,7 @@
                                     🔑 {{t $.Lang "password"}}
                                 </button>
                                 <button class="btn btn-sm btn-danger"
-                                        hx-delete="/settings/users/{{.Username}}"
+                                        hx-post="/settings/users/{{.Username}}/delete"
                                         hx-confirm="{{t $.Lang "confirm_delete_user"}} {{.Username}}?">
                                     🗑️ {{t $.Lang "delete"}}
                                 </button>

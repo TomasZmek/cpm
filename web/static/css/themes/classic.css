@@ -440,6 +440,27 @@ input[type="radio"] {
   pointer-events: none;
 }
 
+/* Input with prefix text */
+.input-group {
+  display: flex;
+  align-items: center;
+}
+
+.input-prefix {
+  background: var(--gray-100);
+  border: 1px solid var(--gray-300);
+  border-right: none;
+  padding: 0.6rem 0.75rem;
+  border-radius: var(--radius) 0 0 var(--radius);
+  color: var(--gray-600);
+  font-weight: 500;
+}
+
+.input-group .input-prefix + input {
+  border-radius: 0 var(--radius) var(--radius) 0;
+  flex: 1;
+}
+
 /* Form hint/help text */
 .form-hint {
   font-size: 0.8rem;

@@ -63,6 +63,27 @@
     </div>
     
     <div class="form-section">
+        <div class="form-section-title">🔐 {{t .Lang "tls_certificate"}}</div>
+        
+        <div class="form-group">
+            <label for="tls_mode">{{t .Lang "tls_mode"}}</label>
+            <select id="tls_mode" name="tls_mode" class="form-control">
+                {{if .WildcardDomains}}
+                {{range .WildcardDomains}}
+                <option value="wildcard:{{.Domain}}" {{if eq $.Site.TLSMode (printf "wildcard:%s" .Domain)}}selected{{end}}>
+                    🌟 {{t $.Lang "tls_use_wildcard"}} *.{{.Domain}}
+                </option>
+                {{end}}
+                {{end}}
+                <option value="auto" {{if or (eq .Site.TLSMode "auto") (eq .Site.TLSMode "")}}selected{{end}}>
+                    🔄 {{t .Lang "tls_auto"}}
+                </option>
+            </select>
+            <div class="form-hint">{{t .Lang "tls_hint"}}</div>
+        </div>
+    </div>
+    
+    <div class="form-section">
         <div class="form-section-title">⚙️ {{t .Lang "sites_snippets"}}</div>
         
         <div class="snippet-options">
@@ -149,3 +170,43 @@
         </button>
     </div>
 </form>
+
+<script>
+// Auto-detect matching wildcard for domain
+document.addEventListener('DOMContentLoaded', function() {
+    const domainsInput = document.getElementById('domains');
+    const tlsSelect = document.getElementById('tls_mode');
+    
+    if (!domainsInput || !tlsSelect) return;
+    
+    // Get available wildcard domains from select options
+    const wildcardOptions = Array.from(tlsSelect.options).filter(opt => 
+        opt.value.startsWith('wildcard:')
+    );
+    
+    function detectWildcard() {
+        const domains = domainsInput.value.split(/[,\s]+/).map(d => d.trim()).filter(d => d);
+        if (domains.length === 0) return;
+        
+        const firstDomain = domains[0];
+        
+        // Find matching wildcard
+        for (const opt of wildcardOptions) {
+            const wildcardDomain = opt.value.replace('wildcard:', '');
+            if (firstDomain.endsWith('.' + wildcardDomain)) {
+                tlsSelect.value = opt.value;
+                return;
+            }
+        }
+        
+        // No match - set to auto
+        tlsSelect.value = 'auto';
+    }
+    
+    // Only auto-detect for new sites (not editing)
+    {{if .IsNew}}
+    domainsInput.addEventListener('blur', detectWildcard);
+    domainsInput.addEventListener('change', detectWildcard);
+    {{end}}
+});
+</script>

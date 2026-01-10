@@ -64,10 +64,15 @@
                         </span>
                     </td>
                     <td>
+                        <button class="btn btn-sm btn-secondary"
+                                hx-post="/certificates/{{.Domain}}/renew"
+                                hx-confirm="{{t $.Lang "certs_confirm_renew"}} {{.Domain}}?">
+                            🔄 {{t $.Lang "certs_renew"}}
+                        </button>
                         <button class="btn btn-sm btn-danger"
-                                hx-delete="/certificates/{{.Domain}}"
+                                hx-post="/certificates/{{.Domain}}/delete"
                                 hx-confirm="{{t $.Lang "certs_confirm_delete"}} {{.Domain}}?">
-                            🔄 {{t $.Lang "certs_force_renew"}}
+                            🗑️ {{t $.Lang "delete"}}
                         </button>
                     </td>
                 </tr>
@@ -90,4 +95,8 @@
 <div class="info-box mt-4">
     <h4>ℹ️ {{t .Lang "certs_about_title"}}</h4>
     <p>{{t .Lang "certs_about_desc"}}</p>
+    <ul style="margin-top: 0.5rem; margin-left: 1.5rem;">
+        <li><strong>🔄 {{t .Lang "certs_renew"}}</strong> - {{t .Lang "certs_renew_desc"}}</li>
+        <li><strong>🗑️ {{t .Lang "delete"}}</strong> - {{t .Lang "certs_delete_desc"}}</li>
+    </ul>
 </div>

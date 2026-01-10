@@ -35,10 +35,14 @@ func (p *ParserService) Parse(content, filenameDomain string) *models.Site {
 		RawContent: content,
 		Snippets:   []string{},
 		Tags:       []string{},
+		TLSMode:    "auto",
 	}
 
 	// Parse tags from comment
 	site.Tags = p.parseTags(content)
+
+	// Parse TLS mode from comment or import
+	site.TLSMode = p.parseTLSMode(content)
 
 	// Parse domains from header
 	site.Domains = p.parseDomains(content, filenameDomain)
@@ -304,6 +308,25 @@ func CleanDomains(domainsStr string) []string {
 		}
 	}
 	return domains
+}
+
+// parseTLSMode extracts TLS mode from config
+func (p *ParserService) parseTLSMode(content string) string {
+	// First try to find @tls comment
+	tlsRegex := regexp.MustCompile(`#\s*@tls:\s*(.+)`)
+	if match := tlsRegex.FindStringSubmatch(content); len(match) > 1 {
+		return strings.TrimSpace(match[1])
+	}
+
+	// Try to find wildcard-tls import
+	wildcardRegex := regexp.MustCompile(`import\s+wildcard-tls-([a-zA-Z0-9-]+)`)
+	if match := wildcardRegex.FindStringSubmatch(content); len(match) > 1 {
+		// Convert snippet name back to domain (e.g., "zrnek-cz" -> "zrnek.cz")
+		domain := strings.ReplaceAll(match[1], "-", ".")
+		return "wildcard:" + domain
+	}
+
+	return "auto"
 }
 
 func contains(slice []string, item string) bool {

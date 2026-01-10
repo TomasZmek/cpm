@@ -15,6 +15,7 @@ type Site struct {
 	TargetPort         string    `json:"target_port"`
 	IsHTTPSBackend     bool      `json:"is_https_backend"`
 	IsInternal         bool      `json:"is_internal"`
+	TLSMode            string    `json:"tls_mode"` // "auto" or "wildcard:domain.com"
 	Snippets           []string  `json:"snippets"`
 	Tags               []string  `json:"tags"`
 	AdditionalBackends []string  `json:"additional_backends"`
@@ -93,8 +94,20 @@ func (s *Site) ToCaddyfile() string {
 		lines = append(lines, fmt.Sprintf("# @tags: %s", strings.Join(s.Tags, ", ")))
 	}
 
+	// TLS mode as comment for parsing
+	if s.TLSMode != "" && s.TLSMode != "auto" {
+		lines = append(lines, fmt.Sprintf("# @tls: %s", s.TLSMode))
+	}
+
 	// Domain header
 	lines = append(lines, fmt.Sprintf("%s {", strings.Join(s.Domains, ", ")))
+
+	// Wildcard TLS import (must be first)
+	if strings.HasPrefix(s.TLSMode, "wildcard:") {
+		domain := strings.TrimPrefix(s.TLSMode, "wildcard:")
+		snippetName := "wildcard-tls-" + strings.ReplaceAll(domain, ".", "-")
+		lines = append(lines, fmt.Sprintf("    import %s", snippetName))
+	}
 
 	// Import snippets
 	for _, snippet := range s.Snippets {

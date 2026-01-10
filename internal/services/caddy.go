@@ -433,3 +433,18 @@ func TimeAgo(t time.Time) string {
 		return fmt.Sprintf("%d days ago", days)
 	}
 }
+
+// SaveWildcardConfig saves the wildcard configuration to a Caddy file
+func (c *CaddyService) SaveWildcardConfig(config string) error {
+	wildcardPath := filepath.Join(c.config.SitesDir, "_wildcard.caddy")
+	
+	// If config is empty, remove the file
+	if config == "" {
+		if _, err := os.Stat(wildcardPath); err == nil {
+			return os.Remove(wildcardPath)
+		}
+		return nil
+	}
+	
+	return os.WriteFile(wildcardPath, []byte(config), 0644)
+}

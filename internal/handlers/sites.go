@@ -49,12 +49,19 @@ func (h *Handler) SiteNew(c *fiber.Ctx) error {
 	availableSnippets, _ := h.snippetsService.GetAvailableSnippets()
 	templates := models.GetServiceTemplates()
 	categories := models.GetTemplateCategories()
+	
+	// Get wildcard domains for TLS selection
+	var wildcardDomains []models.WildcardDomain
+	if h.wildcardService != nil {
+		wildcardDomains, _ = h.wildcardService.GetDomains()
+	}
 
 	data := h.baseData(c, "New Proxy Rule")
 	data["IsNew"] = true
-	data["Site"] = &models.Site{}
+	data["Site"] = &models.Site{TLSMode: "auto"}
 	data["DefaultIP"] = h.config.DefaultIP
 	data["AvailableSnippets"] = availableSnippets
+	data["WildcardDomains"] = wildcardDomains
 	data["Templates"] = templates
 	data["Categories"] = categories
 	data["Active"] = "sites"
@@ -75,6 +82,10 @@ func (h *Handler) SiteCreate(c *fiber.Ctx) error {
 	site.EnableWebSocket = c.FormValue("enable_websocket") == "on"
 	site.HealthCheckPath = c.FormValue("health_check_path")
 	site.ExtraConfig = c.FormValue("extra_config")
+	site.TLSMode = c.FormValue("tls_mode")
+	if site.TLSMode == "" {
+		site.TLSMode = "auto"
+	}
 
 	// Parse snippets
 	if snippets := c.FormValue("snippets"); snippets != "" {
@@ -143,12 +154,19 @@ func (h *Handler) SiteEdit(c *fiber.Ctx) error {
 	}
 
 	availableSnippets, _ := h.snippetsService.GetAvailableSnippets()
+	
+	// Get wildcard domains for TLS selection
+	var wildcardDomains []models.WildcardDomain
+	if h.wildcardService != nil {
+		wildcardDomains, _ = h.wildcardService.GetDomains()
+	}
 
 	data := h.baseData(c, "Edit: "+site.PrimaryDomain())
 	data["IsNew"] = false
 	data["Site"] = site
 	data["DefaultIP"] = h.config.DefaultIP
 	data["AvailableSnippets"] = availableSnippets
+	data["WildcardDomains"] = wildcardDomains
 	data["Active"] = "sites"
 
 	return c.Render("pages/site_form", data, "layouts/base")
@@ -178,6 +196,10 @@ func (h *Handler) SiteUpdate(c *fiber.Ctx) error {
 		site.EnableWebSocket = c.FormValue("enable_websocket") == "on"
 		site.HealthCheckPath = c.FormValue("health_check_path")
 		site.ExtraConfig = c.FormValue("extra_config")
+		site.TLSMode = c.FormValue("tls_mode")
+		if site.TLSMode == "" {
+			site.TLSMode = "auto"
+		}
 
 		if snippets := c.FormValue("snippets"); snippets != "" {
 			site.Snippets = strings.Split(snippets, ",")

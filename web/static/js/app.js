@@ -3,9 +3,42 @@
  * Main JavaScript file
  */
 
+// Custom confirm handler - intercept before HTMX processes
+document.addEventListener('click', function(evt) {
+  const el = evt.target.closest('[hx-confirm]');
+  if (!el) return;
+  
+  const question = el.getAttribute('hx-confirm');
+  if (!question) return;
+  
+  // Prevent default click and HTMX from processing
+  evt.preventDefault();
+  evt.stopPropagation();
+  
+  Swal.fire({
+    title: window.cpmLang === 'cs' ? 'Potvrzení' : 'Confirm',
+    text: question,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#dc3545',
+    cancelButtonColor: '#6c757d',
+    confirmButtonText: window.cpmLang === 'cs' ? 'Ano, provést' : 'Yes, proceed',
+    cancelButtonText: window.cpmLang === 'cs' ? 'Zrušit' : 'Cancel',
+    reverseButtons: true
+  }).then((result) => {
+    if (result.isConfirmed) {
+      // Remove hx-confirm temporarily to prevent double dialog
+      el.removeAttribute('hx-confirm');
+      // Trigger HTMX request
+      htmx.trigger(el, 'click');
+      // Restore hx-confirm
+      setTimeout(() => el.setAttribute('hx-confirm', question), 100);
+    }
+  });
+}, true); // Use capture phase to intercept before HTMX
+
 // Initialize HTMX extensions
 document.addEventListener('DOMContentLoaded', function() {
-  // Add loading class during HTMX requests
   document.body.addEventListener('htmx:beforeRequest', function(evt) {
     evt.target.classList.add('htmx-loading');
   });

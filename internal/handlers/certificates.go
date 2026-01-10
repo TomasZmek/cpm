@@ -24,8 +24,26 @@ func (h *Handler) CertificatesList(c *fiber.Ctx) error {
 	return c.Render("pages/certificates", data, "layouts/base")
 }
 
-// CertificateDelete deletes a certificate to force renewal
+// CertificateDelete deletes a certificate (no renewal)
 func (h *Handler) CertificateDelete(c *fiber.Ctx) error {
+	domain := c.Params("domain")
+
+	if err := h.certService.DeleteCertificate(domain); err != nil {
+		return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
+	}
+
+	setFlash(c, "success", "Certificate for '"+domain+"' deleted.")
+
+	if c.Get("HX-Request") == "true" {
+		c.Set("HX-Redirect", "/certificates")
+		return c.SendStatus(fiber.StatusOK)
+	}
+
+	return c.Redirect("/certificates")
+}
+
+// CertificateRenew deletes a certificate and reloads Caddy to trigger renewal
+func (h *Handler) CertificateRenew(c *fiber.Ctx) error {
 	domain := c.Params("domain")
 
 	if err := h.certService.DeleteCertificate(domain); err != nil {
