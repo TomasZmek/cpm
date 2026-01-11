@@ -14,8 +14,9 @@ import (
 
 // SnippetsService handles snippet configuration
 type SnippetsService struct {
-	config     *config.Config
-	configPath string
+	config          *config.Config
+	configPath      string
+	wildcardService *WildcardService
 }
 
 // NewSnippetsService creates a new snippets service
@@ -24,6 +25,11 @@ func NewSnippetsService(cfg *config.Config) *SnippetsService {
 		config:     cfg,
 		configPath: filepath.Join(cfg.ConfigDir, ".snippets_config.json"),
 	}
+}
+
+// SetWildcardService sets the wildcard service reference (to avoid circular dependency)
+func (s *SnippetsService) SetWildcardService(ws *WildcardService) {
+	s.wildcardService = ws
 }
 
 // GetConfig returns the current snippet configuration
@@ -241,6 +247,24 @@ func (s *SnippetsService) GenerateSnippetsFile(cfg *models.SnippetConfig) error 
 		lines = append(lines, "    }")
 		lines = append(lines, "}")
 		lines = append(lines, "")
+	}
+
+	// Wildcard TLS Snippets
+	if s.wildcardService != nil {
+		wildcardConfig, err := s.wildcardService.GenerateCaddyConfig()
+		if err == nil && wildcardConfig != "" {
+			lines = append(lines, "# --- WILDCARD TLS CERTIFICATES ---")
+			// Add each line from wildcard config (skip the header comments)
+			for _, line := range strings.Split(wildcardConfig, "\n") {
+				trimmed := strings.TrimSpace(line)
+				// Skip empty lines and the auto-generated header
+				if trimmed == "" || strings.HasPrefix(trimmed, "# Wildcard TLS configuration") || strings.HasPrefix(trimmed, "# Import this") {
+					continue
+				}
+				lines = append(lines, line)
+			}
+			lines = append(lines, "")
+		}
 	}
 
 	content := strings.Join(lines, "\n")

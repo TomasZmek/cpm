@@ -1,25 +1,15 @@
 # CPM - Caddy Proxy Manager
 
 <p align="center">
-  <strong>🚀 v3.0.0 - Complete Go Rewrite!</strong><br>
-  Lightweight web UI for managing Caddy reverse proxy
+  <strong>🚀 Lightweight web UI for managing Caddy reverse proxy</strong><br>
+  Wildcard SSL • Auto-detection • One-click migration
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-3.0.0-blue" alt="Version">
-  <img src="https://img.shields.io/badge/Go-1.22+-00ADD8?logo=go" alt="Go">
-  <img src="https://img.shields.io/badge/image_size-~25MB-green" alt="Image Size">
+  <img src="https://img.shields.io/badge/version-3.0.2-blue" alt="Version">
+  <img src="https://img.shields.io/badge/Go-1.23+-00ADD8?logo=go" alt="Go">
+  <img src="https://img.shields.io/badge/image_size-~6MB-green" alt="Image Size">
 </p>
-
----
-
-## 🆕 What's New in v3.0.0
-
-- **Complete Go rewrite** - From Python to Go
-- **~25MB Docker image** - Down from 800MB!
-- **Modern UI** - Fresh, clean design
-- **Persistent auth** - Sessions survive restarts
-- **Lightning fast** - Go + Fiber framework
 
 ---
 
@@ -29,7 +19,8 @@
 |---------|-------------|
 | 📊 **Dashboard** | System overview, stats, alerts |
 | 🔀 **Proxy Rules** | Visual editor for reverse proxy |
-| ⚙️ **Snippets** | Cloudflare DNS, security headers |
+| 🔐 **Wildcard SSL** | Manage wildcard certificates with DNS challenge |
+| ⚙️ **Snippets** | Cloudflare DNS, security headers, rate limiting |
 | 📜 **Certificates** | SSL overview with expiration alerts |
 | 👥 **Multi-User** | Role-based access control |
 | 💾 **Backup** | Full config backup & restore |
@@ -40,8 +31,8 @@
 ## 🚀 Quick Start
 
 ```bash
-docker pull perteus/cpm:latest
-docker pull perteus/cpm:3.0.0
+docker pull perteus/caddy-ui:latest
+docker pull perteus/caddy-ui:3.0.2
 ```
 
 ### Docker Compose
@@ -51,8 +42,10 @@ version: '3.8'
 
 services:
   caddy:
-    image: caddy:2-alpine
+    image: serfriz/caddy-cloudflare:latest
     container_name: caddy_proxy
+    environment:
+      - CF_API_TOKEN=${CF_API_TOKEN}
     ports:
       - "80:80"
       - "443:443"
@@ -61,7 +54,7 @@ services:
       - ./caddy-data:/data
 
   cpm:
-    image: perteus/cpm:3.0.0
+    image: perteus/caddy-ui:3.0.2
     container_name: cpm
     ports:
       - "8501:8501"
@@ -87,6 +80,23 @@ For Synology, add `privileged: true` for Docker socket access.
 | `PORT` | `8501` | HTTP port |
 | `CONTAINER_NAME` | `caddy` | Caddy container name |
 | `DEFAULT_IP` | `192.168.1.1` | Default target IP |
+| `CF_API_TOKEN` | - | Cloudflare API token (for wildcard SSL) |
+
+---
+
+## 📝 Version History
+
+| Version | Notes |
+|---------|-------|
+| **3.0.2** | 🐛 Wildcard TLS fix, parser fix, 405 fix |
+| **3.0.1** | 🔐 Wildcard SSL, migration tools, UI improvements |
+| **3.0.0** | 🎉 Complete Go rewrite (794MB → 6MB) |
+| 2.x | Python version (deprecated) |
+
+### v3.0.2 Bug Fixes
+- ✅ **Wildcard TLS snippets** now correctly generated in `snippets.caddy`
+- ✅ **Parser fix** - comments no longer parsed as domains
+- ✅ **405 Method Not Allowed** - fixed site/snippet update forms
 
 ---
 
@@ -98,15 +108,6 @@ For Synology, add `privileged: true` for Docker socket access.
 
 ---
 
-## 📝 Version History
-
-| Version | Notes |
-|---------|-------|
-| **3.0.0** | 🎉 Complete Go rewrite, new UI |
-| 2.x | Python version (deprecated) |
-
----
-
 ## 📄 License
 
 MIT License
@@ -114,6 +115,6 @@ MIT License
 ---
 
 <p align="center">
-  <strong>CPM v3.0.0 - Caddy Proxy Manager</strong><br>
+  <strong>CPM - Caddy Proxy Manager</strong><br>
   Made with ❤️ for home labs
 </p>
