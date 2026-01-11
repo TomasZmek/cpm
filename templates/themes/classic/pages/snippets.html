@@ -24,7 +24,6 @@
         
         <div class="snippet-card-body" x-show="expanded" x-collapse>
             <form action="/snippets/cloudflare_dns" method="POST" hx-boost="true">
-                <input type="hidden" name="_method" value="PUT">
                 
                 <label class="checkbox-label">
                     <input type="checkbox" name="enabled" {{if .Config.CloudflareDNS.Enabled}}checked{{end}}>
@@ -67,7 +66,6 @@
         
         <div class="snippet-card-body" x-show="expanded" x-collapse>
             <form action="/snippets/internal_only" method="POST" hx-boost="true">
-                <input type="hidden" name="_method" value="PUT">
                 
                 <label class="checkbox-label">
                     <input type="checkbox" name="enabled" {{if .Config.InternalOnly.Enabled}}checked{{end}}>
@@ -104,7 +102,6 @@
         
         <div class="snippet-card-body" x-show="expanded" x-collapse>
             <form action="/snippets/security_headers" method="POST" hx-boost="true">
-                <input type="hidden" name="_method" value="PUT">
                 
                 <label class="checkbox-label">
                     <input type="checkbox" name="enabled" {{if .Config.SecurityHeaders.Enabled}}checked{{end}}>
@@ -168,7 +165,6 @@
         
         <div class="snippet-card-body" x-show="expanded" x-collapse>
             <form action="/snippets/compression" method="POST" hx-boost="true">
-                <input type="hidden" name="_method" value="PUT">
                 
                 <label class="checkbox-label">
                     <input type="checkbox" name="enabled" {{if .Config.Compression.Enabled}}checked{{end}}>
@@ -207,7 +203,6 @@
         
         <div class="snippet-card-body" x-show="expanded" x-collapse>
             <form action="/snippets/rate_limit" method="POST" hx-boost="true">
-                <input type="hidden" name="_method" value="PUT">
                 
                 <label class="checkbox-label">
                     <input type="checkbox" name="enabled" {{if .Config.RateLimit.Enabled}}checked{{end}}>

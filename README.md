@@ -5,38 +5,16 @@
 </p>
 
 <p align="center">
-  <strong>🚀 v3.0.1 - Wildcard SSL & Migration Tools!</strong><br>
-  Lightweight web UI for managing Caddy reverse proxy
+  <strong>🚀 Lightweight web UI for managing Caddy reverse proxy</strong><br>
+  Wildcard SSL • Auto-detection • One-click migration
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-3.0.1-blue" alt="Version">
+  <img src="https://img.shields.io/badge/version-3.0.2-blue" alt="Version">
   <img src="https://img.shields.io/badge/Go-1.23+-00ADD8?logo=go" alt="Go">
   <img src="https://img.shields.io/badge/Docker-ready-2496ED?logo=docker" alt="Docker">
   <img src="https://img.shields.io/badge/image_size-~6MB-green" alt="Image Size">
 </p>
-
----
-
-## 🆕 What's New in v3.0.1
-
-### Wildcard SSL Management
-- **🔐 Wildcard Certificate Support** - Configure wildcard SSL certificates with DNS challenge
-- **🔄 Auto-detection** - Automatically suggests wildcard when creating rules for subdomains
-- **📦 Bulk Migration** - Migrate existing sites to wildcard with one click
-- **🗑️ Certificate Cleanup** - Optionally delete individual certificates after migration
-
-### UI Improvements
-- **🎨 Modern Dialogs** - SweetAlert2 replaces ugly browser confirms
-- **🔄 Separate Renew/Delete** - Clear distinction between certificate actions
-- **🌐 Complete i18n** - All UI elements now translated (EN/CS)
-- **📝 Better Forms** - Improved TLS certificate selection in site forms
-
-### Bug Fixes
-- ✅ Fixed version display showing "3.0.0" everywhere
-- ✅ Fixed 405 errors on delete operations (HTMX compatibility)
-- ✅ Fixed language cookie persistence
-- ✅ Fixed authentication toggle in settings
 
 ---
 
@@ -61,8 +39,8 @@
 ### Docker Hub
 
 ```bash
-docker pull perteus/cpm:latest
-docker pull perteus/cpm:3.0.1
+docker pull perteus/caddy-ui:latest
+docker pull perteus/caddy-ui:3.0.2
 ```
 
 ### Docker Compose (Recommended)
@@ -82,7 +60,7 @@ services:
       - ./caddy-data:/data
 
   cpm:
-    image: perteus/cpm:3.0.1
+    image: perteus/caddy-ui:3.0.2
     container_name: cpm
     ports:
       - "8501:8501"
@@ -104,12 +82,15 @@ services:
     container_name: caddy_proxy
     environment:
       - CF_API_TOKEN=${CF_API_TOKEN}
+    ports:
+      - "80:80"
+      - "443:443"
     volumes:
       - ./caddy-config:/etc/caddy
       - ./caddy-data:/data
 
   cpm:
-    image: perteus/cpm:3.0.1
+    image: perteus/caddy-ui:3.0.2
     container_name: cpm
     privileged: true  # Required for Synology
     ports:
@@ -134,6 +115,27 @@ services:
 
 When creating new proxy rules, CPM automatically detects if a wildcard certificate is available and pre-selects it.
 
+### How it works
+
+CPM generates TLS snippets in `snippets.caddy`:
+
+```
+(wildcard-tls-zrnek-cz) {
+    tls {
+        dns cloudflare {env.CF_API_TOKEN}
+    }
+}
+```
+
+Sites using wildcard import this snippet:
+```
+adguard.zrnek.cz {
+    import wildcard-tls-zrnek-cz
+    import cloudflare_dns
+    reverse_proxy 192.168.1.100:3000
+}
+```
+
 ---
 
 ## ⚙️ Environment Variables
@@ -154,8 +156,7 @@ When creating new proxy rules, CPM automatically detects if a wildcard certifica
 ```
 caddy-config/
 ├── Caddyfile              # Main Caddy configuration
-├── snippets.caddy         # Shared snippets (auto-generated)
-├── _wildcard.caddy        # Wildcard TLS snippets (auto-generated)
+├── snippets.caddy         # Shared snippets + wildcard TLS (auto-generated)
 ├── sites/                 # Proxy rules (one file per domain)
 │   ├── example.com.caddy
 │   └── app.example.com.caddy
@@ -176,7 +177,7 @@ For Synology Docker, use `privileged: true` to allow Docker socket access:
 
 ```yaml
 cpm:
-  image: perteus/cpm:3.0.1
+  image: perteus/caddy-ui:3.0.2
   privileged: true
   volumes:
     - /volume1/docker/caddy-config:/caddy-config
@@ -214,7 +215,9 @@ go build -o cpm ./cmd/cpm
 ### Docker Build
 
 ```bash
-docker build -t cpm:3.0.1 .
+docker build -t perteus/caddy-ui:3.0.2 --no-cache .
+docker push perteus/caddy-ui:3.0.2
+docker push perteus/caddy-ui:latest
 ```
 
 ---
@@ -223,11 +226,15 @@ docker build -t cpm:3.0.1 .
 
 | Version | Date | Notes |
 |---------|------|-------|
+| **3.0.2** | 2026-01 | 🐛 Wildcard TLS fix, parser fix, 405 fix |
 | **3.0.1** | 2026-01 | 🔐 Wildcard SSL, migration tools, UI improvements |
-| **3.0.0** | 2026-01 | 🎉 Complete Go rewrite, new UI |
+| **3.0.0** | 2026-01 | 🎉 Complete Go rewrite (794MB → 6MB) |
 | 2.2.1 | 2025-12 | Python version (deprecated) |
-| 2.0.0 | 2025-11 | Major Python refactor |
-| 1.0.0 | 2025-10 | Initial release |
+
+### v3.0.2 Bug Fixes
+- ✅ **Wildcard TLS snippets** now correctly generated in `snippets.caddy`
+- ✅ **Parser fix** - comments (`# @tls:`) no longer parsed as domains
+- ✅ **405 Method Not Allowed** - fixed site/snippet update forms
 
 ---
 
@@ -257,8 +264,8 @@ MIT License - see [LICENSE](LICENSE) for details.
 ---
 
 <p align="center">
-  <strong>CPM v3.0.1 - Caddy Proxy Manager</strong><br>
+  <strong>CPM - Caddy Proxy Manager</strong><br>
   Made with ❤️ for home labs<br>
-  <a href="https://hub.docker.com/r/perteus/cpm">Docker Hub</a> •
+  <a href="https://hub.docker.com/r/perteus/caddy-ui">Docker Hub</a> •
   <a href="https://github.com/TomasZmek/cpm">GitHub</a>
 </p>

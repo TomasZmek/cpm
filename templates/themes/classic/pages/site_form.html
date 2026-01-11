@@ -8,10 +8,6 @@
       method="POST"
       class="site-form">
     
-    {{if not .IsNew}}
-    <input type="hidden" name="_method" value="PUT">
-    {{end}}
-    
     <div class="form-section">
         <div class="form-section-title">🌐 {{t .Lang "domain_config"}}</div>
         

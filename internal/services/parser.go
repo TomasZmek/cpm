@@ -108,7 +108,18 @@ func (p *ParserService) parseDomains(content, defaultDomain string) []string {
 		return []string{defaultDomain}
 	}
 
-	domainsStr := strings.ReplaceAll(match[1], "\n", " ")
+	// Split by newlines and filter out comment lines
+	var domainParts []string
+	for _, line := range strings.Split(match[1], "\n") {
+		line = strings.TrimSpace(line)
+		// Skip empty lines and comments
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+		domainParts = append(domainParts, line)
+	}
+	
+	domainsStr := strings.Join(domainParts, " ")
 	domainsStr = strings.TrimSpace(domainsStr)
 
 	var domains []string
