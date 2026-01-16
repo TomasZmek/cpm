@@ -997,3 +997,219 @@ code {
 .htmx-indicator {
   display: none;
 }
+
+/* Toggle Switch */
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 52px;
+  height: 28px;
+  flex-shrink: 0;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--gray-300);
+  transition: 0.3s;
+  border-radius: 28px;
+}
+
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 22px;
+  width: 22px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.3s;
+  border-radius: 50%;
+  box-shadow: var(--shadow-sm);
+}
+
+.toggle-switch input:checked + .toggle-slider {
+  background-color: var(--primary);
+}
+
+.toggle-switch input:focus + .toggle-slider {
+  box-shadow: 0 0 0 3px rgba(0, 173, 216, 0.2);
+}
+
+.toggle-switch input:checked + .toggle-slider:before {
+  transform: translateX(24px);
+}
+
+.toggle-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-3) 0;
+  cursor: pointer;
+}
+
+.toggle-label .toggle-text {
+  font-weight: 500;
+}
+
+/* Snippet option improvements */
+.snippet-option {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--gray-100);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 2px solid transparent;
+  user-select: none;
+}
+
+.snippet-option:hover {
+  background: var(--gray-200);
+}
+
+.snippet-option input:checked + span {
+  font-weight: 600;
+}
+
+.snippet-option:has(input:checked) {
+  background: var(--primary-light);
+  border-color: var(--primary);
+  color: var(--primary-dark);
+}
+
+.snippet-option input {
+  accent-color: var(--primary);
+}
+
+/* Details/Summary improvements */
+details {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-top: var(--space-4);
+}
+
+details summary {
+  padding: var(--space-4);
+  cursor: pointer;
+  font-weight: 600;
+  background: var(--gray-50);
+  border-radius: var(--radius);
+  user-select: none;
+}
+
+details summary:hover {
+  background: var(--gray-100);
+}
+
+details[open] summary {
+  border-bottom: 1px solid var(--border);
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+
+details .details-content {
+  padding: var(--space-4);
+}
+
+/* Form section styling */
+.form-section {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  margin-bottom: var(--space-4);
+}
+
+.form-section-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: var(--space-4);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--border);
+}
+
+/* Badge styles */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-1) var(--space-2);
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: var(--radius);
+  background: var(--gray-200);
+  color: var(--gray-700);
+}
+
+.badge-wildcard {
+  background: linear-gradient(135deg, var(--primary-light), var(--primary));
+  color: white;
+  font-size: 1rem;
+  padding: 0.25rem;
+  border-radius: 50%;
+}
+
+.snippet-badge-tls {
+  background: linear-gradient(135deg, #10B981, #059669);
+  color: white;
+}
+
+/* Site card improvements */
+.site-card-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.site-card-badges {
+  display: flex;
+  gap: var(--space-2);
+  margin-left: auto;
+  margin-right: var(--space-2);
+}
+
+.site-card-actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+/* Code block in alerts */
+.code-block {
+  background: var(--gray-800);
+  color: var(--gray-100);
+  padding: var(--space-3);
+  border-radius: var(--radius);
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+  font-size: 0.8rem;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+  margin-top: var(--space-2);
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+details.mt-2 {
+  margin-top: var(--space-2);
+}
+
+details.mt-2 summary {
+  cursor: pointer;
+  font-weight: 500;
+  padding: var(--space-2);
+  background: var(--gray-100);
+  border-radius: var(--radius-sm);
+}

@@ -86,18 +86,42 @@ func (d *DockerService) IsContainerRunning() bool {
 
 // ReloadCaddy reloads Caddy configuration
 func (d *DockerService) ReloadCaddy() error {
-	return d.ExecCommand("caddy", "reload", "--config", "/etc/caddy/Caddyfile")
+	output, err := d.ExecCommandWithOutput("caddy", "reload", "--config", "/etc/caddy/Caddyfile")
+	if err != nil {
+		return fmt.Errorf("reload failed: %w\nOutput: %s", err, output)
+	}
+	return nil
+}
+
+// ReloadCaddyWithOutput reloads Caddy and returns output for debugging
+func (d *DockerService) ReloadCaddyWithOutput() (string, error) {
+	return d.ExecCommandWithOutput("caddy", "reload", "--config", "/etc/caddy/Caddyfile")
 }
 
 // ValidateConfig validates Caddy configuration
 func (d *DockerService) ValidateConfig() error {
-	return d.ExecCommand("caddy", "validate", "--config", "/etc/caddy/Caddyfile")
+	output, err := d.ExecCommandWithOutput("caddy", "validate", "--config", "/etc/caddy/Caddyfile")
+	if err != nil {
+		return fmt.Errorf("validation failed: %w\nOutput: %s", err, output)
+	}
+	return nil
 }
 
-// ExecCommand executes a command inside the container
+// ValidateConfigWithOutput validates Caddy configuration and returns output
+func (d *DockerService) ValidateConfigWithOutput() (string, error) {
+	return d.ExecCommandWithOutput("caddy", "validate", "--config", "/etc/caddy/Caddyfile")
+}
+
+// ExecCommand executes a command inside the container (legacy, returns only error)
 func (d *DockerService) ExecCommand(cmd ...string) error {
+	_, err := d.ExecCommandWithOutput(cmd...)
+	return err
+}
+
+// ExecCommandWithOutput executes a command inside the container and returns output
+func (d *DockerService) ExecCommandWithOutput(cmd ...string) (string, error) {
 	if d.client == nil {
-		return fmt.Errorf("Docker client not available")
+		return "", fmt.Errorf("Docker client not available")
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
@@ -105,7 +129,7 @@ func (d *DockerService) ExecCommand(cmd ...string) error {
 
 	containerID, err := d.GetContainerID()
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	execConfig := container.ExecOptions{
@@ -116,29 +140,44 @@ func (d *DockerService) ExecCommand(cmd ...string) error {
 
 	execID, err := d.client.ContainerExecCreate(ctx, containerID, execConfig)
 	if err != nil {
-		return fmt.Errorf("failed to create exec: %w", err)
+		return "", fmt.Errorf("failed to create exec: %w", err)
 	}
 
 	resp, err := d.client.ContainerExecAttach(ctx, execID.ID, container.ExecAttachOptions{})
 	if err != nil {
-		return fmt.Errorf("failed to attach exec: %w", err)
+		return "", fmt.Errorf("failed to attach exec: %w", err)
 	}
 	defer resp.Close()
 
 	// Read output
 	output, _ := io.ReadAll(resp.Reader)
+	outputStr := cleanDockerOutput(string(output))
 
 	// Check exit code
 	inspect, err := d.client.ContainerExecInspect(ctx, execID.ID)
 	if err != nil {
-		return fmt.Errorf("failed to inspect exec: %w", err)
+		return outputStr, fmt.Errorf("failed to inspect exec: %w", err)
 	}
 
 	if inspect.ExitCode != 0 {
-		return fmt.Errorf("command failed with exit code %d: %s", inspect.ExitCode, string(output))
+		return outputStr, fmt.Errorf("command failed with exit code %d", inspect.ExitCode)
 	}
 
-	return nil
+	return outputStr, nil
+}
+
+// cleanDockerOutput removes Docker log header bytes from output
+func cleanDockerOutput(output string) string {
+	var lines []string
+	for _, line := range strings.Split(output, "\n") {
+		// Docker logs have 8-byte header, skip it
+		if len(line) > 8 {
+			lines = append(lines, line[8:])
+		} else if len(line) > 0 {
+			lines = append(lines, line)
+		}
+	}
+	return strings.Join(lines, "\n")
 }
 
 // GetLogs retrieves container logs

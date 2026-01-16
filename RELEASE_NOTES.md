@@ -1,83 +1,102 @@
-# 🚀 CPM v3.0.3 Release Notes
+# CPM v3.1.0 - Wildcard Refactor
+
+## 🚀 Major Changes
+
+### Wildcard Architecture Refactor
+The wildcard certificate handling has been completely rewritten to work correctly with Caddy.
+
+**Previous (broken) approach:**
+```
+# Each site file - caused individual certificate requests
+home.perteus.cz {
+    import wildcard-tls-perteus-cz
+    reverse_proxy ...
+}
+```
+
+**New (correct) approach:**
+```
+# Caddyfile - single wildcard block
+*.perteus.cz {
+    import wildcard-tls-perteus-cz
+    import /etc/caddy/sites/wildcard/*.perteus.cz.caddy
+    handle_errors { ... }
+    handle { abort }
+}
+
+# Site file - handle block only
+@home_perteus_cz host home.perteus.cz
+handle @home_perteus_cz {
+    reverse_proxy http://192.168.50.159:8123
+}
+```
+
+### New Directory Structure
+```
+sites/
+├── wildcard/           # Handle blocks for wildcard sites
+│   └── *.domain.caddy
+├── standard/           # Classic domain {} blocks
+│   └── domain.caddy
+└── *.caddy             # Legacy (still supported)
+```
+
+### Automatic Caddyfile Management
+CPM now generates and manages the main Caddyfile with:
+- Wildcard blocks for each configured wildcard domain
+- Internal network restrictions at wildcard level
+- Error pages (403, 404) at wildcard level
+- Proper snippet imports
+
+## 🔧 Improvements
+
+### Better Error Reporting
+- Reload and validate operations now return detailed output
+- `ReloadResult` includes `ValidationLog` and `ReloadLog` fields
+- Error messages from Caddy are properly captured and displayed
+
+### Internal-Only Handling
+- For wildcard sites: Handled at wildcard block level (not per-site)
+- For standard sites: Still uses `internal_only` snippet
+- Prevents nested handle block issues
+
+### Site File Format Detection
+- Parser automatically detects wildcard vs standard format
+- Supports both `@matcher host domain.com` and `domain.com { }` formats
+- Backward compatible with existing site files
+
+## ⚠️ Migration Notes
+
+### Automatic Migration
+When adding a wildcard domain, CPM will:
+1. Create the wildcard block in Caddyfile
+2. Offer to migrate existing sites to new format
+3. Move site files to `sites/wildcard/` directory
+
+### Manual Migration
+For existing installations:
+1. Go to Settings → Wildcard SSL
+2. Remove and re-add your wildcard domains
+3. Use "Migrate" button for each domain
+
+### Backup First!
+Always create a backup before migrating:
+- Settings → Backup → Create Backup
+- Or manually: `cp -r caddy-config caddy-config.backup`
 
 ## 🐛 Bug Fixes
 
-### v3.0.2 - HTTP Method Fix
-- **Fixed: 405 Method Not Allowed on Site/Snippet Update**
-  - Issue: Editing existing proxy rules or snippets returned 405 error
-  - Cause: HTML forms only support GET/POST methods, but routes expected PUT/DELETE
-  - Solution: Converted PUT routes to POST for site and snippet updates
-- **Fixed: Wildcard TLS Certificate Import Error**
-  - Issue: Sites using wildcard TLS showed `File to import not found: wildcard-tls-*` error
-  - Cause: Wildcard TLS snippets were saved to a separate `_wildcard.caddy` file that wasn't properly loaded
-  - Solution: Wildcard TLS snippets are now integrated into the main `snippets.caddy` file
-  - This ensures proper loading order and snippet availability
+- Fixed: Wildcard sites were requesting individual certificates
+- Fixed: Internal-only caused nested handle block errors
+- Fixed: handle_errors not working in wildcard sites
+- Fixed: Parser corruption when editing wildcard sites
+- Fixed: Reload not returning detailed error information
 
----
+## 📝 Version History
 
-## 🔐 Wildcard SSL Management (v3.0.1)
-
-The headline feature is comprehensive wildcard SSL certificate support:
-
-### Wildcard Features
-- **Settings → Wildcard SSL** - Dedicated section for managing wildcard certificates
-- **DNS Challenge Configuration** - Easy setup with Cloudflare (more providers coming)
-- **Auto-detection** - When creating new proxy rules, CPM automatically detects and suggests available wildcard certificates
-- **Bulk Migration Tool** - Migrate all existing sites to use wildcard with one click
-- **Certificate Cleanup** - Option to delete individual certificates after migration
-
-### How It Works
-1. Add a wildcard domain (e.g., `zrnek.cz` for `*.zrnek.cz`)
-2. Configure DNS provider (Cloudflare API token)
-3. CPM generates TLS snippet: `import wildcard-tls-zrnek-cz`
-4. New sites automatically use wildcard when domain matches
-
----
-
-## 🎨 UI Improvements (v3.0.1)
-
-### SweetAlert2 Dialogs
-- Beautiful confirmation dialogs replace ugly browser `confirm()` popups
-- Localized buttons (English/Czech)
-- Consistent styling across the app
-
-### Certificate Management
-- **Split Actions**: Separate "Renew" and "Delete" buttons with clear explanations
-- **Info Box**: Explains the difference between renewing and deleting certificates
-
-### Form Enhancements
-- **TLS Mode Selector**: New dropdown in site form to choose between wildcard and automatic certificates
-- **Smart Defaults**: Auto-selects wildcard when domain matches available wildcards
-
----
-
-## 🔄 Migration from v3.0.x
-
-No breaking changes. Simply update your Docker image:
-
-```bash
-docker pull perteus/caddy-ui:3.0.3
-docker-compose up -d
-```
-
-After update, you may need to:
-1. Go to **Settings → Snippets** and click Save (to regenerate snippets.caddy with wildcard TLS)
-2. Or go to **Settings → Wildcard SSL** and re-add your wildcard domain
-
-Old `_wildcard.caddy` files in `/etc/caddy/sites/` are no longer used and can be removed:
-```bash
-docker exec caddy rm -f /etc/caddy/sites/_wildcard.caddy
-```
-
----
-
-## 📊 Image Size
-
-| Version | Size |
-|---------|------|
-| v3.0.3 | ~6 MB |
-| v2.2.1 (Python) | ~800 MB |
-
----
-
-**Full Changelog**: https://github.com/TomasZmek/cpm/compare/v3.0.1...v3.0.3
+| Version | Date | Notes |
+|---------|------|-------|
+| **3.1.0** | 2026-01-15 | 🔐 Wildcard refactor, new architecture |
+| 3.0.2 | 2026-01-11 | 🐛 Wildcard TLS fix, parser fix |
+| 3.0.1 | 2026-01-09 | 🔐 Wildcard SSL, migration tools |
+| 3.0.0 | 2026-01-07 | 🎉 Complete Go rewrite |

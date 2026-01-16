@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"strings"
+
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -78,7 +80,23 @@ func (h *Handler) CaddyReload(c *fiber.Ctx) error {
 		if result.Success {
 			return c.SendString(`<div class="alert alert-success">✅ Configuration reloaded successfully</div>`)
 		}
-		return c.SendString(`<div class="alert alert-error">❌ Reload failed: ` + result.Error + `</div>`)
+		// Show detailed error with logs
+		errorHTML := `<div class="alert alert-error">
+			<strong>❌ Reload failed:</strong> ` + escapeHTML(result.Error) + `
+		</div>`
+		if result.ValidationLog != "" {
+			errorHTML += `<details class="mt-2">
+				<summary>📋 Validation Log</summary>
+				<pre class="code-block">` + escapeHTML(result.ValidationLog) + `</pre>
+			</details>`
+		}
+		if result.ReloadLog != "" {
+			errorHTML += `<details class="mt-2">
+				<summary>📋 Reload Log</summary>
+				<pre class="code-block">` + escapeHTML(result.ReloadLog) + `</pre>
+			</details>`
+		}
+		return c.SendString(errorHTML)
 	}
 
 	if result.Success {
@@ -96,9 +114,26 @@ func (h *Handler) CaddyValidate(c *fiber.Ctx) error {
 
 	if c.Get("HX-Request") == "true" {
 		if result.Success {
-			return c.SendString(`<div class="alert alert-success">✅ Configuration is valid</div>`)
+			html := `<div class="alert alert-success">✅ Configuration is valid</div>`
+			if result.ValidationLog != "" {
+				html += `<details class="mt-2">
+					<summary>📋 Validation Output</summary>
+					<pre class="code-block">` + escapeHTML(result.ValidationLog) + `</pre>
+				</details>`
+			}
+			return c.SendString(html)
 		}
-		return c.SendString(`<div class="alert alert-error">❌ Validation failed: ` + result.Error + `</div>`)
+		// Show detailed error with logs
+		errorHTML := `<div class="alert alert-error">
+			<strong>❌ Validation failed:</strong> ` + escapeHTML(result.Error) + `
+		</div>`
+		if result.ValidationLog != "" {
+			errorHTML += `<details class="mt-2">
+				<summary>📋 Validation Log</summary>
+				<pre class="code-block">` + escapeHTML(result.ValidationLog) + `</pre>
+			</details>`
+		}
+		return c.SendString(errorHTML)
 	}
 
 	if result.Success {
@@ -108,4 +143,14 @@ func (h *Handler) CaddyValidate(c *fiber.Ctx) error {
 	}
 
 	return c.Redirect(c.Get("Referer", "/"))
+}
+
+// escapeHTML escapes HTML special characters
+func escapeHTML(s string) string {
+	s = strings.ReplaceAll(s, "&", "&amp;")
+	s = strings.ReplaceAll(s, "<", "&lt;")
+	s = strings.ReplaceAll(s, ">", "&gt;")
+	s = strings.ReplaceAll(s, "\"", "&quot;")
+	s = strings.ReplaceAll(s, "'", "&#39;")
+	return s
 }

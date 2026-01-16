@@ -14,16 +14,19 @@ import (
 
 // ReloadResult represents the result of a reload operation
 type ReloadResult struct {
-	Success bool
-	Message string
-	Error   string
+	Success        bool
+	Message        string
+	Error          string
+	ValidationLog  string // Output from caddy validate
+	ReloadLog      string // Output from caddy reload
 }
 
 // CaddyService handles Caddy configuration management
 type CaddyService struct {
-	config        *config.Config
-	dockerService *DockerService
-	parser        *ParserService
+	config           *config.Config
+	dockerService    *DockerService
+	parser           *ParserService
+	caddyfileManager *CaddyfileManager
 }
 
 // NewCaddyService creates a new Caddy service
@@ -35,46 +38,70 @@ func NewCaddyService(cfg *config.Config, dockerService *DockerService) *CaddySer
 	}
 }
 
-// GetAllSites returns all proxy rules
+// SetCaddyfileManager sets the CaddyfileManager (to avoid circular dependency)
+func (c *CaddyService) SetCaddyfileManager(cm *CaddyfileManager) {
+	c.caddyfileManager = cm
+}
+
+// GetAllSites returns all proxy rules from all directories
 func (c *CaddyService) GetAllSites() ([]*models.Site, error) {
 	sitesDir := c.config.SitesDir
-
-	// Ensure directory exists
-	if _, err := os.Stat(sitesDir); os.IsNotExist(err) {
-		return []*models.Site{}, nil
-	}
-
-	entries, err := os.ReadDir(sitesDir)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read sites directory: %w", err)
-	}
-
 	var sites []*models.Site
 
-	for _, entry := range entries {
-		if entry.IsDir() {
+	// Directories to search (new structure + legacy flat structure)
+	searchDirs := []string{
+		filepath.Join(sitesDir, "wildcard"),
+		filepath.Join(sitesDir, "standard"),
+		sitesDir, // Legacy flat structure
+	}
+
+	// Keep track of loaded files to avoid duplicates
+	loadedFiles := make(map[string]bool)
+
+	for _, dir := range searchDirs {
+		// Skip if directory doesn't exist
+		if _, err := os.Stat(dir); os.IsNotExist(err) {
 			continue
 		}
 
-		name := entry.Name()
-		if !strings.HasSuffix(name, ".caddy") {
-			continue
-		}
-
-		// Skip fallback
-		if name == "fallback.caddy" {
-			continue
-		}
-
-		filepath := filepath.Join(sitesDir, name)
-		site, err := c.loadSite(filepath)
+		entries, err := os.ReadDir(dir)
 		if err != nil {
-			// Log error but continue
-			fmt.Printf("Warning: Could not load site %s: %v\n", name, err)
+			fmt.Printf("Warning: Could not read directory %s: %v\n", dir, err)
 			continue
 		}
 
-		sites = append(sites, site)
+		for _, entry := range entries {
+			if entry.IsDir() {
+				continue
+			}
+
+			name := entry.Name()
+			if !strings.HasSuffix(name, ".caddy") {
+				continue
+			}
+
+			// Skip special files
+			if name == "fallback.caddy" || name == "snippets.caddy" || strings.HasPrefix(name, "_") {
+				continue
+			}
+
+			filePath := filepath.Join(dir, name)
+
+			// Skip if already loaded (avoid duplicates)
+			if loadedFiles[filePath] {
+				continue
+			}
+			loadedFiles[filePath] = true
+
+			site, err := c.loadSite(filePath)
+			if err != nil {
+				// Log error but continue
+				fmt.Printf("Warning: Could not load site %s: %v\n", name, err)
+				continue
+			}
+
+			sites = append(sites, site)
+		}
 	}
 
 	// Sort by primary domain
@@ -87,11 +114,25 @@ func (c *CaddyService) GetAllSites() ([]*models.Site, error) {
 
 // GetSite returns a single site by filename
 func (c *CaddyService) GetSite(filename string) (*models.Site, error) {
-	filepath := filepath.Join(c.config.SitesDir, filename)
-	if !strings.HasSuffix(filepath, ".caddy") {
-		filepath += ".caddy"
+	if !strings.HasSuffix(filename, ".caddy") {
+		filename += ".caddy"
 	}
-	return c.loadSite(filepath)
+
+	// Search in all possible directories
+	searchDirs := []string{
+		filepath.Join(c.config.SitesDir, "wildcard"),
+		filepath.Join(c.config.SitesDir, "standard"),
+		c.config.SitesDir, // Legacy flat structure
+	}
+
+	for _, dir := range searchDirs {
+		filePath := filepath.Join(dir, filename)
+		if _, err := os.Stat(filePath); err == nil {
+			return c.loadSite(filePath)
+		}
+	}
+
+	return nil, fmt.Errorf("site not found: %s", filename)
 }
 
 // loadSite loads a site from file
@@ -123,7 +164,18 @@ func (c *CaddyService) CreateSite(site *models.Site) error {
 		site.Filename = sanitizeFilename(site.PrimaryDomain())
 	}
 
-	site.Filepath = filepath.Join(c.config.SitesDir, site.Filename+".caddy")
+	// Determine correct directory based on site type
+	var sitesDir string
+	if site.IsWildcard() && c.caddyfileManager != nil {
+		sitesDir = filepath.Join(c.config.SitesDir, "wildcard")
+	} else if !site.IsWildcard() && c.caddyfileManager != nil {
+		sitesDir = filepath.Join(c.config.SitesDir, "standard")
+	} else {
+		// Fallback to legacy flat structure
+		sitesDir = c.config.SitesDir
+	}
+
+	site.Filepath = filepath.Join(sitesDir, site.Filename+".caddy")
 
 	// Check if file already exists
 	if _, err := os.Stat(site.Filepath); err == nil {
@@ -131,7 +183,7 @@ func (c *CaddyService) CreateSite(site *models.Site) error {
 	}
 
 	// Ensure sites directory exists
-	if err := os.MkdirAll(c.config.SitesDir, 0755); err != nil {
+	if err := os.MkdirAll(sitesDir, 0755); err != nil {
 		return fmt.Errorf("failed to create sites directory: %w", err)
 	}
 
@@ -148,23 +200,43 @@ func (c *CaddyService) CreateSite(site *models.Site) error {
 
 // UpdateSite updates an existing proxy rule
 func (c *CaddyService) UpdateSite(site *models.Site) error {
-	if site.Filepath == "" {
-		site.Filepath = filepath.Join(c.config.SitesDir, site.Filename+".caddy")
+	// If site type changed (wildcard <-> standard), we need to move the file
+	oldFilepath := site.Filepath
+	
+	// Determine correct directory based on site type
+	var sitesDir string
+	if site.IsWildcard() && c.caddyfileManager != nil {
+		sitesDir = filepath.Join(c.config.SitesDir, "wildcard")
+	} else if !site.IsWildcard() && c.caddyfileManager != nil {
+		sitesDir = filepath.Join(c.config.SitesDir, "standard")
+	} else {
+		// Fallback to legacy flat structure
+		sitesDir = c.config.SitesDir
 	}
 
-	// Check if file exists
-	if _, err := os.Stat(site.Filepath); os.IsNotExist(err) {
-		return fmt.Errorf("site not found: %s", site.Filename)
+	newFilepath := filepath.Join(sitesDir, site.Filename+".caddy")
+
+	// Ensure directory exists
+	if err := os.MkdirAll(sitesDir, 0755); err != nil {
+		return fmt.Errorf("failed to create sites directory: %w", err)
 	}
 
 	// Generate Caddyfile content
 	content := site.ToCaddyfile()
 
-	// Write file
-	if err := os.WriteFile(site.Filepath, []byte(content), 0644); err != nil {
+	// Write to new location
+	if err := os.WriteFile(newFilepath, []byte(content), 0644); err != nil {
 		return fmt.Errorf("failed to write site file: %w", err)
 	}
 
+	// If file moved, remove old one
+	if oldFilepath != "" && oldFilepath != newFilepath {
+		if _, err := os.Stat(oldFilepath); err == nil {
+			os.Remove(oldFilepath)
+		}
+	}
+
+	site.Filepath = newFilepath
 	return nil
 }
 
@@ -184,16 +256,28 @@ func (c *CaddyService) UpdateSiteRaw(filename, content string) error {
 
 // DeleteSite deletes a proxy rule
 func (c *CaddyService) DeleteSite(filename string) error {
-	filepath := filepath.Join(c.config.SitesDir, filename)
-	if !strings.HasSuffix(filepath, ".caddy") {
-		filepath += ".caddy"
+	if !strings.HasSuffix(filename, ".caddy") {
+		filename += ".caddy"
 	}
 
-	if err := os.Remove(filepath); err != nil {
-		return fmt.Errorf("failed to delete site file: %w", err)
+	// Search in all possible directories
+	searchDirs := []string{
+		filepath.Join(c.config.SitesDir, "wildcard"),
+		filepath.Join(c.config.SitesDir, "standard"),
+		c.config.SitesDir, // Legacy flat structure
 	}
 
-	return nil
+	for _, dir := range searchDirs {
+		filePath := filepath.Join(dir, filename)
+		if _, err := os.Stat(filePath); err == nil {
+			if err := os.Remove(filePath); err != nil {
+				return fmt.Errorf("failed to delete site file: %w", err)
+			}
+			return nil
+		}
+	}
+
+	return fmt.Errorf("site not found: %s", filename)
 }
 
 // DuplicateSite creates a copy of a site with new domains
@@ -231,46 +315,69 @@ func (c *CaddyService) DuplicateSite(sourceFilename string, newDomains []string)
 
 // Reload reloads Caddy configuration
 func (c *CaddyService) Reload() *ReloadResult {
-	if err := c.dockerService.ReloadCaddy(); err != nil {
+	output, err := c.dockerService.ReloadCaddyWithOutput()
+	if err != nil {
 		return &ReloadResult{
-			Success: false,
-			Error:   err.Error(),
+			Success:   false,
+			Error:     err.Error(),
+			ReloadLog: output,
 		}
 	}
 
 	return &ReloadResult{
-		Success: true,
-		Message: "Configuration reloaded successfully",
+		Success:   true,
+		Message:   "Configuration reloaded successfully",
+		ReloadLog: output,
 	}
 }
 
 // Validate validates Caddy configuration
 func (c *CaddyService) Validate() *ReloadResult {
-	if err := c.dockerService.ValidateConfig(); err != nil {
+	output, err := c.dockerService.ValidateConfigWithOutput()
+	if err != nil {
 		return &ReloadResult{
-			Success: false,
-			Error:   err.Error(),
+			Success:       false,
+			Error:         err.Error(),
+			ValidationLog: output,
 		}
 	}
 
 	return &ReloadResult{
-		Success: true,
-		Message: "Configuration is valid",
+		Success:       true,
+		Message:       "Configuration is valid",
+		ValidationLog: output,
 	}
 }
 
 // ReloadWithValidation validates and then reloads
 func (c *CaddyService) ReloadWithValidation() *ReloadResult {
 	// First validate
-	if result := c.Validate(); !result.Success {
+	validateOutput, validateErr := c.dockerService.ValidateConfigWithOutput()
+	if validateErr != nil {
 		return &ReloadResult{
-			Success: false,
-			Error:   fmt.Sprintf("Validation failed: %s", result.Error),
+			Success:       false,
+			Error:         fmt.Sprintf("Validation failed: %s", validateErr.Error()),
+			ValidationLog: validateOutput,
 		}
 	}
 
 	// Then reload
-	return c.Reload()
+	reloadOutput, reloadErr := c.dockerService.ReloadCaddyWithOutput()
+	if reloadErr != nil {
+		return &ReloadResult{
+			Success:       false,
+			Error:         fmt.Sprintf("Reload failed: %s", reloadErr.Error()),
+			ValidationLog: validateOutput,
+			ReloadLog:     reloadOutput,
+		}
+	}
+
+	return &ReloadResult{
+		Success:       true,
+		Message:       "Configuration validated and reloaded successfully",
+		ValidationLog: validateOutput,
+		ReloadLog:     reloadOutput,
+	}
 }
 
 // GetFallback returns the fallback rule content
@@ -447,4 +554,18 @@ func (c *CaddyService) SaveWildcardConfig(config string) error {
 	}
 	
 	return os.WriteFile(wildcardPath, []byte(config), 0644)
+}
+
+// RegenerateCaddyfile regenerates the main Caddyfile with wildcard blocks
+// This should be called when wildcard domains are added or removed
+func (c *CaddyService) RegenerateCaddyfile() error {
+	if c.caddyfileManager == nil {
+		return fmt.Errorf("CaddyfileManager not initialized")
+	}
+	return c.caddyfileManager.SaveCaddyfile()
+}
+
+// GetCaddyfileManager returns the CaddyfileManager instance
+func (c *CaddyService) GetCaddyfileManager() *CaddyfileManager {
+	return c.caddyfileManager
 }

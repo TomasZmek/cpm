@@ -134,3 +134,13 @@ func getFlash(c *fiber.Ctx) (string, string) {
 
 	return msgType, message
 }
+
+// contains checks if a slice contains an item
+func contains(slice []string, item string) bool {
+	for _, s := range slice {
+		if s == item {
+			return true
+		}
+	}
+	return false
+}

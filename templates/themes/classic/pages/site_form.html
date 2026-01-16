@@ -49,11 +49,14 @@
         </div>
         
         <div class="form-group">
-            <label class="checkbox-label">
-                <input type="checkbox" 
-                       name="is_https_backend" 
-                       {{if .Site.IsHTTPSBackend}}checked{{end}}>
-                <span>🔒 {{t .Lang "sites_https_backend"}}</span>
+            <label class="toggle-label">
+                <span class="toggle-text">🔒 {{t .Lang "sites_https_backend"}}</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" 
+                           name="is_https_backend" 
+                           {{if .Site.IsHTTPSBackend}}checked{{end}}>
+                    <span class="toggle-slider"></span>
+                </label>
             </label>
         </div>
     </div>
@@ -75,16 +78,16 @@
                     🔄 {{t .Lang "tls_auto"}}
                 </option>
             </select>
-            <div class="form-hint">{{t .Lang "tls_hint"}}</div>
+            <div class="form-hint" id="tls-hint">{{t .Lang "tls_hint"}}</div>
         </div>
     </div>
     
     <div class="form-section">
         <div class="form-section-title">⚙️ {{t .Lang "sites_snippets"}}</div>
         
-        <div class="snippet-options">
+        <div class="snippet-options" id="snippet-options">
             {{range .AvailableSnippets}}
-            <label class="snippet-option">
+            <label class="snippet-option" data-snippet="{{.}}">
                 <input type="checkbox" 
                        name="snippets" 
                        value="{{.}}"
@@ -100,6 +103,9 @@
                 </span>
             </label>
             {{end}}
+        </div>
+        <div id="wildcard-snippet-hint" class="form-hint" style="display: none; margin-top: 0.5rem;">
+            ℹ️ {{t .Lang "wildcard_snippets_hint"}}
         </div>
     </div>
     
@@ -119,24 +125,16 @@
     <details>
         <summary>⚡ {{t .Lang "advanced_options"}}</summary>
         <div class="details-content">
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="checkbox-label">
+            <div class="form-group">
+                <label class="toggle-label">
+                    <span class="toggle-text">🔌 {{t .Lang "sites_websocket"}}</span>
+                    <label class="toggle-switch">
                         <input type="checkbox" 
                                name="enable_websocket" 
                                {{if .Site.EnableWebSocket}}checked{{end}}>
-                        <span>🔌 {{t .Lang "sites_websocket"}}</span>
+                        <span class="toggle-slider"></span>
                     </label>
-                </div>
-                
-                <div class="form-group">
-                    <label class="checkbox-label">
-                        <input type="checkbox" 
-                               name="is_internal" 
-                               {{if .Site.IsInternal}}checked{{end}}>
-                        <span>🏠 {{t .Lang "sites_internal"}}</span>
-                    </label>
-                </div>
+                </label>
             </div>
             
             <div class="form-group">
@@ -168,17 +166,52 @@
 </form>
 
 <script>
-// Auto-detect matching wildcard for domain
 document.addEventListener('DOMContentLoaded', function() {
     const domainsInput = document.getElementById('domains');
     const tlsSelect = document.getElementById('tls_mode');
+    const snippetOptions = document.getElementById('snippet-options');
+    const wildcardHint = document.getElementById('wildcard-snippet-hint');
+    const tlsHint = document.getElementById('tls-hint');
     
     if (!domainsInput || !tlsSelect) return;
+    
+    // Snippets to hide/disable when wildcard is selected
+    const wildcardHiddenSnippets = ['cloudflare_dns', 'internal_only'];
     
     // Get available wildcard domains from select options
     const wildcardOptions = Array.from(tlsSelect.options).filter(opt => 
         opt.value.startsWith('wildcard:')
     );
+    
+    function updateSnippetsVisibility() {
+        const isWildcard = tlsSelect.value.startsWith('wildcard:');
+        
+        wildcardHiddenSnippets.forEach(snippetName => {
+            const label = snippetOptions.querySelector(`[data-snippet="${snippetName}"]`);
+            if (label) {
+                if (isWildcard) {
+                    label.style.display = 'none';
+                    label.querySelector('input').checked = false;
+                } else {
+                    label.style.display = '';
+                }
+            }
+        });
+        
+        // Show/hide hint
+        if (wildcardHint) {
+            wildcardHint.style.display = isWildcard ? 'block' : 'none';
+        }
+        
+        // Update TLS hint
+        if (tlsHint) {
+            if (isWildcard) {
+                tlsHint.innerHTML = '✅ {{t .Lang "wildcard_tls_active"}}';
+            } else {
+                tlsHint.innerHTML = '{{t .Lang "tls_hint"}}';
+            }
+        }
+    }
     
     function detectWildcard() {
         const domains = domainsInput.value.split(/[,\s]+/).map(d => d.trim()).filter(d => d);
@@ -191,13 +224,21 @@ document.addEventListener('DOMContentLoaded', function() {
             const wildcardDomain = opt.value.replace('wildcard:', '');
             if (firstDomain.endsWith('.' + wildcardDomain)) {
                 tlsSelect.value = opt.value;
+                updateSnippetsVisibility();
                 return;
             }
         }
         
         // No match - set to auto
         tlsSelect.value = 'auto';
+        updateSnippetsVisibility();
     }
+    
+    // Listen to TLS mode changes
+    tlsSelect.addEventListener('change', updateSnippetsVisibility);
+    
+    // Initial update
+    updateSnippetsVisibility();
     
     // Only auto-detect for new sites (not editing)
     {{if .IsNew}}

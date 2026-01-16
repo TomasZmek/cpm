@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-3.0.2-blue" alt="Version">
+  <img src="https://img.shields.io/badge/version-3.1.0-blue" alt="Version">
   <img src="https://img.shields.io/badge/Go-1.23+-00ADD8?logo=go" alt="Go">
   <img src="https://img.shields.io/badge/Docker-ready-2496ED?logo=docker" alt="Docker">
   <img src="https://img.shields.io/badge/image_size-~6MB-green" alt="Image Size">
@@ -40,7 +40,7 @@
 
 ```bash
 docker pull perteus/caddy-ui:latest
-docker pull perteus/caddy-ui:3.0.2
+docker pull perteus/caddy-ui:3.1.0
 ```
 
 ### Docker Compose (Recommended)
@@ -60,7 +60,7 @@ services:
       - ./caddy-data:/data
 
   cpm:
-    image: perteus/caddy-ui:3.0.2
+    image: perteus/caddy-ui:3.1.0
     container_name: cpm
     ports:
       - "8501:8501"
@@ -90,7 +90,7 @@ services:
       - ./caddy-data:/data
 
   cpm:
-    image: perteus/caddy-ui:3.0.2
+    image: perteus/caddy-ui:3.1.0
     container_name: cpm
     privileged: true  # Required for Synology
     ports:
@@ -155,11 +155,13 @@ adguard.zrnek.cz {
 
 ```
 caddy-config/
-├── Caddyfile              # Main Caddy configuration
+├── Caddyfile              # Main config (managed by CPM)
 ├── snippets.caddy         # Shared snippets + wildcard TLS (auto-generated)
-├── sites/                 # Proxy rules (one file per domain)
-│   ├── example.com.caddy
-│   └── app.example.com.caddy
+├── sites/
+│   ├── wildcard/          # Wildcard site handle blocks
+│   │   └── *.domain.caddy
+│   └── standard/          # Standard domain {} blocks
+│       └── domain.caddy
 └── pages/                 # Custom error pages (optional)
     ├── 403.html
     └── 404.html
@@ -177,7 +179,7 @@ For Synology Docker, use `privileged: true` to allow Docker socket access:
 
 ```yaml
 cpm:
-  image: perteus/caddy-ui:3.0.2
+  image: perteus/caddy-ui:3.1.0
   privileged: true
   volumes:
     - /volume1/docker/caddy-config:/caddy-config
@@ -215,8 +217,8 @@ go build -o cpm ./cmd/cpm
 ### Docker Build
 
 ```bash
-docker build -t perteus/caddy-ui:3.0.2 --no-cache .
-docker push perteus/caddy-ui:3.0.2
+docker build -t perteus/caddy-ui:3.1.0 --no-cache .
+docker push perteus/caddy-ui:3.1.0
 docker push perteus/caddy-ui:latest
 ```
 
@@ -226,15 +228,17 @@ docker push perteus/caddy-ui:latest
 
 | Version | Date | Notes |
 |---------|------|-------|
+| **3.1.0** | 2026-01 | 🔐 Wildcard refactor, new architecture |
 | **3.0.2** | 2026-01 | 🐛 Wildcard TLS fix, parser fix, 405 fix |
 | **3.0.1** | 2026-01 | 🔐 Wildcard SSL, migration tools, UI improvements |
 | **3.0.0** | 2026-01 | 🎉 Complete Go rewrite (794MB → 6MB) |
 | 2.2.1 | 2025-12 | Python version (deprecated) |
 
-### v3.0.2 Bug Fixes
-- ✅ **Wildcard TLS snippets** now correctly generated in `snippets.caddy`
-- ✅ **Parser fix** - comments (`# @tls:`) no longer parsed as domains
-- ✅ **405 Method Not Allowed** - fixed site/snippet update forms
+### v3.1.0 - Wildcard Refactor
+- ✅ **New architecture** - Wildcard blocks in Caddyfile, handle blocks for sites
+- ✅ **Correct TLS handling** - No more individual certificate requests
+- ✅ **Better error reporting** - Detailed Caddy output in UI
+- ✅ **Internal-only fix** - Handled at wildcard block level
 
 ---
 

@@ -367,6 +367,8 @@ var englishTranslations = map[string]string{
 	"tls_auto":              "Automatic (new certificate)",
 	"tls_use_wildcard":      "Use wildcard",
 	"tls_hint":              "Wildcard certificates are shared across all subdomains - more private and efficient",
+	"wildcard_snippets_hint": "cloudflare_dns and internal_only are handled automatically at wildcard level",
+	"wildcard_tls_active":   "Wildcard TLS active - DNS and internal restrictions handled automatically",
 }
 
 // Czech translations
@@ -672,4 +674,6 @@ var czechTranslations = map[string]string{
 	"tls_auto":              "Automatický (nový certifikát)",
 	"tls_use_wildcard":      "Použít wildcard",
 	"tls_hint":              "Wildcard certifikáty jsou sdílené pro všechny subdomény - více soukromí a efektivnější",
+	"wildcard_snippets_hint": "cloudflare_dns a internal_only jsou automaticky řešeny na úrovni wildcard",
+	"wildcard_tls_active":   "Wildcard TLS aktivní - DNS a interní omezení jsou řešeny automaticky",
 }

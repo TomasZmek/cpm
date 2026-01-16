@@ -85,8 +85,87 @@ func (s *Site) AllBackends() []string {
 	return backends
 }
 
-// ToCaddyfile generates Caddyfile content for this site
+// IsWildcard returns true if site uses wildcard TLS
+func (s *Site) IsWildcard() bool {
+	return strings.HasPrefix(s.TLSMode, "wildcard:")
+}
+
+// WildcardDomain returns the wildcard domain (e.g., "perteus.cz" from "wildcard:perteus.cz")
+func (s *Site) WildcardDomain() string {
+	if !s.IsWildcard() {
+		return ""
+	}
+	return strings.TrimPrefix(s.TLSMode, "wildcard:")
+}
+
+// MatcherName returns a safe matcher name for the primary domain
+// e.g., "home.perteus.cz" -> "home_perteus_cz"
+func (s *Site) MatcherName() string {
+	name := s.PrimaryDomain()
+	name = strings.ReplaceAll(name, ".", "_")
+	name = strings.ReplaceAll(name, "-", "_")
+	return name
+}
+
+// ToCaddyfile generates Caddyfile content - routes to correct format based on wildcard
 func (s *Site) ToCaddyfile() string {
+	if s.IsWildcard() {
+		return s.ToCaddyfileWildcard()
+	}
+	return s.ToCaddyfileStandard()
+}
+
+// ToCaddyfileWildcard generates handle block format for wildcard sites
+// This format is used inside a *.domain.com { } block
+func (s *Site) ToCaddyfileWildcard() string {
+	var lines []string
+	
+	// Metadata as comments
+	if len(s.Tags) > 0 {
+		lines = append(lines, fmt.Sprintf("# @tags: %s", strings.Join(s.Tags, ", ")))
+	}
+	lines = append(lines, fmt.Sprintf("# @tls: %s", s.TLSMode))
+	
+	// Matcher for this specific host
+	matcherName := s.MatcherName()
+	lines = append(lines, fmt.Sprintf("@%s host %s", matcherName, strings.Join(s.Domains, " ")))
+	
+	// Handle block
+	lines = append(lines, fmt.Sprintf("handle @%s {", matcherName))
+	
+	// Import snippets (except internal_only which is handled at wildcard block level)
+	for _, snippet := range s.Snippets {
+		if snippet != "" && snippet != "internal_only" && snippet != "cloudflare_dns" {
+			lines = append(lines, fmt.Sprintf("    import %s", snippet))
+		}
+	}
+	
+	// Basic Auth
+	if s.BasicAuthEnabled && len(s.BasicAuthUsers) > 0 {
+		lines = append(lines, "    basic_auth {")
+		for _, userHash := range s.BasicAuthUsers {
+			lines = append(lines, fmt.Sprintf("        %s", userHash))
+		}
+		lines = append(lines, "    }")
+	}
+	
+	// Extra config
+	if extra := strings.TrimSpace(s.ExtraConfig); extra != "" {
+		for _, line := range strings.Split(extra, "\n") {
+			lines = append(lines, fmt.Sprintf("    %s", strings.TrimSpace(line)))
+		}
+	}
+	
+	// Reverse proxy (inline, not nested)
+	lines = append(lines, s.generateReverseProxyWildcard()...)
+	
+	lines = append(lines, "}")
+	
+	return strings.Join(lines, "\n") + "\n"
+}
+
+// ToCaddyfileStandard generates classic domain { } block format
+func (s *Site) ToCaddyfileStandard() string {
 	var lines []string
 
 	// Tags as comment
@@ -101,13 +180,6 @@ func (s *Site) ToCaddyfile() string {
 
 	// Domain header
 	lines = append(lines, fmt.Sprintf("%s {", strings.Join(s.Domains, ", ")))
-
-	// Wildcard TLS import (must be first)
-	if strings.HasPrefix(s.TLSMode, "wildcard:") {
-		domain := strings.TrimPrefix(s.TLSMode, "wildcard:")
-		snippetName := "wildcard-tls-" + strings.ReplaceAll(domain, ".", "-")
-		lines = append(lines, fmt.Sprintf("    import %s", snippetName))
-	}
 
 	// Import snippets
 	for _, snippet := range s.Snippets {
@@ -146,6 +218,65 @@ func (s *Site) ToCaddyfile() string {
 }
 
 func (s *Site) generateReverseProxy() []string {
+	var lines []string
+	backends := s.AllBackends()
+
+	// Simple proxy without extra settings
+	simpleProxy := len(backends) == 1 &&
+		!s.IsHTTPSBackend &&
+		!s.EnableWebSocket &&
+		s.HealthCheckPath == "" &&
+		s.TimeoutSeconds == 0
+
+	if simpleProxy {
+		lines = append(lines, fmt.Sprintf("    reverse_proxy %s:%s", s.TargetIP, s.TargetPort))
+		return lines
+	}
+
+	// Complex proxy
+	backendStr := strings.Join(backends, " ")
+	lines = append(lines, fmt.Sprintf("    reverse_proxy %s {", backendStr))
+
+	// Load balancing policy
+	if len(backends) > 1 && s.LBPolicy != "" {
+		lines = append(lines, fmt.Sprintf("        lb_policy %s", s.LBPolicy))
+	}
+
+	// Health check
+	if s.HealthCheckPath != "" {
+		lines = append(lines, fmt.Sprintf("        health_uri %s", s.HealthCheckPath))
+		lines = append(lines, "        health_interval 30s")
+	}
+
+	// WebSocket headers
+	if s.EnableWebSocket {
+		lines = append(lines, "        header_up Host {host}")
+		lines = append(lines, "        header_up X-Real-IP {remote_host}")
+		lines = append(lines, "        header_up X-Forwarded-For {remote_host}")
+		lines = append(lines, "        header_up X-Forwarded-Proto {scheme}")
+	}
+
+	// Transport settings
+	if s.IsHTTPSBackend || s.TimeoutSeconds > 0 {
+		lines = append(lines, "        transport http {")
+		if s.IsHTTPSBackend {
+			lines = append(lines, "            tls_insecure_skip_verify")
+		}
+		if s.TimeoutSeconds > 0 {
+			lines = append(lines, fmt.Sprintf("            dial_timeout %ds", s.TimeoutSeconds))
+			lines = append(lines, fmt.Sprintf("            response_header_timeout %ds", s.TimeoutSeconds))
+		}
+		lines = append(lines, "        }")
+	}
+
+	lines = append(lines, "    }")
+
+	return lines
+}
+
+// generateReverseProxyWildcard generates reverse proxy config for wildcard handle blocks
+// Uses different indentation since it's inside a handle block
+func (s *Site) generateReverseProxyWildcard() []string {
 	var lines []string
 	backends := s.AllBackends()
 

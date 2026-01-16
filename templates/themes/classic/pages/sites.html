@@ -50,6 +50,11 @@
                     <span class="text-muted">+{{sub (len .Domains) 1}} {{t $.Lang "more"}}</span>
                     {{end}}
                 </div>
+                <div class="site-card-badges">
+                    {{if .IsWildcard}}
+                    <span class="badge badge-wildcard" title="Wildcard TLS: *.{{.WildcardDomain}}">🌟</span>
+                    {{end}}
+                </div>
                 <div class="site-card-actions">
                     <a href="/sites/{{.Filename}}/edit" class="btn btn-sm btn-secondary">{{t $.Lang "edit"}}</a>
                     <button class="btn btn-sm btn-danger"
@@ -75,6 +80,9 @@
                 {{end}}
                 
                 <div class="site-card-snippets">
+                    {{if .IsWildcard}}
+                    <span class="snippet-badge snippet-badge-tls">*.{{.WildcardDomain}}</span>
+                    {{end}}
                     {{range .Snippets}}
                     <span class="snippet-badge">{{.}}</span>
                     {{end}}

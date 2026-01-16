@@ -25,15 +25,21 @@
         <div class="snippet-card-body" x-show="expanded" x-collapse>
             <form action="/snippets/cloudflare_dns" method="POST" hx-boost="true">
                 
-                <label class="checkbox-label">
-                    <input type="checkbox" name="enabled" {{if .Config.CloudflareDNS.Enabled}}checked{{end}}>
-                    {{t .Lang "snippets_enable_cloudflare"}}
+                <label class="toggle-label">
+                    <span class="toggle-text">{{t .Lang "snippets_enable_cloudflare"}}</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" name="enabled" {{if .Config.CloudflareDNS.Enabled}}checked{{end}}>
+                        <span class="toggle-slider"></span>
+                    </label>
                 </label>
                 
-                <div class="form-group mt-3">
-                    <label class="checkbox-label">
-                        <input type="checkbox" name="use_env" {{if .Config.CloudflareDNS.UseEnv}}checked{{end}}>
-                        {{t .Lang "snippets_use_env"}}
+                <div class="form-group mt-4">
+                    <label class="toggle-label">
+                        <span class="toggle-text">{{t .Lang "snippets_use_env"}}</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" name="use_env" {{if .Config.CloudflareDNS.UseEnv}}checked{{end}}>
+                            <span class="toggle-slider"></span>
+                        </label>
                     </label>
                 </div>
                 
@@ -67,12 +73,15 @@
         <div class="snippet-card-body" x-show="expanded" x-collapse>
             <form action="/snippets/internal_only" method="POST" hx-boost="true">
                 
-                <label class="checkbox-label">
-                    <input type="checkbox" name="enabled" {{if .Config.InternalOnly.Enabled}}checked{{end}}>
-                    {{t .Lang "snippets_enable_internal"}}
+                <label class="toggle-label">
+                    <span class="toggle-text">{{t .Lang "snippets_enable_internal"}}</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" name="enabled" {{if .Config.InternalOnly.Enabled}}checked{{end}}>
+                        <span class="toggle-slider"></span>
+                    </label>
                 </label>
                 
-                <div class="form-group mt-3">
+                <div class="form-group mt-4">
                     <label for="allowed_networks">{{t .Lang "snippets_allowed_networks"}}</label>
                     <textarea id="allowed_networks" 
                               name="allowed_networks" 
@@ -103,36 +112,48 @@
         <div class="snippet-card-body" x-show="expanded" x-collapse>
             <form action="/snippets/security_headers" method="POST" hx-boost="true">
                 
-                <label class="checkbox-label">
-                    <input type="checkbox" name="enabled" {{if .Config.SecurityHeaders.Enabled}}checked{{end}}>
-                    {{t .Lang "snippets_enable_security"}}
+                <label class="toggle-label">
+                    <span class="toggle-text">{{t .Lang "snippets_enable_security"}}</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" name="enabled" {{if .Config.SecurityHeaders.Enabled}}checked{{end}}>
+                        <span class="toggle-slider"></span>
+                    </label>
                 </label>
                 
-                <div class="form-row mt-3">
+                <div class="form-row mt-4">
                     <div class="form-group">
                         <label for="hsts_max_age">{{t .Lang "snippets_hsts_max_age"}}</label>
                         <input type="number" id="hsts_max_age" name="hsts_max_age" 
                                value="{{.Config.SecurityHeaders.HSTSMaxAge}}">
                     </div>
                     
-                    <label class="checkbox-label">
-                        <input type="checkbox" name="hsts_include_subdomains" 
-                               {{if .Config.SecurityHeaders.HSTSIncludeSubdomains}}checked{{end}}>
-                        {{t .Lang "snippets_include_subdomains"}}
+                    <label class="toggle-label" style="flex: 1;">
+                        <span class="toggle-text">{{t .Lang "snippets_include_subdomains"}}</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" name="hsts_include_subdomains" 
+                                   {{if .Config.SecurityHeaders.HSTSIncludeSubdomains}}checked{{end}}>
+                            <span class="toggle-slider"></span>
+                        </label>
                     </label>
                 </div>
                 
                 <div class="form-row">
-                    <label class="checkbox-label">
-                        <input type="checkbox" name="x_content_type_options" 
-                               {{if .Config.SecurityHeaders.XContentTypeOptions}}checked{{end}}>
-                        X-Content-Type-Options: nosniff
+                    <label class="toggle-label" style="flex: 1;">
+                        <span class="toggle-text">X-Content-Type-Options: nosniff</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" name="x_content_type_options" 
+                                   {{if .Config.SecurityHeaders.XContentTypeOptions}}checked{{end}}>
+                            <span class="toggle-slider"></span>
+                        </label>
                     </label>
                     
-                    <label class="checkbox-label">
-                        <input type="checkbox" name="hide_server" 
-                               {{if .Config.SecurityHeaders.HideServer}}checked{{end}}>
-                        {{t .Lang "snippets_hide_server"}}
+                    <label class="toggle-label" style="flex: 1;">
+                        <span class="toggle-text">{{t .Lang "snippets_hide_server"}}</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" name="hide_server" 
+                                   {{if .Config.SecurityHeaders.HideServer}}checked{{end}}>
+                            <span class="toggle-slider"></span>
+                        </label>
                     </label>
                 </div>
                 
@@ -166,20 +187,29 @@
         <div class="snippet-card-body" x-show="expanded" x-collapse>
             <form action="/snippets/compression" method="POST" hx-boost="true">
                 
-                <label class="checkbox-label">
-                    <input type="checkbox" name="enabled" {{if .Config.Compression.Enabled}}checked{{end}}>
-                    {{t .Lang "snippets_enable_compression"}}
+                <label class="toggle-label">
+                    <span class="toggle-text">{{t .Lang "snippets_enable_compression"}}</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" name="enabled" {{if .Config.Compression.Enabled}}checked{{end}}>
+                        <span class="toggle-slider"></span>
+                    </label>
                 </label>
                 
-                <div class="form-row mt-3">
-                    <label class="checkbox-label">
-                        <input type="checkbox" name="zstd" {{if .Config.Compression.Zstd}}checked{{end}}>
-                        {{t .Lang "snippets_zstd"}}
+                <div class="form-row mt-4">
+                    <label class="toggle-label" style="flex: 1;">
+                        <span class="toggle-text">{{t .Lang "snippets_zstd"}}</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" name="zstd" {{if .Config.Compression.Zstd}}checked{{end}}>
+                            <span class="toggle-slider"></span>
+                        </label>
                     </label>
                     
-                    <label class="checkbox-label">
-                        <input type="checkbox" name="gzip" {{if .Config.Compression.Gzip}}checked{{end}}>
-                        {{t .Lang "snippets_gzip"}}
+                    <label class="toggle-label" style="flex: 1;">
+                        <span class="toggle-text">{{t .Lang "snippets_gzip"}}</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" name="gzip" {{if .Config.Compression.Gzip}}checked{{end}}>
+                            <span class="toggle-slider"></span>
+                        </label>
                     </label>
                 </div>
                 
@@ -204,12 +234,15 @@
         <div class="snippet-card-body" x-show="expanded" x-collapse>
             <form action="/snippets/rate_limit" method="POST" hx-boost="true">
                 
-                <label class="checkbox-label">
-                    <input type="checkbox" name="enabled" {{if .Config.RateLimit.Enabled}}checked{{end}}>
-                    {{t .Lang "snippets_enable_rate_limit"}}
+                <label class="toggle-label">
+                    <span class="toggle-text">{{t .Lang "snippets_enable_rate_limit"}}</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" name="enabled" {{if .Config.RateLimit.Enabled}}checked{{end}}>
+                        <span class="toggle-slider"></span>
+                    </label>
                 </label>
                 
-                <div class="form-row mt-3">
+                <div class="form-row mt-4">
                     <div class="form-group">
                         <label for="requests">{{t .Lang "snippets_requests"}}</label>
                         <input type="number" id="requests" name="requests" 
