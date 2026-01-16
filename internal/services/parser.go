@@ -38,14 +38,21 @@ func (p *ParserService) Parse(content, filenameDomain string) *models.Site {
 		TLSMode:    "auto",
 	}
 
+	// Detect format: wildcard handle block vs standard domain block
+	isWildcardFormat := p.isWildcardHandleFormat(content)
+
 	// Parse tags from comment
 	site.Tags = p.parseTags(content)
 
 	// Parse TLS mode from comment or import
 	site.TLSMode = p.parseTLSMode(content)
 
-	// Parse domains from header
-	site.Domains = p.parseDomains(content, filenameDomain)
+	// Parse domains based on format
+	if isWildcardFormat {
+		site.Domains = p.parseDomainsFromHandleBlock(content, filenameDomain)
+	} else {
+		site.Domains = p.parseDomains(content, filenameDomain)
+	}
 
 	// Parse snippets
 	site.Snippets = p.parseSnippets(content)
@@ -81,6 +88,37 @@ func (p *ParserService) Parse(content, filenameDomain string) *models.Site {
 	site.ExtraConfig = p.parseExtraConfig(content)
 
 	return site
+}
+
+// isWildcardHandleFormat detects if content is wildcard handle block format
+// Wildcard format: @matcher host domain.com \n handle @matcher { ... }
+// Standard format: domain.com { ... }
+func (p *ParserService) isWildcardHandleFormat(content string) bool {
+	// Look for pattern: @something host something.something
+	handleRe := regexp.MustCompile(`@\w+\s+host\s+[\w.-]+`)
+	return handleRe.MatchString(content)
+}
+
+// parseDomainsFromHandleBlock extracts domains from wildcard handle block format
+// Format: @matcher host domain1.com domain2.com
+func (p *ParserService) parseDomainsFromHandleBlock(content, defaultDomain string) []string {
+	re := regexp.MustCompile(`@\w+\s+host\s+(.+)$`)
+	for _, line := range strings.Split(content, "\n") {
+		line = strings.TrimSpace(line)
+		if match := re.FindStringSubmatch(line); len(match) > 1 {
+			var domains []string
+			for _, d := range strings.Fields(match[1]) {
+				d = strings.TrimSpace(d)
+				if d != "" {
+					domains = append(domains, d)
+				}
+			}
+			if len(domains) > 0 {
+				return domains
+			}
+		}
+	}
+	return []string{defaultDomain}
 }
 
 // parseTags extracts tags from # @tags: comment

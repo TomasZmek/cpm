@@ -78,7 +78,6 @@ func (h *Handler) SiteCreate(c *fiber.Ctx) error {
 	site.TargetIP = c.FormValue("target_ip")
 	site.TargetPort = c.FormValue("target_port")
 	site.IsHTTPSBackend = c.FormValue("is_https_backend") == "on"
-	site.IsInternal = c.FormValue("is_internal") == "on"
 	site.EnableWebSocket = c.FormValue("enable_websocket") == "on"
 	site.HealthCheckPath = c.FormValue("health_check_path")
 	site.ExtraConfig = c.FormValue("extra_config")
@@ -91,6 +90,9 @@ func (h *Handler) SiteCreate(c *fiber.Ctx) error {
 	if snippets := c.FormValue("snippets"); snippets != "" {
 		site.Snippets = strings.Split(snippets, ",")
 	}
+
+	// Derive IsInternal from snippets (internal_only snippet = internal site)
+	site.IsInternal = contains(site.Snippets, "internal_only")
 
 	// Parse tags
 	if tags := c.FormValue("tags"); tags != "" {
@@ -192,7 +194,6 @@ func (h *Handler) SiteUpdate(c *fiber.Ctx) error {
 		site.TargetIP = c.FormValue("target_ip")
 		site.TargetPort = c.FormValue("target_port")
 		site.IsHTTPSBackend = c.FormValue("is_https_backend") == "on"
-		site.IsInternal = c.FormValue("is_internal") == "on"
 		site.EnableWebSocket = c.FormValue("enable_websocket") == "on"
 		site.HealthCheckPath = c.FormValue("health_check_path")
 		site.ExtraConfig = c.FormValue("extra_config")
@@ -201,11 +202,19 @@ func (h *Handler) SiteUpdate(c *fiber.Ctx) error {
 			site.TLSMode = "auto"
 		}
 
+		// Parse snippets
+		site.Snippets = []string{}
 		if snippets := c.FormValue("snippets"); snippets != "" {
 			site.Snippets = strings.Split(snippets, ",")
 		}
+		
+		// Derive IsInternal from snippets
+		site.IsInternal = contains(site.Snippets, "internal_only")
+		
 		if tags := c.FormValue("tags"); tags != "" {
 			site.Tags = strings.Split(tags, ",")
+		} else {
+			site.Tags = []string{}
 		}
 
 		if err := h.caddyService.UpdateSite(site); err != nil {

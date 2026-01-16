@@ -6,7 +6,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-3.0.2-blue" alt="Version">
+  <img src="https://img.shields.io/badge/version-3.1.0-blue" alt="Version">
   <img src="https://img.shields.io/badge/Go-1.23+-00ADD8?logo=go" alt="Go">
   <img src="https://img.shields.io/badge/image_size-~6MB-green" alt="Image Size">
 </p>
@@ -32,7 +32,7 @@
 
 ```bash
 docker pull perteus/caddy-ui:latest
-docker pull perteus/caddy-ui:3.0.2
+docker pull perteus/caddy-ui:3.1.0
 ```
 
 ### Docker Compose
@@ -54,7 +54,7 @@ services:
       - ./caddy-data:/data
 
   cpm:
-    image: perteus/caddy-ui:3.0.2
+    image: perteus/caddy-ui:3.1.0
     container_name: cpm
     ports:
       - "8501:8501"
@@ -88,12 +88,12 @@ For Synology, add `privileged: true` for Docker socket access.
 
 | Version | Notes |
 |---------|-------|
-| **3.0.2** | 🐛 Wildcard TLS fix, parser fix, 405 fix |
+| **3.1.0** | 🐛 Wildcard TLS fix, parser fix, 405 fix |
 | **3.0.1** | 🔐 Wildcard SSL, migration tools, UI improvements |
 | **3.0.0** | 🎉 Complete Go rewrite (794MB → 6MB) |
 | 2.x | Python version (deprecated) |
 
-### v3.0.2 Bug Fixes
+### v3.1.0 Bug Fixes
 - ✅ **Wildcard TLS snippets** now correctly generated in `snippets.caddy`
 - ✅ **Parser fix** - comments no longer parsed as domains
 - ✅ **405 Method Not Allowed** - fixed site/snippet update forms

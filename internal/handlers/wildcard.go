@@ -232,7 +232,7 @@ func (h *Handler) WildcardDelete(c *fiber.Ctx) error {
 }
 
 // regenerateWildcardConfig generates and saves the wildcard Caddy configuration
-// by regenerating the entire snippets.caddy file (which includes wildcard snippets)
+// by regenerating both the snippets.caddy file and the main Caddyfile with wildcard blocks
 func (h *Handler) regenerateWildcardConfig() error {
 	// Get current snippet config
 	cfg, err := h.snippetsService.GetConfig()
@@ -240,6 +240,15 @@ func (h *Handler) regenerateWildcardConfig() error {
 		return err
 	}
 
-	// Regenerate snippets file (which now includes wildcard TLS snippets)
-	return h.snippetsService.GenerateSnippetsFile(cfg)
+	// Regenerate snippets file (which includes wildcard TLS snippets)
+	if err := h.snippetsService.GenerateSnippetsFile(cfg); err != nil {
+		return fmt.Errorf("failed to regenerate snippets: %w", err)
+	}
+
+	// Regenerate main Caddyfile with wildcard blocks
+	if err := h.caddyService.RegenerateCaddyfile(); err != nil {
+		return fmt.Errorf("failed to regenerate Caddyfile: %w", err)
+	}
+
+	return nil
 }
