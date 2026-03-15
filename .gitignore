@@ -50,3 +50,4 @@ logs/
 
 # Build cache
 .cache/
+.aider*

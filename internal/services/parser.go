@@ -57,7 +57,7 @@ func (p *ParserService) Parse(content, filenameDomain string) *models.Site {
 	// Parse snippets
 	site.Snippets = p.parseSnippets(content)
 
-	// Detect internal access
+	// Detect internal access - site is internal if it uses internal_only snippet
 	site.IsInternal = contains(site.Snippets, "internal_only")
 
 	// Parse reverse proxy settings

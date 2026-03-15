@@ -133,9 +133,9 @@ func (s *Site) ToCaddyfileWildcard() string {
 	// Handle block
 	lines = append(lines, fmt.Sprintf("handle @%s {", matcherName))
 	
-	// Import snippets (except internal_only which is handled at wildcard block level)
+	// Import snippets (except cloudflare_dns which is handled at wildcard block level via TLS snippet)
 	for _, snippet := range s.Snippets {
-		if snippet != "" && snippet != "internal_only" && snippet != "cloudflare_dns" {
+		if snippet != "" && snippet != "cloudflare_dns" {
 			lines = append(lines, fmt.Sprintf("    import %s", snippet))
 		}
 	}

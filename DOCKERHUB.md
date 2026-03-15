@@ -88,15 +88,19 @@ For Synology, add `privileged: true` for Docker socket access.
 
 | Version | Notes |
 |---------|-------|
-| **3.1.0** | 🐛 Wildcard TLS fix, parser fix, 405 fix |
+| **3.1.0** | 🔐 Wildcard refactor - new architecture, handle blocks |
+| **3.0.2** | 🐛 Wildcard TLS fix, parser fix, 405 fix |
 | **3.0.1** | 🔐 Wildcard SSL, migration tools, UI improvements |
 | **3.0.0** | 🎉 Complete Go rewrite (794MB → 6MB) |
 | 2.x | Python version (deprecated) |
 
-### v3.1.0 Bug Fixes
-- ✅ **Wildcard TLS snippets** now correctly generated in `snippets.caddy`
-- ✅ **Parser fix** - comments no longer parsed as domains
-- ✅ **405 Method Not Allowed** - fixed site/snippet update forms
+### v3.1.0 Highlights
+- ✅ **Wildcard architecture refactor** - proper certificate handling
+- ✅ **Handle-based routing** - sites use `@matcher handle {}` format
+- ✅ **IP restrictions at wildcard level** - fixes nested handle errors
+- ✅ **New directory structure** - `sites/wildcard/` and `sites/standard/`
+- ✅ **Toggle switches UI** - modern form controls
+- ✅ **Detailed error logs** - see Caddy output on reload failures
 
 ---
 

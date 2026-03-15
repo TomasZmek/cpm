@@ -175,8 +175,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (!domainsInput || !tlsSelect) return;
     
-    // Snippets to hide/disable when wildcard is selected
-    const wildcardHiddenSnippets = ['cloudflare_dns', 'internal_only'];
+    // Only hide cloudflare_dns for wildcard (TLS is handled at wildcard block level)
+    // internal_only works fine inside handle blocks!
+    const wildcardHiddenSnippets = ['cloudflare_dns'];
     
     // Get available wildcard domains from select options
     const wildcardOptions = Array.from(tlsSelect.options).filter(opt => 
@@ -186,6 +187,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateSnippetsVisibility() {
         const isWildcard = tlsSelect.value.startsWith('wildcard:');
         
+        // Hide certain snippets for wildcard (they're handled at wildcard block level)
         wildcardHiddenSnippets.forEach(snippetName => {
             const label = snippetOptions.querySelector(`[data-snippet="${snippetName}"]`);
             if (label) {
@@ -198,7 +200,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         
-        // Show/hide hint
+        // Show/hide snippet hint
         if (wildcardHint) {
             wildcardHint.style.display = isWildcard ? 'block' : 'none';
         }
