@@ -56,19 +56,29 @@ func (s *SnippetsService) GetConfig() (*models.SnippetConfig, error) {
 		cfg = *models.DefaultSnippetConfig()
 
 		if raw, ok := rawCfg["cloudflare_dns"]; ok {
-			json.Unmarshal(raw, &cfg.CloudflareDNS)
+			if err := json.Unmarshal(raw, &cfg.CloudflareDNS); err != nil {
+				return nil, fmt.Errorf("invalid cloudflare_dns config: %w", err)
+			}
 		}
 		if raw, ok := rawCfg["internal_only"]; ok {
-			json.Unmarshal(raw, &cfg.InternalOnly)
+			if err := json.Unmarshal(raw, &cfg.InternalOnly); err != nil {
+				return nil, fmt.Errorf("invalid internal_only config: %w", err)
+			}
 		}
 		if raw, ok := rawCfg["security_headers"]; ok {
-			json.Unmarshal(raw, &cfg.SecurityHeaders)
+			if err := json.Unmarshal(raw, &cfg.SecurityHeaders); err != nil {
+				return nil, fmt.Errorf("invalid security_headers config: %w", err)
+			}
 		}
 		if raw, ok := rawCfg["compression"]; ok {
-			json.Unmarshal(raw, &cfg.Compression)
+			if err := json.Unmarshal(raw, &cfg.Compression); err != nil {
+				return nil, fmt.Errorf("invalid compression config: %w", err)
+			}
 		}
 		if raw, ok := rawCfg["rate_limit"]; ok {
-			json.Unmarshal(raw, &cfg.RateLimit)
+			if err := json.Unmarshal(raw, &cfg.RateLimit); err != nil {
+				return nil, fmt.Errorf("invalid rate limit config: %w", err)
+			}
 		}
 
 		// Handle basic_auth specially - might be old format
