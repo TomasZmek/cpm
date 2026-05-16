@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 	"time"
+
+	"github.com/TomasZmek/cpm/internal/utils"
 )
 
 // Site represents a proxy rule
@@ -189,7 +191,7 @@ func (s *Site) ToCaddyfileStandard() string {
 	}
 
 	// Legacy support - add internal_only if internal and not in snippets
-	if s.IsInternal && !contains(s.Snippets, "internal_only") {
+	if s.IsInternal && !utils.Contains(s.Snippets, "internal_only") {
 		lines = append(lines, "    import internal_only")
 	}
 
@@ -333,11 +335,3 @@ func (s *Site) generateReverseProxyWildcard() []string {
 	return lines
 }
 
-func contains(slice []string, item string) bool {
-	for _, s := range slice {
-		if s == item {
-			return true
-		}
-	}
-	return false
-}
