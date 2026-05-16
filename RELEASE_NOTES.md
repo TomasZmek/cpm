@@ -1,3 +1,40 @@
+# CPM v3.1.1 - Security Update & Multi-platform
+
+## 🔒 Security Updates
+
+- **Go 1.26** - builder upgraded from Go 1.25, includes security fixes in net/http, html/template, crypto/tls and other packages
+- **Fiber v2.52.13** - fixes CVE-2025-66630 (9.2 critical) and CVE-2026-25882
+- **Docker SDK v28.5.2** - updated from v27.4.1
+
+## 🏗️ Multi-platform Support
+
+Docker image is now built for both amd64 and arm64:
+- Intel/AMD servers and NAS devices (Synology DS220+, etc.)
+- Apple Silicon (M1/M2/M3/M4)
+- Raspberry Pi and other ARM devices
+
+```bash
+docker pull perteus/caddy-ui:3.1.1
+```
+
+## ✨ New Features
+
+### Internal-only Restrictions
+Sites can now be restricted to internal network access only.
+For wildcard sites, the restriction is applied at the wildcard block level.
+
+## 📝 Version History
+
+| Version | Date | Notes |
+|---------|------|-------|
+| **3.1.1** | 2026-05-16 | 🔒 Security update, Go 1.26, multi-platform |
+| **3.1.0** | 2026-01-15 | 🔐 Wildcard refactor, new architecture |
+| 3.0.2 | 2026-01-11 | 🐛 Wildcard TLS fix, parser fix |
+| 3.0.1 | 2026-01-09 | 🔐 Wildcard SSL, migration tools |
+| 3.0.0 | 2026-01-07 | 🎉 Complete Go rewrite |
+
+---
+
 # CPM v3.1.0 - Wildcard Refactor
 
 ## 🚀 Major Changes
