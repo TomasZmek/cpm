@@ -51,3 +51,7 @@ logs/
 # Build cache
 .cache/
 .aider*
+
+# Docker build artifacts
+*.tar
+*.tar.gz
