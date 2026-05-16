@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/TomasZmek/cpm/internal/models"
+	"github.com/TomasZmek/cpm/internal/utils"
 )
 
 // ParserService handles parsing of Caddyfile configurations
@@ -58,7 +59,7 @@ func (p *ParserService) Parse(content, filenameDomain string) *models.Site {
 	site.Snippets = p.parseSnippets(content)
 
 	// Detect internal access - site is internal if it uses internal_only snippet
-	site.IsInternal = contains(site.Snippets, "internal_only")
+	site.IsInternal = utils.Contains(site.Snippets, "internal_only")
 
 	// Parse reverse proxy settings
 	p.parseReverseProxy(content, site)
@@ -185,7 +186,7 @@ func (p *ParserService) parseSnippets(content string) []string {
 	for _, match := range matches {
 		if len(match) > 1 {
 			snippet := match[1]
-			if contains(p.knownSnippets, snippet) {
+			if utils.Contains(p.knownSnippets, snippet) {
 				snippets = append(snippets, snippet)
 			}
 		}
@@ -378,11 +379,3 @@ func (p *ParserService) parseTLSMode(content string) string {
 	return "auto"
 }
 
-func contains(slice []string, item string) bool {
-	for _, s := range slice {
-		if s == item {
-			return true
-		}
-	}
-	return false
-}
