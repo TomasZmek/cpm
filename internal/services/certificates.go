@@ -4,6 +4,7 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"sort"
@@ -51,7 +52,7 @@ func (c *CertificateService) GetAllCertificates() ([]*models.Certificate, error)
 		cert, err := c.parseCertificate(path)
 		if err != nil {
 			// Log but continue
-			fmt.Printf("Warning: Could not parse certificate %s: %v\n", path, err)
+			log.Printf("Warning: Could not parse certificate %s: %v", path, err)
 			return nil
 		}
 

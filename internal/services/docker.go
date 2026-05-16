@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log"
 	"strings"
 	"time"
 
@@ -22,7 +23,7 @@ func NewDockerService(containerName string) *DockerService {
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		// Log error but continue - Docker might not be available
-		fmt.Printf("Warning: Could not connect to Docker: %v\n", err)
+		log.Printf("Warning: Could not connect to Docker: %v", err)
 	}
 
 	return &DockerService{
