@@ -5,10 +5,9 @@ import (
 	"time"
 
 	"github.com/TomasZmek/cpm/internal/models"
+	"github.com/TomasZmek/cpm/internal/utils"
 	"github.com/gofiber/fiber/v2"
 )
-
-const sessionCookieName = "cpm_session"
 
 const (
 	maxLoginAttempts = 5
@@ -64,10 +63,11 @@ func (l *rateLimiter) reset(ip string) {
 	delete(l.entries, ip)
 }
 
+
 // LoginPage renders the login page
 func (h *Handler) LoginPage(c *fiber.Ctx) error {
 	// If already logged in, redirect to dashboard
-	if token := c.Cookies(sessionCookieName); token != "" {
+	if token := c.Cookies(utils.SessionCookieName); token != "" {
 		if user := h.authService.ValidateSession(token); user != nil {
 			return c.Redirect("/")
 		}
@@ -129,7 +129,7 @@ func (h *Handler) Login(c *fiber.Ctx) error {
 
 	// Set session cookie
 	c.Cookie(&fiber.Cookie{
-		Name:     sessionCookieName,
+		Name:     utils.SessionCookieName,
 		Value:    token,
 		HTTPOnly: true,
 		SameSite: "Lax",
@@ -141,14 +141,14 @@ func (h *Handler) Login(c *fiber.Ctx) error {
 
 // Logout handles logout
 func (h *Handler) Logout(c *fiber.Ctx) error {
-	token := c.Cookies(sessionCookieName)
+	token := c.Cookies(utils.SessionCookieName)
 	if token != "" {
 		h.authService.Logout(token)
 	}
 
 	// Clear cookie
 	c.Cookie(&fiber.Cookie{
-		Name:   sessionCookieName,
+		Name:   utils.SessionCookieName,
 		Value:  "",
 		MaxAge: -1,
 	})
