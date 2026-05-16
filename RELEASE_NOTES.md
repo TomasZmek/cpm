@@ -1,3 +1,26 @@
+# CPM v3.1.2 - Security Fixes & Code Quality
+
+## 🔒 Security Fixes
+
+- **Race condition** (internal/services/auth.go) — ValidateSession was deleting from session map under RLock; fixed with double-checked locking
+- **Path traversal / zip-slip** (internal/services/backup.go) — ZIP restore now validates all extracted paths stay within target directory using filepath.Abs + prefix check
+- **CSRF protection** — Fiber CSRF middleware added, all HTML forms include _csrf hidden field, HTMX requests inject token via configRequest header
+- **Brute-force login protection** — in-memory rate limiter, max 5 failed attempts per IP per 15-minute sliding window, returns HTTP 429
+
+## 🐛 Bug Fixes
+
+- **Dashboard certificate expiry** (internal/handlers/dashboard.go) — formatDaysLeft() was returning a Unicode control character instead of a number; fixed with fmt.Sprintf
+
+## ♻️ Refactoring
+
+- **Deduplicated contains()** — 3 identical copies replaced with generic utils.Contains[T comparable] in new internal/utils package
+- **Centralized session cookie name** — "cpm_session" literal centralized as utils.SessionCookieName
+- **Consistent logging** — 7 fmt.Printf calls in services replaced with log.Printf
+- **JSON unmarshal errors** — 5 ignored json.Unmarshal errors in snippets.go now propagate properly
+- **Wildcard domain matching** — strings.Contains replaced with per-token strings.HasSuffix to eliminate false positives
+
+---
+
 # CPM v3.1.1 - Security Update & Multi-platform
 
 ## 🔒 Security Updates
