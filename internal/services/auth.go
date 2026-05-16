@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"sync"
@@ -61,12 +62,12 @@ func (a *AuthService) loadConfig() {
 
 	content, err := os.ReadFile(a.configPath)
 	if err != nil {
-		fmt.Printf("Warning: Could not read auth config: %v\n", err)
+		log.Printf("Warning: Could not read auth config: %v", err)
 		return
 	}
 
 	if err := json.Unmarshal(content, a.config); err != nil {
-		fmt.Printf("Warning: Could not parse auth config: %v\n", err)
+		log.Printf("Warning: Could not parse auth config: %v", err)
 	}
 }
 

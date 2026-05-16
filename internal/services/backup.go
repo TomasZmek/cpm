@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -59,7 +60,7 @@ func (b *BackupService) CreateBackup() ([]byte, string, error) {
 		path := filepath.Join(b.config.ConfigDir, filename)
 		if err := b.addFileToZip(zipWriter, path, filename); err != nil {
 			// Log but continue - file might not exist
-			fmt.Printf("Skipping %s: %v\n", filename, err)
+			log.Printf("Skipping %s: %v", filename, err)
 		}
 	}
 
