@@ -1,11 +1,68 @@
 package handlers
 
 import (
+	"sync"
+	"time"
+
 	"github.com/TomasZmek/cpm/internal/models"
 	"github.com/gofiber/fiber/v2"
 )
 
 const sessionCookieName = "cpm_session"
+
+const (
+	maxLoginAttempts = 5
+	loginWindow      = 15 * time.Minute
+)
+
+// loginLimiter tracks failed login attempts per IP to prevent brute-force attacks.
+var loginLimiter = &rateLimiter{entries: make(map[string]*rateLimitEntry)}
+
+type rateLimiter struct {
+	mu      sync.Mutex
+	entries map[string]*rateLimitEntry
+}
+
+type rateLimitEntry struct {
+	failures    int
+	windowStart time.Time
+}
+
+// isAllowed returns true if the IP has not exceeded the failed-attempt limit.
+// Expired windows are pruned on each call to bound memory usage.
+func (l *rateLimiter) isAllowed(ip string) bool {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+
+	now := time.Now()
+	for k, v := range l.entries {
+		if now.Sub(v.windowStart) >= loginWindow {
+			delete(l.entries, k)
+		}
+	}
+
+	e, ok := l.entries[ip]
+	return !ok || e.failures < maxLoginAttempts
+}
+
+func (l *rateLimiter) recordFailure(ip string) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+
+	now := time.Now()
+	e, ok := l.entries[ip]
+	if !ok || now.Sub(e.windowStart) >= loginWindow {
+		l.entries[ip] = &rateLimitEntry{failures: 1, windowStart: now}
+		return
+	}
+	e.failures++
+}
+
+func (l *rateLimiter) reset(ip string) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	delete(l.entries, ip)
+}
 
 // LoginPage renders the login page
 func (h *Handler) LoginPage(c *fiber.Ctx) error {
@@ -32,6 +89,17 @@ func (h *Handler) LoginPage(c *fiber.Ctx) error {
 
 // Login handles the login form submission
 func (h *Handler) Login(c *fiber.Ctx) error {
+	ip := c.IP()
+
+	if !loginLimiter.isAllowed(ip) {
+		return c.Status(fiber.StatusTooManyRequests).Render("pages/login", fiber.Map{
+			"Error":      "Too many failed login attempts. Please try again in 15 minutes.",
+			"NeedsSetup": !h.authService.HasUsers(),
+			"Version":    h.config.Version,
+			"Lang":       "en",
+		})
+	}
+
 	username := c.FormValue("username")
 	password := c.FormValue("password")
 
@@ -39,6 +107,7 @@ func (h *Handler) Login(c *fiber.Ctx) error {
 	if !h.authService.HasUsers() {
 		// Create first admin user
 		if err := h.authService.CreateUser(username, password, models.RoleAdmin); err != nil {
+			loginLimiter.recordFailure(ip)
 			return c.Redirect("/login?error=Failed+to+create+user")
 		}
 
@@ -51,8 +120,11 @@ func (h *Handler) Login(c *fiber.Ctx) error {
 	// Authenticate
 	token, err := h.authService.Authenticate(username, password)
 	if err != nil {
+		loginLimiter.recordFailure(ip)
 		return c.Redirect("/login?error=Invalid+credentials")
 	}
+
+	loginLimiter.reset(ip)
 
 	// Set session cookie
 	c.Cookie(&fiber.Cookie{
