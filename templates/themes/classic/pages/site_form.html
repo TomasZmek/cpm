@@ -4,9 +4,10 @@
 </div>
 
 <!-- Main Form -->
-<form action="{{if .IsNew}}/sites{{else}}/sites/{{.Site.Filename}}{{end}}" 
+<form action="{{if .IsNew}}/sites{{else}}/sites/{{.Site.Filename}}{{end}}"
       method="POST"
       class="site-form">
+    <input type="hidden" name="_csrf" value="{{.CSRFToken}}">
     
     <div class="form-section">
         <div class="form-section-title">🌐 {{t .Lang "domain_config"}}</div>

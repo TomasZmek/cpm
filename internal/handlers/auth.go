@@ -24,6 +24,7 @@ func (h *Handler) LoginPage(c *fiber.Ctx) error {
 		"Error":      c.Query("error"),
 		"Version":    h.config.Version,
 		"Lang":       "en",
+		"CSRFToken":  c.Locals("csrf_token"),
 	}
 
 	// Login page has its own HTML structure, no layout needed

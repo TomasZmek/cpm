@@ -104,11 +104,12 @@ func (h *Handler) baseData(c *fiber.Ctx, title string) fiber.Map {
 	}
 
 	return fiber.Map{
-		"Title":    title,
-		"Lang":     lang,
-		"ThemeCSS": themeCSS,
-		"Version":  h.config.Version,
-		"User":     c.Locals("user"),
+		"Title":     title,
+		"Lang":      lang,
+		"ThemeCSS":  themeCSS,
+		"Version":   h.config.Version,
+		"User":      c.Locals("user"),
+		"CSRFToken": c.Locals("csrf_token"),
 	}
 }
 

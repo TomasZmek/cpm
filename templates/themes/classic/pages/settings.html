@@ -85,6 +85,7 @@
                     <h3>📤 {{t .Lang "backup_restore_title"}}</h3>
                     <p>{{t .Lang "backup_restore_desc"}}</p>
                     <form action="/settings/backup/restore" method="POST" enctype="multipart/form-data">
+                        <input type="hidden" name="_csrf" value="{{$.CSRFToken}}">
                         <input type="file" name="backup" accept=".zip" required>
                         <button type="submit" class="btn btn-warning mt-2">
                             ⬆️ {{t .Lang "backup_upload"}}
@@ -111,6 +112,7 @@
                     <h3>📥 {{t .Lang "import_rules"}}</h3>
                     <p>{{t .Lang "import_rules_desc"}}</p>
                     <form action="/settings/import" method="POST" enctype="multipart/form-data">
+                        <input type="hidden" name="_csrf" value="{{$.CSRFToken}}">
                         <input type="file" name="import_file" accept=".json" required>
                         <label class="checkbox-label mt-2">
                             <input type="checkbox" name="skip_existing" checked>
@@ -132,6 +134,7 @@
             
             {{if .FallbackExists}}
             <form action="/settings/fallback" method="POST">
+                <input type="hidden" name="_csrf" value="{{$.CSRFToken}}">
                 <textarea name="content" rows="10" class="code-editor">{{.Fallback}}</textarea>
                 <button type="submit" class="btn btn-primary mt-2">
                     💾 {{t .Lang "save"}}
@@ -141,6 +144,7 @@
             <div class="alert alert-warning">
                 {{t .Lang "fallback_not_found"}}
                 <form action="/settings/fallback/create" method="POST" class="mt-2">
+                    <input type="hidden" name="_csrf" value="{{$.CSRFToken}}">
                     <button type="submit" class="btn btn-primary">
                         {{t .Lang "create"}} fallback.caddy
                     </button>
@@ -157,6 +161,7 @@
                 <div class="card flex-1">
                     <h3>403 Forbidden</h3>
                     <form action="/settings/error-page/403" method="POST">
+                        <input type="hidden" name="_csrf" value="{{$.CSRFToken}}">
                         <textarea name="content" rows="8" class="code-editor">{{.ErrorPage403}}</textarea>
                         <button type="submit" class="btn btn-secondary btn-sm mt-2">
                             💾 {{t .Lang "save"}} 403.html
@@ -167,6 +172,7 @@
                 <div class="card flex-1">
                     <h3>404 Not Found</h3>
                     <form action="/settings/error-page/404" method="POST">
+                        <input type="hidden" name="_csrf" value="{{$.CSRFToken}}">
                         <textarea name="content" rows="8" class="code-editor">{{.ErrorPage404}}</textarea>
                         <button type="submit" class="btn btn-secondary btn-sm mt-2">
                             💾 {{t .Lang "save"}} 404.html
@@ -241,6 +247,7 @@ subdomain.example.com {
         <div class="settings-section">
             <h3>➕ {{t .Lang "wildcard_add"}}</h3>
             <form action="/settings/wildcard" method="POST" class="wildcard-form">
+                <input type="hidden" name="_csrf" value="{{$.CSRFToken}}">
                 <div class="form-row">
                     <div class="form-group flex-2">
                         <label for="wildcard-domain">{{t .Lang "wildcard_domain"}}</label>
@@ -302,6 +309,7 @@ subdomain.example.com {
             <h2>👥 {{t .Lang "user_management"}}</h2>
             
             <form action="/settings/auth/toggle" method="POST" class="form-group">
+                <input type="hidden" name="_csrf" value="{{$.CSRFToken}}">
                 <label class="checkbox-label">
                     <input type="checkbox" 
                            name="enabled"
@@ -372,6 +380,7 @@ subdomain.example.com {
         <div class="settings-section">
             <h3>➕ {{t .Lang "add_user"}}</h3>
             <form action="/settings/users" method="POST" class="user-form">
+                <input type="hidden" name="_csrf" value="{{$.CSRFToken}}">
                 <div class="form-row">
                     <div class="form-group">
                         <label for="new-username">{{t .Lang "username"}}</label>
@@ -416,9 +425,13 @@ function changeTheme(theme) {
 function showPasswordModal(username) {
     const newPassword = prompt(`Enter new password for ${username}:`);
     if (newPassword && newPassword.length >= 6) {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
         fetch(`/settings/users/${username}/password`, {
-            method: 'PUT',
-            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRF-Token': csrfToken
+            },
             body: `password=${encodeURIComponent(newPassword)}`
         }).then(() => window.location.reload());
     }
