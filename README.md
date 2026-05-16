@@ -31,6 +31,16 @@
   <br><em>Settings — language, theme, wildcard SSL, users</em>
 </p>
 
+<p align="center">
+  <img src="img/edit-rules.png" alt="CPM Proxy Rules" width="800">
+  <br><em>Proxy Rules — visual editor for reverse proxy configuration</em>
+</p>
+
+<p align="center">
+  <img src="img/certificates.png" alt="CPM Certificates" width="800">
+  <br><em>Certificates — SSL overview with expiration status</em>
+</p>
+
 ---
 
 ## ✨ Features
