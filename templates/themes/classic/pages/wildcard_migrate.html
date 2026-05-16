@@ -20,6 +20,7 @@
         </div>
 
         <form action="/settings/wildcard/migrate/{{.Domain}}" method="POST">
+            <input type="hidden" name="_csrf" value="{{.CSRFToken}}">
             <!-- Sites to migrate -->
             <div class="settings-section">
                 <h3>📁 {{t .Lang "migrate_sites_title"}}</h3>
