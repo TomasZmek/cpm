@@ -223,9 +223,15 @@ func (s *WildcardService) GetMigrationInfo(domain string, sitesDir string, certs
 				continue
 			}
 			
-			// Simple check: if file contains .domain (e.g., .zrnek.cz)
-			if strings.Contains(string(content), "."+domain) {
-				info.MatchingSites = append(info.MatchingSites, entry.Name())
+			// Check if any token in the file is a subdomain of the target domain.
+			// Using per-token suffix matching avoids false positives from
+			// bare strings.Contains (e.g. ".example.com" matching "notexample.com").
+			suffix := "." + domain
+			for _, token := range strings.Fields(string(content)) {
+				if strings.HasSuffix(token, suffix) {
+					info.MatchingSites = append(info.MatchingSites, entry.Name())
+					break
+				}
 			}
 		}
 	}
