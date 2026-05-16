@@ -19,6 +19,20 @@
 
 ---
 
+## 📸 Screenshots
+
+<p align="center">
+  <img src="img/dashboard.png" alt="CPM Dashboard" width="800">
+  <br><em>Dashboard — system overview, alerts, quick actions</em>
+</p>
+
+<p align="center">
+  <img src="img/settings.png" alt="CPM Settings" width="800">
+  <br><em>Settings — language, theme, wildcard SSL, users</em>
+</p>
+
+---
+
 ## ✨ Features
 
 | Feature | Description |
