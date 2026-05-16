@@ -142,15 +142,24 @@ func (b *BackupService) RestoreBackup(data []byte) *RestoreResult {
 			continue
 		}
 
-		// Determine target path
-		var targetPath string
+		// Determine target path and base directory for path traversal check.
+		var targetPath, baseDir string
 		switch {
 		case strings.HasPrefix(f.Name, "sites/"):
-			targetPath = filepath.Join(b.config.SitesDir, strings.TrimPrefix(f.Name, "sites/"))
+			baseDir = b.config.SitesDir
+			targetPath = filepath.Join(baseDir, strings.TrimPrefix(f.Name, "sites/"))
 		case strings.HasPrefix(f.Name, "pages/"):
-			targetPath = filepath.Join(b.config.ConfigDir, f.Name)
+			baseDir = b.config.ConfigDir
+			targetPath = filepath.Join(baseDir, f.Name)
 		default:
-			targetPath = filepath.Join(b.config.ConfigDir, f.Name)
+			baseDir = b.config.ConfigDir
+			targetPath = filepath.Join(baseDir, f.Name)
+		}
+
+		// Guard against zip-slip / path traversal attacks.
+		if err := assertInsideDir(targetPath, baseDir); err != nil {
+			result.Errors = append(result.Errors, fmt.Sprintf("Rejected unsafe path in backup: %s", f.Name))
+			continue
 		}
 
 		// Create directory if needed
@@ -341,6 +350,23 @@ func (b *BackupService) extractFile(f *zip.File, targetPath string) error {
 	}
 
 	return os.WriteFile(targetPath, content, 0644)
+}
+
+// assertInsideDir returns an error if target does not resolve to a path inside base,
+// preventing zip-slip / path traversal attacks.
+func assertInsideDir(target, base string) error {
+	resolved, err := filepath.Abs(target)
+	if err != nil {
+		return err
+	}
+	absBase, err := filepath.Abs(base)
+	if err != nil {
+		return err
+	}
+	if !strings.HasPrefix(resolved, absBase+string(os.PathSeparator)) {
+		return fmt.Errorf("path escapes target directory")
+	}
+	return nil
 }
 
 // formatBytes formats bytes to human readable string
