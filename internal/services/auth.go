@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"sync"
@@ -61,12 +62,12 @@ func (a *AuthService) loadConfig() {
 
 	content, err := os.ReadFile(a.configPath)
 	if err != nil {
-		fmt.Printf("Warning: Could not read auth config: %v\n", err)
+		log.Printf("Warning: Could not read auth config: %v", err)
 		return
 	}
 
 	if err := json.Unmarshal(content, a.config); err != nil {
-		fmt.Printf("Warning: Could not parse auth config: %v\n", err)
+		log.Printf("Warning: Could not parse auth config: %v", err)
 	}
 }
 
@@ -234,16 +235,21 @@ func (a *AuthService) Authenticate(username, password string) (string, error) {
 // ValidateSession validates a session token
 func (a *AuthService) ValidateSession(token string) *models.User {
 	a.mu.RLock()
-	defer a.mu.RUnlock()
-
 	session, ok := a.sessions[token]
+	a.mu.RUnlock()
+
 	if !ok {
 		return nil
 	}
 
 	if time.Now().After(session.ExpiresAt) {
-		// Session expired
-		delete(a.sessions, token)
+		// Session expired — acquire write lock to safely delete.
+		// Re-check under write lock: another goroutine may have already removed it.
+		a.mu.Lock()
+		if s, exists := a.sessions[token]; exists && time.Now().After(s.ExpiresAt) {
+			delete(a.sessions, token)
+		}
+		a.mu.Unlock()
 		return nil
 	}
 

@@ -5,7 +5,7 @@ bin/
 *.dll
 *.so
 *.dylib
-cpm
+/cpm
 
 # Test binary
 *.test

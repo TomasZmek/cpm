@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{.CSRFToken}}">
     <title>{{.Title}} - CPM</title>
     <link rel="stylesheet" href="{{.ThemeCSS}}">
     <link rel="icon" type="image/svg+xml" href="/static/img/logo.svg">
@@ -49,6 +50,7 @@
                     <span>{{.User.Username}}</span>
                 </div>
                 <form action="/logout" method="POST">
+                    <input type="hidden" name="_csrf" value="{{.CSRFToken}}">
                     <button type="submit" class="btn btn-secondary btn-sm">
                         {{t .Lang "logout"}}
                     </button>
@@ -77,5 +79,14 @@
     </div>
     
     <script src="/static/js/app.js"></script>
+    <script>
+    // Send CSRF token with every HTMX request via header
+    document.addEventListener('htmx:configRequest', function(evt) {
+        var meta = document.querySelector('meta[name="csrf-token"]');
+        if (meta) {
+            evt.detail.headers['X-CSRF-Token'] = meta.getAttribute('content');
+        }
+    });
+    </script>
 </body>
 </html>

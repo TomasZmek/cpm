@@ -104,11 +104,12 @@ func (h *Handler) baseData(c *fiber.Ctx, title string) fiber.Map {
 	}
 
 	return fiber.Map{
-		"Title":    title,
-		"Lang":     lang,
-		"ThemeCSS": themeCSS,
-		"Version":  h.config.Version,
-		"User":     c.Locals("user"),
+		"Title":     title,
+		"Lang":      lang,
+		"ThemeCSS":  themeCSS,
+		"Version":   h.config.Version,
+		"User":      c.Locals("user"),
+		"CSRFToken": c.Locals("csrf_token"),
 	}
 }
 
@@ -135,12 +136,3 @@ func getFlash(c *fiber.Ctx) (string, string) {
 	return msgType, message
 }
 
-// contains checks if a slice contains an item
-func contains(slice []string, item string) bool {
-	for _, s := range slice {
-		if s == item {
-			return true
-		}
-	}
-	return false
-}

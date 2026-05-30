@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"fmt"
+
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -95,5 +97,5 @@ func formatDaysLeft(days int) string {
 	if days == 1 {
 		return "1 day left"
 	}
-	return string(rune(days)) + " days left"
+	return fmt.Sprintf("%d days left", days)
 }

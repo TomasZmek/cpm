@@ -2,6 +2,7 @@ package services
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"sort"
@@ -66,7 +67,7 @@ func (c *CaddyService) GetAllSites() ([]*models.Site, error) {
 
 		entries, err := os.ReadDir(dir)
 		if err != nil {
-			fmt.Printf("Warning: Could not read directory %s: %v\n", dir, err)
+			log.Printf("Warning: Could not read directory %s: %v", dir, err)
 			continue
 		}
 
@@ -96,7 +97,7 @@ func (c *CaddyService) GetAllSites() ([]*models.Site, error) {
 			site, err := c.loadSite(filePath)
 			if err != nil {
 				// Log error but continue
-				fmt.Printf("Warning: Could not load site %s: %v\n", name, err)
+				log.Printf("Warning: Could not load site %s: %v", name, err)
 				continue
 			}
 

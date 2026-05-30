@@ -5,6 +5,7 @@ import (
 
 	"github.com/TomasZmek/cpm/internal/models"
 	"github.com/TomasZmek/cpm/internal/services"
+	"github.com/TomasZmek/cpm/internal/utils"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -92,7 +93,7 @@ func (h *Handler) SiteCreate(c *fiber.Ctx) error {
 	}
 
 	// Derive IsInternal from snippets (internal_only snippet = internal site)
-	site.IsInternal = contains(site.Snippets, "internal_only")
+	site.IsInternal = utils.Contains(site.Snippets, "internal_only")
 
 	// Parse tags
 	if tags := c.FormValue("tags"); tags != "" {
@@ -209,7 +210,7 @@ func (h *Handler) SiteUpdate(c *fiber.Ctx) error {
 		}
 		
 		// Derive IsInternal from snippets
-		site.IsInternal = contains(site.Snippets, "internal_only")
+		site.IsInternal = utils.Contains(site.Snippets, "internal_only")
 		
 		if tags := c.FormValue("tags"); tags != "" {
 			site.Tags = strings.Split(tags, ",")

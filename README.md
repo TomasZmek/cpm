@@ -10,11 +10,35 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-3.1.1-blue" alt="Version">
+  <img src="https://img.shields.io/badge/version-3.1.2-blue" alt="Version">
   <img src="https://img.shields.io/badge/Go-1.26-00ADD8?logo=go" alt="Go">
   <img src="https://img.shields.io/badge/Docker-ready-2496ED?logo=docker" alt="Docker">
   <img src="https://img.shields.io/badge/platforms-amd64%20%7C%20arm64-lightgrey" alt="Platforms">
   <img src="https://img.shields.io/badge/image_size-~6MB-green" alt="Image Size">
+</p>
+
+---
+
+## 📸 Screenshots
+
+<p align="center">
+  <img src="img/dashboard.png" alt="CPM Dashboard" width="800">
+  <br><em>Dashboard — system overview, alerts, quick actions</em>
+</p>
+
+<p align="center">
+  <img src="img/settings.png" alt="CPM Settings" width="800">
+  <br><em>Settings — language, theme, wildcard SSL, users</em>
+</p>
+
+<p align="center">
+  <img src="img/edit-rules.png" alt="CPM Proxy Rules" width="800">
+  <br><em>Proxy Rules — visual editor for reverse proxy configuration</em>
+</p>
+
+<p align="center">
+  <img src="img/certificates.png" alt="CPM Certificates" width="800">
+  <br><em>Certificates — SSL overview with expiration status</em>
 </p>
 
 ---
@@ -40,7 +64,7 @@
 ### Docker Hub
 
 ```bash
-docker pull perteus/caddy-ui:3.1.1
+docker pull perteus/caddy-ui:3.1.2
 docker pull perteus/caddy-ui:latest
 ```
 
@@ -61,7 +85,7 @@ services:
       - ./caddy-data:/data
 
   cpm:
-    image: perteus/caddy-ui:3.1.1
+    image: perteus/caddy-ui:3.1.2
     container_name: cpm
     ports:
       - "8501:8501"
@@ -91,7 +115,7 @@ services:
       - ./caddy-data:/data
 
   cpm:
-    image: perteus/caddy-ui:3.1.1
+    image: perteus/caddy-ui:3.1.2
     container_name: cpm
     privileged: true  # Required for Synology
     ports:
@@ -180,7 +204,7 @@ For Synology Docker, use `privileged: true` to allow Docker socket access:
 
 ```yaml
 cpm:
-  image: perteus/caddy-ui:3.1.1
+  image: perteus/caddy-ui:3.1.2
   privileged: true
   volumes:
     - /volume1/docker/caddy-config:/caddy-config
@@ -218,8 +242,8 @@ go build -o cpm ./cmd/cpm
 ### Docker Build
 
 ```bash
-docker build -t perteus/caddy-ui:3.1.1 --no-cache .
-docker push perteus/caddy-ui:3.1.1
+docker build -t perteus/caddy-ui:3.1.2 --no-cache .
+docker push perteus/caddy-ui:3.1.2
 docker push perteus/caddy-ui:latest
 ```
 
@@ -229,12 +253,21 @@ docker push perteus/caddy-ui:latest
 
 | Version | Date | Notes |
 |---------|------|-------|
+| **3.1.2** | 2026-05-16 | 🔒 Security fixes, refactoring |
 | **3.1.1** | 2026-05-16 | 🔒 Security update, Go 1.26, multi-platform (amd64/arm64) |
 | **3.1.0** | 2026-01 | 🔐 Wildcard refactor, new architecture |
 | **3.0.2** | 2026-01 | 🐛 Wildcard TLS fix, parser fix, 405 fix |
 | **3.0.1** | 2026-01 | 🔐 Wildcard SSL, migration tools, UI improvements |
 | **3.0.0** | 2026-01 | 🎉 Complete Go rewrite (794MB → 6MB) |
 | 2.2.1 | 2025-12 | Python version (deprecated) |
+
+### v3.1.2 - Security Fixes & Code Quality
+- ✅ **Race condition fix** - ValidateSession no longer writes to map under read lock
+- ✅ **Path traversal fix** - ZIP restore is now protected against zip-slip attacks
+- ✅ **CSRF protection** - all forms now protected with CSRF tokens
+- ✅ **Brute-force protection** - login endpoint rate limited (5 attempts / 15 min)
+- ✅ **Dashboard fix** - certificate days remaining now displays correctly
+- ✅ **Code deduplication** - shared utils package, consistent logging
 
 ### v3.1.1 - Security Update & Multi-platform
 - ✅ **Go 1.26** - updated runtime with security fixes

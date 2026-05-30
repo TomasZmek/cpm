@@ -2,10 +2,9 @@ package middleware
 
 import (
 	"github.com/TomasZmek/cpm/internal/services"
+	"github.com/TomasZmek/cpm/internal/utils"
 	"github.com/gofiber/fiber/v2"
 )
-
-const sessionCookieName = "cpm_session"
 
 // Auth middleware checks if user is authenticated
 func Auth(authService *services.AuthService) fiber.Handler {
@@ -16,7 +15,7 @@ func Auth(authService *services.AuthService) fiber.Handler {
 		}
 
 		// Get session token from cookie
-		token := c.Cookies(sessionCookieName)
+		token := c.Cookies(utils.SessionCookieName)
 		if token == "" {
 			return redirectToLogin(c)
 		}

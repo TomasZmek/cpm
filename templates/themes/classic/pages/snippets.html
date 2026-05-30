@@ -24,7 +24,7 @@
         
         <div class="snippet-card-body" x-show="expanded" x-collapse>
             <form action="/snippets/cloudflare_dns" method="POST" hx-boost="true">
-                
+                <input type="hidden" name="_csrf" value="{{.CSRFToken}}">
                 <label class="toggle-label">
                     <span class="toggle-text">{{t .Lang "snippets_enable_cloudflare"}}</span>
                     <label class="toggle-switch">
@@ -72,7 +72,7 @@
         
         <div class="snippet-card-body" x-show="expanded" x-collapse>
             <form action="/snippets/internal_only" method="POST" hx-boost="true">
-                
+                <input type="hidden" name="_csrf" value="{{.CSRFToken}}">
                 <label class="toggle-label">
                     <span class="toggle-text">{{t .Lang "snippets_enable_internal"}}</span>
                     <label class="toggle-switch">
@@ -111,7 +111,7 @@
         
         <div class="snippet-card-body" x-show="expanded" x-collapse>
             <form action="/snippets/security_headers" method="POST" hx-boost="true">
-                
+                <input type="hidden" name="_csrf" value="{{.CSRFToken}}">
                 <label class="toggle-label">
                     <span class="toggle-text">{{t .Lang "snippets_enable_security"}}</span>
                     <label class="toggle-switch">
@@ -186,7 +186,7 @@
         
         <div class="snippet-card-body" x-show="expanded" x-collapse>
             <form action="/snippets/compression" method="POST" hx-boost="true">
-                
+                <input type="hidden" name="_csrf" value="{{.CSRFToken}}">
                 <label class="toggle-label">
                     <span class="toggle-text">{{t .Lang "snippets_enable_compression"}}</span>
                     <label class="toggle-switch">
@@ -233,7 +233,7 @@
         
         <div class="snippet-card-body" x-show="expanded" x-collapse>
             <form action="/snippets/rate_limit" method="POST" hx-boost="true">
-                
+                <input type="hidden" name="_csrf" value="{{.CSRFToken}}">
                 <label class="toggle-label">
                     <span class="toggle-text">{{t .Lang "snippets_enable_rate_limit"}}</span>
                     <label class="toggle-switch">
