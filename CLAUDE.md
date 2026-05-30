@@ -127,12 +127,22 @@ Types: `feat`, `fix`, `docs`, `refactor`, `chore`
 1. Update `Version` and `BuildDate` constants in `cmd/cpm/main.go`
 2. Update `RELEASE_NOTES.md`
 3. Update version badges in `README.md` and `DOCKERHUB.md`
-4. Build and push Docker image:
+4. Build and push Docker image (multi-platform amd64 + arm64):
    ```bash
-   docker build -t perteus/caddy-ui:VERSION --no-cache .
-   docker push perteus/caddy-ui:VERSION
-   docker push perteus/caddy-ui:latest
+   # Multi-platform build a push — jediný správný způsob
+   docker buildx create --name multibuilder --use --bootstrap 2>/dev/null || \
+     docker buildx use multibuilder
+   docker buildx build \
+     --platform linux/amd64,linux/arm64 \
+     --push \
+     --no-cache \
+     -t perteus/caddy-ui:VERSION \
+     -t perteus/caddy-ui:latest \
+     .
    ```
+   Nebo přes Makefile: `make docker-build`
+
+   POZNÁMKA: `buildx --push` pushuje přímo během buildu. `make docker-push` není potřeba volat zvlášť.
 5. Commit with `chore: bump version to vVERSION`
 
 v3.1.1 has never been pushed to Docker Hub — it exists only on the `CPM-v3.1.1-internal-only-wildcard-fix` branch.

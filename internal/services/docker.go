@@ -8,8 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/client"
+	"github.com/moby/moby/client"
 )
 
 // DockerService handles Docker container operations
@@ -46,12 +45,12 @@ func (d *DockerService) GetContainerID() (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	containers, err := d.client.ContainerList(ctx, container.ListOptions{All: true})
+	result, err := d.client.ContainerList(ctx, client.ContainerListOptions{All: true})
 	if err != nil {
 		return "", fmt.Errorf("failed to list containers: %w", err)
 	}
 
-	for _, c := range containers {
+	for _, c := range result.Items {
 		for _, name := range c.Names {
 			// Container names start with /
 			if name == "/"+d.containerName || name == d.containerName {
@@ -77,12 +76,12 @@ func (d *DockerService) IsContainerRunning() bool {
 		return false
 	}
 
-	inspect, err := d.client.ContainerInspect(ctx, containerID)
+	inspect, err := d.client.ContainerInspect(ctx, containerID, client.ContainerInspectOptions{})
 	if err != nil {
 		return false
 	}
 
-	return inspect.State.Running
+	return inspect.Container.State.Running
 }
 
 // ReloadCaddy reloads Caddy configuration
@@ -133,18 +132,18 @@ func (d *DockerService) ExecCommandWithOutput(cmd ...string) (string, error) {
 		return "", err
 	}
 
-	execConfig := container.ExecOptions{
+	execConfig := client.ExecCreateOptions{
 		Cmd:          cmd,
 		AttachStdout: true,
 		AttachStderr: true,
 	}
 
-	execID, err := d.client.ContainerExecCreate(ctx, containerID, execConfig)
+	execID, err := d.client.ExecCreate(ctx, containerID, execConfig)
 	if err != nil {
 		return "", fmt.Errorf("failed to create exec: %w", err)
 	}
 
-	resp, err := d.client.ContainerExecAttach(ctx, execID.ID, container.ExecAttachOptions{})
+	resp, err := d.client.ExecAttach(ctx, execID.ID, client.ExecAttachOptions{})
 	if err != nil {
 		return "", fmt.Errorf("failed to attach exec: %w", err)
 	}
@@ -155,7 +154,7 @@ func (d *DockerService) ExecCommandWithOutput(cmd ...string) (string, error) {
 	outputStr := cleanDockerOutput(string(output))
 
 	// Check exit code
-	inspect, err := d.client.ContainerExecInspect(ctx, execID.ID)
+	inspect, err := d.client.ExecInspect(ctx, execID.ID, client.ExecInspectOptions{})
 	if err != nil {
 		return outputStr, fmt.Errorf("failed to inspect exec: %w", err)
 	}
@@ -195,7 +194,7 @@ func (d *DockerService) GetLogs(lines int) ([]string, error) {
 		return nil, err
 	}
 
-	options := container.LogsOptions{
+	options := client.ContainerLogsOptions{
 		ShowStdout: true,
 		ShowStderr: true,
 		Tail:       fmt.Sprintf("%d", lines),
@@ -242,10 +241,10 @@ func (d *DockerService) GetContainerStatus() string {
 		return "not found"
 	}
 
-	inspect, err := d.client.ContainerInspect(ctx, containerID)
+	inspect, err := d.client.ContainerInspect(ctx, containerID, client.ContainerInspectOptions{})
 	if err != nil {
 		return "error"
 	}
 
-	return inspect.State.Status
+	return string(inspect.Container.State.Status)
 }

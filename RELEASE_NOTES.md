@@ -1,3 +1,12 @@
+# CPM v3.1.3 - Security patch
+
+## 🔒 Security Fixes
+
+- chore: bump golang.org/x/crypto 0.45.0 → 0.52.0 (CVE-2026-39831..39834, CVE-2026-42508, CVE-2026-39829, CVE-2026-46597, CVE-2026-46595)
+- chore: migrate github.com/docker/docker → github.com/moby/moby/client v0.4.1 (CVE-2026-34040)
+
+---
+
 # CPM v3.1.2 - Security Fixes & Code Quality
 
 ## 🔒 Security Fixes
