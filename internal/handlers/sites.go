@@ -57,9 +57,20 @@ func (h *Handler) SiteNew(c *fiber.Ctx) error {
 		wildcardDomains, _ = h.wildcardService.GetDomains()
 	}
 
+	site := &models.Site{TLSMode: "auto"}
+	if qIP := c.Query("ip"); qIP != "" {
+		site.TargetIP = qIP
+	}
+	if qPort := c.Query("port"); qPort != "" {
+		site.TargetPort = qPort
+	}
+	if qName := c.Query("name"); qName != "" {
+		site.Domains = []string{qName}
+	}
+
 	data := h.baseData(c, "New Proxy Rule")
 	data["IsNew"] = true
-	data["Site"] = &models.Site{TLSMode: "auto"}
+	data["Site"] = site
 	data["DefaultIP"] = h.config.DefaultIP
 	data["AvailableSnippets"] = availableSnippets
 	data["WildcardDomains"] = wildcardDomains

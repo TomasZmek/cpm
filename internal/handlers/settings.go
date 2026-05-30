@@ -7,6 +7,38 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+// SettingsDocker renders the Docker Auto-Discovery settings tab.
+func (h *Handler) SettingsDocker(c *fiber.Ctx) error {
+	return h.renderSettingsTab(c, "docker")
+}
+
+// SettingsDiscoveryIPSave saves the Discovery IP setting.
+func (h *Handler) SettingsDiscoveryIPSave(c *fiber.Ctx) error {
+	ip := c.FormValue("discovery_ip")
+
+	settings, err := h.settingsService.Get()
+	if err != nil {
+		setFlash(c, "error", "Failed to load settings: "+err.Error())
+		return c.Redirect("/settings/docker")
+	}
+
+	settings.DiscoveryIP = ip
+
+	if err := h.settingsService.Save(settings); err != nil {
+		setFlash(c, "error", "Failed to save settings: "+err.Error())
+		return c.Redirect("/settings/docker")
+	}
+
+	setFlash(c, "success", "Discovery IP saved")
+
+	if c.Get("HX-Request") == "true" {
+		c.Set("HX-Redirect", "/settings/docker")
+		return c.SendStatus(fiber.StatusOK)
+	}
+
+	return c.Redirect("/settings/docker")
+}
+
 // SettingsPage renders the settings page
 func (h *Handler) SettingsPage(c *fiber.Ctx) error {
 	tab := c.Query("tab", "general")
@@ -75,6 +107,10 @@ func (h *Handler) renderSettingsTab(c *fiber.Ctx, tab string) error {
 		data["Users"] = h.authService.GetUsers()
 		data["AuthEnabled"] = h.authService.IsEnabled()
 		data["Roles"] = models.AllRoles()
+
+	case "docker":
+		appSettings, _ := h.settingsService.Get()
+		data["DiscoveryIP"] = appSettings.DiscoveryIP
 	}
 
 	return c.Render("pages/settings", data, "layouts/base")

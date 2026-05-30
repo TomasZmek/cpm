@@ -369,6 +369,22 @@ var englishTranslations = map[string]string{
 	"tls_hint":              "Wildcard certificates are shared across all subdomains - more private and efficient",
 	"wildcard_snippets_hint": "cloudflare_dns is handled automatically at wildcard level",
 	"wildcard_tls_active":   "Wildcard TLS active - DNS challenge handled automatically",
+
+	// Docker Auto-Discovery
+	"settings_docker":             "Docker",
+	"settings_docker_title":       "Docker Auto-Discovery",
+	"discovery_title":             "Docker Auto-Discovery",
+	"discovery_ip_label":          "Discovery IP",
+	"discovery_ip_description":    "IP address used as the target when creating proxy rules from discovered containers.",
+	"discovery_ip_help":           "Target IP address used for auto-discovered containers.",
+	"discovery_ip_saved":          "Discovery IP saved",
+	"discovery_container":         "Container",
+	"discovery_not_paired":        "Not paired",
+	"discovery_create_rule":       "Create rule",
+	"discovery_empty":             "No running containers found (excluding Caddy and CPM).",
+	"discovery_ip_not_set":        "Discovery IP not set.",
+	"discovery_ip_not_set_desc":   "Please configure a Discovery IP in Settings → Docker first.",
+	"discovery_docker_error":      "Docker error:",
 }
 
 // Czech translations
@@ -676,4 +692,20 @@ var czechTranslations = map[string]string{
 	"tls_hint":              "Wildcard certifikáty jsou sdílené pro všechny subdomény - více soukromí a efektivnější",
 	"wildcard_snippets_hint": "cloudflare_dns je řešeno automaticky na úrovni wildcard",
 	"wildcard_tls_active":   "Wildcard TLS aktivní - DNS challenge je řešeno automaticky",
+
+	// Docker Auto-Discovery
+	"settings_docker":             "Docker",
+	"settings_docker_title":       "Docker Auto-Discovery",
+	"discovery_title":             "Docker Auto-Discovery",
+	"discovery_ip_label":          "Discovery IP",
+	"discovery_ip_description":    "IP adresa cíle pro vytváření proxy pravidel z nalezených kontejnerů.",
+	"discovery_ip_help":           "Cílová IP adresa pro auto-discovery kontejnerů.",
+	"discovery_ip_saved":          "Discovery IP uložena",
+	"discovery_container":         "Kontejner",
+	"discovery_not_paired":        "Nespárováno",
+	"discovery_create_rule":       "Vytvořit pravidlo",
+	"discovery_empty":             "Žádné běžící kontejnery nenalezeny (s výjimkou Caddy a CPM).",
+	"discovery_ip_not_set":        "Discovery IP není nastavena.",
+	"discovery_ip_not_set_desc":   "Nejprve nakonfigurujte Discovery IP v Nastavení → Docker.",
+	"discovery_docker_error":      "Chyba Dockeru:",
 }

@@ -5,11 +5,26 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"os"
 	"strings"
 	"time"
 
 	"github.com/moby/moby/client"
 )
+
+// DiscoveredPort represents a single port mapping on a discovered container.
+type DiscoveredPort struct {
+	PrivatePort uint16
+	PublicPort  uint16
+}
+
+// DiscoveredContainer represents a running container eligible for auto-discovery.
+// Containers with multiple ports are returned as multiple entries (one per port).
+type DiscoveredContainer struct {
+	Name  string
+	State string
+	Ports []DiscoveredPort
+}
 
 // DockerService handles Docker container operations
 type DockerService struct {
@@ -225,6 +240,65 @@ func (d *DockerService) GetLogs(lines int) ([]string, error) {
 	}
 
 	return cleanLines, nil
+}
+
+// ListDiscoverableContainers returns running containers suitable for auto-discovery.
+// Caddy (d.containerName) and the CPM container itself are excluded.
+// Containers with N ports are returned as N separate entries (one per port).
+func (d *DockerService) ListDiscoverableContainers() ([]DiscoveredContainer, error) {
+	if d.client == nil {
+		return nil, fmt.Errorf("Docker client not available")
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	selfHostname, _ := os.Hostname()
+
+	result, err := d.client.ContainerList(ctx, client.ContainerListOptions{All: false})
+	if err != nil {
+		return nil, fmt.Errorf("failed to list containers: %w", err)
+	}
+
+	var discovered []DiscoveredContainer
+	for _, c := range result.Items {
+		if c.State != "running" {
+			continue
+		}
+
+		name := ""
+		for _, n := range c.Names {
+			name = strings.TrimPrefix(n, "/")
+			break
+		}
+
+		if name == d.containerName {
+			continue
+		}
+
+		if selfHostname != "" && strings.HasPrefix(c.ID, selfHostname) {
+			continue
+		}
+
+		if len(c.Ports) == 0 {
+			discovered = append(discovered, DiscoveredContainer{
+				Name:  name,
+				State: "running",
+				Ports: []DiscoveredPort{},
+			})
+			continue
+		}
+
+		for _, p := range c.Ports {
+			discovered = append(discovered, DiscoveredContainer{
+				Name:  name,
+				State: "running",
+				Ports: []DiscoveredPort{{PrivatePort: p.PrivatePort, PublicPort: p.PublicPort}},
+			})
+		}
+	}
+
+	return discovered, nil
 }
 
 // GetContainerStatus returns the container status

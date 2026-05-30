@@ -19,6 +19,9 @@
         <a href="/settings/wildcard" class="tab {{if eq .ActiveTab "wildcard"}}active{{end}}">
             🔐 {{t .Lang "settings_wildcard"}}
         </a>
+        <a href="/settings/docker" class="tab {{if eq .ActiveTab "docker"}}active{{end}}">
+            🐳 {{t .Lang "settings_docker"}}
+        </a>
         <a href="/settings/users" class="tab {{if eq .ActiveTab "users"}}active{{end}}">
             👥 {{t .Lang "settings_users"}}
         </a>
@@ -303,6 +306,29 @@ subdomain.example.com {
         }
         </script>
         
+        {{else if eq .ActiveTab "docker"}}
+        <!-- Docker Auto-Discovery Settings -->
+        <div class="settings-section">
+            <h2>🐳 {{t .Lang "settings_docker_title"}}</h2>
+            <p class="text-muted">{{t .Lang "discovery_ip_description"}}</p>
+
+            <form action="/settings/discovery-ip" method="POST" class="mt-4">
+                <input type="hidden" name="_csrf" value="{{$.CSRFToken}}">
+                <div class="form-group">
+                    <label for="discovery-ip">{{t .Lang "discovery_ip_label"}}</label>
+                    <input type="text"
+                           id="discovery-ip"
+                           name="discovery_ip"
+                           value="{{.DiscoveryIP}}"
+                           placeholder="192.168.1.100">
+                    <small class="form-help">{{t .Lang "discovery_ip_help"}}</small>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    💾 {{t .Lang "save"}}
+                </button>
+            </form>
+        </div>
+
         {{else if eq .ActiveTab "users"}}
         <!-- Users Settings -->
         <div class="settings-section">
