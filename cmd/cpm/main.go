@@ -236,6 +236,7 @@ func setupRoutes(app *fiber.App, h *handlers.Handler, authService *services.Auth
 	protected.Post("/discovery/create", h.DiscoveryCreate)
 	protected.Get("/settings/docker", h.SettingsDocker)
 	protected.Post("/settings/discovery-hosts", h.SettingsDiscoveryHostsSave)
+	protected.Get("/settings/discovery-detect", h.SettingsDiscoveryDetect)
 
 	// Wildcard SSL
 	protected.Get("/settings/wildcard", h.WildcardSettings)

@@ -68,6 +68,8 @@ func (h *Handler) SiteNew(c *fiber.Ctx) error {
 		site.Domains = []string{qName}
 	}
 
+	appSettings, _ := h.settingsService.Get()
+
 	data := h.baseData(c, "New Proxy Rule")
 	data["IsNew"] = true
 	data["Site"] = site
@@ -76,6 +78,7 @@ func (h *Handler) SiteNew(c *fiber.Ctx) error {
 	data["WildcardDomains"] = wildcardDomains
 	data["Templates"] = templates
 	data["Categories"] = categories
+	data["DiscoveryHosts"] = appSettings.DiscoveryHosts
 	data["Active"] = "sites"
 
 	return c.Render("pages/site_form", data, "layouts/base")
@@ -175,12 +178,15 @@ func (h *Handler) SiteEdit(c *fiber.Ctx) error {
 		wildcardDomains, _ = h.wildcardService.GetDomains()
 	}
 
+	appSettings, _ := h.settingsService.Get()
+
 	data := h.baseData(c, "Edit: "+site.PrimaryDomain())
 	data["IsNew"] = false
 	data["Site"] = site
 	data["DefaultIP"] = h.config.DefaultIP
 	data["AvailableSnippets"] = availableSnippets
 	data["WildcardDomains"] = wildcardDomains
+	data["DiscoveryHosts"] = appSettings.DiscoveryHosts
 	data["Active"] = "sites"
 
 	return c.Render("pages/site_form", data, "layouts/base")

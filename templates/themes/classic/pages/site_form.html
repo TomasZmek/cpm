@@ -26,13 +26,25 @@
     
     <div class="form-section">
         <div class="form-section-title">🎯 {{t .Lang "backend_target"}}</div>
-        
+
+        {{if .DiscoveryHosts}}
+        <div class="form-group">
+            <label for="host-quick-select">🐳 {{t .Lang "sites_quick_host"}}</label>
+            <select id="host-quick-select" onchange="selectDiscoveryHost(this.value)">
+                <option value="">{{t .Lang "sites_select_host"}}</option>
+                {{range .DiscoveryHosts}}
+                <option value="{{.IP}}">{{if .Label}}{{.Label}} ({{.IP}}){{else}}{{.IP}}{{end}}</option>
+                {{end}}
+            </select>
+        </div>
+        {{end}}
+
         <div class="form-row">
             <div class="form-group">
                 <label for="target_ip">{{t .Lang "sites_ip"}} *</label>
-                <input type="text" 
-                       id="target_ip" 
-                       name="target_ip" 
+                <input type="text"
+                       id="target_ip"
+                       name="target_ip"
                        value="{{if .Site.TargetIP}}{{.Site.TargetIP}}{{else}}{{.DefaultIP}}{{end}}"
                        placeholder="192.168.1.100"
                        required>
@@ -249,4 +261,10 @@ document.addEventListener('DOMContentLoaded', function() {
     domainsInput.addEventListener('change', detectWildcard);
     {{end}}
 });
+
+function selectDiscoveryHost(ip) {
+    if (ip) {
+        document.getElementById('target_ip').value = ip;
+    }
+}
 </script>

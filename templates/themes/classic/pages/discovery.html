@@ -1,20 +1,17 @@
 <div class="page-header">
     <div class="page-header-title">
         <h1>🐳 {{t .Lang "discovery_title"}}</h1>
-        {{if .Hosts}}
-        <span class="badge">{{len .Hosts}} hosts</span>
-        {{end}}
     </div>
     <div class="page-header-actions">
         <a href="/settings/docker" class="btn btn-secondary">⚙️ {{t .Lang "settings"}}</a>
     </div>
 </div>
 
-{{if not .Hosts}}
-<!-- No hosts configured -->
+{{if not .HasLocalHost}}
+<!-- No local docker host configured -->
 <div class="alert alert-warning">
-    <strong>⚠️ {{t .Lang "discovery_no_hosts"}}</strong>
-    {{t .Lang "discovery_no_hosts_desc"}}
+    <strong>⚠️ {{t .Lang "discovery_no_local_host"}}</strong>
+    {{t .Lang "discovery_no_local_host_desc"}}
     <a href="/settings/docker">{{t .Lang "settings"}} → Docker</a>
 </div>
 

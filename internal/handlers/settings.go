@@ -5,12 +5,22 @@ import (
 	"strings"
 
 	"github.com/TomasZmek/cpm/internal/models"
+	"github.com/TomasZmek/cpm/internal/services"
 	"github.com/gofiber/fiber/v2"
 )
 
 // SettingsDocker renders the Docker Auto-Discovery settings tab.
 func (h *Handler) SettingsDocker(c *fiber.Ctx) error {
 	return h.renderSettingsTab(c, "docker")
+}
+
+// SettingsDiscoveryDetect detects the local machine's IP and returns it as JSON.
+func (h *Handler) SettingsDiscoveryDetect(c *fiber.Ctx) error {
+	ip, err := services.DetectLocalIP()
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+	return c.JSON(fiber.Map{"ip": ip})
 }
 
 // SettingsDiscoveryHostsSave saves the list of Docker discovery hosts.
@@ -26,6 +36,9 @@ func (h *Handler) SettingsDiscoveryHostsSave(c *fiber.Ctx) error {
 		}
 	})
 
+	// The hidden field local_docker_ip identifies which host is the local Docker host.
+	localDockerIP := strings.TrimSpace(c.FormValue("local_docker_ip"))
+
 	// Build hosts list, skipping entries with empty IP.
 	var hosts []models.DiscoveryHost
 	for i, ip := range ips {
@@ -36,7 +49,11 @@ func (h *Handler) SettingsDiscoveryHostsSave(c *fiber.Ctx) error {
 		if i < len(labels) {
 			label = labels[i]
 		}
-		hosts = append(hosts, models.DiscoveryHost{IP: ip, Label: label})
+		hosts = append(hosts, models.DiscoveryHost{
+			IP:            ip,
+			Label:         label,
+			IsLocalDocker: ip == localDockerIP,
+		})
 	}
 
 	settings, err := h.settingsService.Get()
@@ -128,6 +145,12 @@ func (h *Handler) renderSettingsTab(c *fiber.Ctx, tab string) error {
 	case "docker":
 		appSettings, _ := h.settingsService.Get()
 		data["DiscoveryHosts"] = appSettings.DiscoveryHosts
+		for _, dh := range appSettings.DiscoveryHosts {
+			if dh.IsLocalDocker {
+				data["LocalDockerIP"] = dh.IP
+				break
+			}
+		}
 	}
 
 	return c.Render("pages/settings", data, "layouts/base")
