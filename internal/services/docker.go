@@ -260,6 +260,12 @@ func (d *DockerService) ListDiscoverableContainers() ([]DiscoveredContainer, err
 		return nil, fmt.Errorf("failed to list containers: %w", err)
 	}
 
+	type portKey struct {
+		name        string
+		privatePort uint16
+	}
+	seen := make(map[portKey]bool)
+
 	var discovered []DiscoveredContainer
 	for _, c := range result.Items {
 		if c.State != "running" {
@@ -281,15 +287,24 @@ func (d *DockerService) ListDiscoverableContainers() ([]DiscoveredContainer, err
 		}
 
 		if len(c.Ports) == 0 {
-			discovered = append(discovered, DiscoveredContainer{
-				Name:  name,
-				State: "running",
-				Ports: []DiscoveredPort{},
-			})
+			key := portKey{name: name, privatePort: 0}
+			if !seen[key] {
+				seen[key] = true
+				discovered = append(discovered, DiscoveredContainer{
+					Name:  name,
+					State: "running",
+					Ports: []DiscoveredPort{},
+				})
+			}
 			continue
 		}
 
 		for _, p := range c.Ports {
+			key := portKey{name: name, privatePort: p.PrivatePort}
+			if seen[key] {
+				continue
+			}
+			seen[key] = true
 			discovered = append(discovered, DiscoveredContainer{
 				Name:  name,
 				State: "running",

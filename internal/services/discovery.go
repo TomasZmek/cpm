@@ -10,7 +10,8 @@ import (
 // DiscoveryResult represents a single discoverable container+port combination.
 type DiscoveryResult struct {
 	ContainerName string
-	Port          uint16
+	Port          uint16 // PrivatePort — container's internal port
+	PublicPort    uint16 // PublicPort — host-mapped port (0 if not mapped)
 	DiscoveryIP   string
 	Paired        bool
 	PairedDomain  string
@@ -29,19 +30,22 @@ func DiscoverContainers(dockerSvc *DockerService, caddySvc *CaddyService, discov
 	var results []DiscoveryResult
 	for _, c := range containers {
 		port := uint16(0)
+		publicPort := uint16(0)
 		if len(c.Ports) > 0 {
 			port = c.Ports[0].PrivatePort
+			publicPort = c.Ports[0].PublicPort
 		}
 
 		result := DiscoveryResult{
 			ContainerName: c.Name,
 			Port:          port,
+			PublicPort:    publicPort,
 			DiscoveryIP:   discoveryIP,
 			SuggestedName: SuggestContainerName(c.Name),
 		}
 
 		if port > 0 {
-			result.Paired, result.PairedDomain = findPairedSite(sites, discoveryIP, fmt.Sprintf("%d", port))
+			result.Paired, result.PairedDomain = findPairedSite(sites, discoveryIP, port, publicPort)
 		}
 
 		results = append(results, result)
@@ -65,9 +69,14 @@ func SuggestContainerName(name string) string {
 	return strings.Trim(b.String(), "-")
 }
 
-func findPairedSite(sites []*models.Site, ip, port string) (bool, string) {
+func findPairedSite(sites []*models.Site, ip string, privatePort, publicPort uint16) (bool, string) {
+	privStr := fmt.Sprintf("%d", privatePort)
+	pubStr := fmt.Sprintf("%d", publicPort)
 	for _, s := range sites {
-		if s.TargetIP == ip && s.TargetPort == port {
+		if s.TargetIP != ip {
+			continue
+		}
+		if s.TargetPort == privStr || (publicPort > 0 && s.TargetPort == pubStr) {
 			return true, s.PrimaryDomain()
 		}
 	}
