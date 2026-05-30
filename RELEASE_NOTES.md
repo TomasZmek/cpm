@@ -1,3 +1,14 @@
+# CPM v3.2.0 - Docker Auto-Discovery
+
+## ✨ New Features
+
+- **Docker Auto-Discovery** — automatic detection of running containers on the host
+- **One-click rule creation** — create proxy rules directly from discovered containers
+- **Rule pairing** — existing proxy rules are matched to running containers
+- **Discovery IP setting** — configurable target IP in Settings → Docker tab
+
+---
+
 # CPM v3.1.3 - Security patch
 
 ## 🔒 Security Fixes
