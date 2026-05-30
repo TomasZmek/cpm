@@ -2,7 +2,7 @@
 
 # Variables
 APP_NAME := cpm
-VERSION := 3.1.3
+VERSION := 3.2.0
 BUILD_DATE := $(shell date -u +%Y-%m-%d)
 DOCKER_REPO := perteus/caddy-ui
 GO_FILES := $(shell find . -name '*.go' -type f)
