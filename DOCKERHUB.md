@@ -6,9 +6,10 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-3.1.0-blue" alt="Version">
-  <img src="https://img.shields.io/badge/Go-1.23+-00ADD8?logo=go" alt="Go">
+  <img src="https://img.shields.io/badge/version-3.1.3-blue" alt="Version">
+  <img src="https://img.shields.io/badge/Go-1.26-00ADD8?logo=go" alt="Go">
   <img src="https://img.shields.io/badge/image_size-~6MB-green" alt="Image Size">
+  <img src="https://img.shields.io/badge/platforms-amd64%20%7C%20arm64-lightgrey" alt="Platforms">
 </p>
 
 ---
@@ -25,6 +26,7 @@
 | 👥 **Multi-User** | Role-based access control |
 | 💾 **Backup** | Full config backup & restore |
 | 🌐 **i18n** | English & Czech |
+| 🏠 **Internal-only** | Restrict sites to internal network only |
 
 ---
 
@@ -32,14 +34,13 @@
 
 ```bash
 docker pull perteus/caddy-ui:latest
-docker pull perteus/caddy-ui:3.1.0
+docker pull perteus/caddy-ui:3.1.3
 ```
 
 ### Docker Compose
 
 ```yaml
 version: '3.8'
-
 services:
   caddy:
     image: serfriz/caddy-cloudflare:latest
@@ -54,7 +55,7 @@ services:
       - ./caddy-data:/data
 
   cpm:
-    image: perteus/caddy-ui:3.1.0
+    image: perteus/caddy-ui:3.1.3
     container_name: cpm
     ports:
       - "8501:8501"
@@ -69,7 +70,17 @@ services:
 
 ### Synology NAS
 
-For Synology, add `privileged: true` for Docker socket access.
+Pro Synology přidej `privileged: true` pro přístup k Docker socketu.
+
+```yaml
+cpm:
+  image: perteus/caddy-ui:3.1.3
+  privileged: true
+  volumes:
+    - /volume1/docker/caddy-config:/caddy-config
+    - /volume1/docker/caddy-data:/caddy-data
+    - /var/run/docker.sock:/var/run/docker.sock
+```
 
 ---
 
@@ -88,19 +99,17 @@ For Synology, add `privileged: true` for Docker socket access.
 
 | Version | Notes |
 |---------|-------|
-| **3.1.0** | 🔐 Wildcard refactor - new architecture, handle blocks |
-| **3.0.2** | 🐛 Wildcard TLS fix, parser fix, 405 fix |
-| **3.0.1** | 🔐 Wildcard SSL, migration tools, UI improvements |
+| **3.1.3** | 🔒 Security patch — CVE fixes, migrace na moby/moby/client |
+| **3.1.2** | 🔒 Security fixes, CSRF, race condition, path traversal |
+| **3.1.1** | 🔐 Internal-only restrictions, Go 1.26, multi-platform (amd64/arm64) |
+| **3.1.0** | 🔐 Wildcard refactor, new architecture |
 | **3.0.0** | 🎉 Complete Go rewrite (794MB → 6MB) |
 | 2.x | Python version (deprecated) |
 
-### v3.1.0 Highlights
-- ✅ **Wildcard architecture refactor** - proper certificate handling
-- ✅ **Handle-based routing** - sites use `@matcher handle {}` format
-- ✅ **IP restrictions at wildcard level** - fixes nested handle errors
-- ✅ **New directory structure** - `sites/wildcard/` and `sites/standard/`
-- ✅ **Toggle switches UI** - modern form controls
-- ✅ **Detailed error logs** - see Caddy output on reload failures
+### v3.1.3 - Security Patch
+- ✅ **CVE fixes** — bump golang.org/x/crypto 0.45.0 → 0.52.0
+- ✅ **Docker SDK migration** — github.com/docker/docker → github.com/moby/moby/client (trvalé řešení)
+- ✅ **Multi-platform** — native amd64 + arm64
 
 ---
 
