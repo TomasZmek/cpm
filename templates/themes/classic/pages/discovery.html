@@ -1,8 +1,8 @@
 <div class="page-header">
     <div class="page-header-title">
         <h1>🐳 {{t .Lang "discovery_title"}}</h1>
-        {{if .DiscoveryIP}}
-        <span class="badge">{{.DiscoveryIP}}</span>
+        {{if .Hosts}}
+        <span class="badge">{{len .Hosts}} hosts</span>
         {{end}}
     </div>
     <div class="page-header-actions">
@@ -10,11 +10,11 @@
     </div>
 </div>
 
-{{if not .DiscoveryIP}}
-<!-- No Discovery IP configured -->
+{{if not .Hosts}}
+<!-- No hosts configured -->
 <div class="alert alert-warning">
-    <strong>⚠️ {{t .Lang "discovery_ip_not_set"}}</strong>
-    {{t .Lang "discovery_ip_not_set_desc"}}
+    <strong>⚠️ {{t .Lang "discovery_no_hosts"}}</strong>
+    {{t .Lang "discovery_no_hosts_desc"}}
     <a href="/settings/docker">{{t .Lang "settings"}} → Docker</a>
 </div>
 
@@ -30,6 +30,7 @@
     <table class="table">
         <thead>
             <tr>
+                <th>{{t .Lang "discovery_host_column"}}</th>
                 <th>{{t .Lang "discovery_container"}}</th>
                 <th>{{t .Lang "sites_port"}}</th>
                 <th>{{t .Lang "status"}}</th>
@@ -40,6 +41,13 @@
             {{if .Results}}
                 {{range .Results}}
                 <tr>
+                    <td>
+                        {{if .HostLabel}}
+                        <span class="badge">{{.HostLabel}}</span>
+                        {{else}}
+                        <code>{{.DiscoveryIP}}</code>
+                        {{end}}
+                    </td>
                     <td><strong>{{.ContainerName}}</strong></td>
                     <td>
                         {{if .Port}}
@@ -63,6 +71,7 @@
                             <input type="hidden" name="_csrf" value="{{$.CSRFToken}}">
                             <input type="hidden" name="container_name" value="{{.ContainerName}}">
                             <input type="hidden" name="port" value="{{.Port}}">
+                            <input type="hidden" name="ip" value="{{.DiscoveryIP}}">
                             <button type="submit" class="btn btn-sm btn-primary">
                                 ➕ {{t $.Lang "discovery_create_rule"}}
                             </button>
@@ -77,7 +86,7 @@
                 {{end}}
             {{else}}
             <tr>
-                <td colspan="4">
+                <td colspan="5">
                     <div class="alert alert-info" style="margin:0">
                         ℹ️ {{t .Lang "discovery_empty"}}
                     </div>

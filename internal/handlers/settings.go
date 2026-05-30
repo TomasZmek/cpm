@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/TomasZmek/cpm/internal/models"
 	"github.com/gofiber/fiber/v2"
@@ -12,9 +13,31 @@ func (h *Handler) SettingsDocker(c *fiber.Ctx) error {
 	return h.renderSettingsTab(c, "docker")
 }
 
-// SettingsDiscoveryIPSave saves the Discovery IP setting.
-func (h *Handler) SettingsDiscoveryIPSave(c *fiber.Ctx) error {
-	ip := c.FormValue("discovery_ip")
+// SettingsDiscoveryHostsSave saves the list of Docker discovery hosts.
+func (h *Handler) SettingsDiscoveryHostsSave(c *fiber.Ctx) error {
+	// Collect parallel arrays ip[] and label[] from the form.
+	var ips, labels []string
+	c.Context().PostArgs().VisitAll(func(key, value []byte) {
+		switch string(key) {
+		case "ip[]":
+			ips = append(ips, strings.TrimSpace(string(value)))
+		case "label[]":
+			labels = append(labels, strings.TrimSpace(string(value)))
+		}
+	})
+
+	// Build hosts list, skipping entries with empty IP.
+	var hosts []models.DiscoveryHost
+	for i, ip := range ips {
+		if ip == "" {
+			continue
+		}
+		label := ""
+		if i < len(labels) {
+			label = labels[i]
+		}
+		hosts = append(hosts, models.DiscoveryHost{IP: ip, Label: label})
+	}
 
 	settings, err := h.settingsService.Get()
 	if err != nil {
@@ -22,20 +45,14 @@ func (h *Handler) SettingsDiscoveryIPSave(c *fiber.Ctx) error {
 		return c.Redirect("/settings/docker")
 	}
 
-	settings.DiscoveryIP = ip
+	settings.DiscoveryHosts = hosts
 
 	if err := h.settingsService.Save(settings); err != nil {
 		setFlash(c, "error", "Failed to save settings: "+err.Error())
 		return c.Redirect("/settings/docker")
 	}
 
-	setFlash(c, "success", "Discovery IP saved")
-
-	if c.Get("HX-Request") == "true" {
-		c.Set("HX-Redirect", "/settings/docker")
-		return c.SendStatus(fiber.StatusOK)
-	}
-
+	setFlash(c, "success", "Discovery hosts saved")
 	return c.Redirect("/settings/docker")
 }
 
@@ -110,7 +127,7 @@ func (h *Handler) renderSettingsTab(c *fiber.Ctx, tab string) error {
 
 	case "docker":
 		appSettings, _ := h.settingsService.Get()
-		data["DiscoveryIP"] = appSettings.DiscoveryIP
+		data["DiscoveryHosts"] = appSettings.DiscoveryHosts
 	}
 
 	return c.Render("pages/settings", data, "layouts/base")

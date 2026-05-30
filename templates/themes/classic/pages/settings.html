@@ -310,24 +310,66 @@ subdomain.example.com {
         <!-- Docker Auto-Discovery Settings -->
         <div class="settings-section">
             <h2>🐳 {{t .Lang "settings_docker_title"}}</h2>
-            <p class="text-muted">{{t .Lang "discovery_ip_description"}}</p>
+            <p class="text-muted">{{t .Lang "discovery_hosts_description"}}</p>
 
-            <form action="/settings/discovery-ip" method="POST" class="mt-4">
+            <form action="/settings/discovery-hosts" method="POST" class="mt-4">
                 <input type="hidden" name="_csrf" value="{{$.CSRFToken}}">
-                <div class="form-group">
-                    <label for="discovery-ip">{{t .Lang "discovery_ip_label"}}</label>
-                    <input type="text"
-                           id="discovery-ip"
-                           name="discovery_ip"
-                           value="{{.DiscoveryIP}}"
-                           placeholder="192.168.1.100">
-                    <small class="form-help">{{t .Lang "discovery_ip_help"}}</small>
+
+                <div class="form-row mb-2">
+                    <div style="flex:1"><small class="text-muted">{{t .Lang "discovery_host_label"}}</small></div>
+                    <div style="flex:2"><small class="text-muted">{{t .Lang "discovery_host_ip"}}</small></div>
+                    <div style="width:40px"></div>
                 </div>
-                <button type="submit" class="btn btn-primary">
-                    💾 {{t .Lang "save"}}
-                </button>
+
+                <div id="discovery-hosts-list">
+                    {{range .DiscoveryHosts}}
+                    <div class="form-row host-row mb-2">
+                        <div class="form-group" style="flex:1;margin:0">
+                            <input type="text" name="label[]" value="{{.Label}}"
+                                   placeholder="{{t $.Lang "discovery_host_label"}}">
+                        </div>
+                        <div class="form-group" style="flex:2;margin:0">
+                            <input type="text" name="ip[]" value="{{.IP}}"
+                                   placeholder="192.168.1.100" required>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-danger"
+                                onclick="removeHostRow(this)" title="{{t $.Lang "delete"}}">🗑️</button>
+                    </div>
+                    {{end}}
+                </div>
+
+                <div class="form-row mt-3" style="gap:0.5rem">
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="addHostRow()">
+                        ➕ {{t .Lang "discovery_host_add"}}
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        💾 {{t .Lang "save"}}
+                    </button>
+                </div>
             </form>
         </div>
+
+        <script>
+        function addHostRow() {
+            const list = document.getElementById('discovery-hosts-list');
+            const row = document.createElement('div');
+            row.className = 'form-row host-row mb-2';
+            row.innerHTML = [
+                '<div class="form-group" style="flex:1;margin:0">',
+                '  <input type="text" name="label[]" placeholder="{{t .Lang "discovery_host_label"}}">',
+                '</div>',
+                '<div class="form-group" style="flex:2;margin:0">',
+                '  <input type="text" name="ip[]" placeholder="192.168.1.100" required>',
+                '</div>',
+                '<button type="button" class="btn btn-sm btn-danger" onclick="removeHostRow(this)">🗑️</button>'
+            ].join('');
+            list.appendChild(row);
+            row.querySelector('input[name="ip[]"]').focus();
+        }
+        function removeHostRow(btn) {
+            btn.closest('.host-row').remove();
+        }
+        </script>
 
         {{else if eq .ActiveTab "users"}}
         <!-- Users Settings -->

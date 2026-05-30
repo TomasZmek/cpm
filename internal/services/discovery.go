@@ -2,6 +2,7 @@ package services
 
 import (
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/TomasZmek/cpm/internal/models"
@@ -13,19 +14,41 @@ type DiscoveryResult struct {
 	Port          uint16 // PrivatePort — container's internal port
 	PublicPort    uint16 // PublicPort — host-mapped port (0 if not mapped)
 	DiscoveryIP   string
+	HostLabel     string
 	Paired        bool
 	PairedDomain  string
 	SuggestedName string
 }
 
-// DiscoverContainers lists running containers and matches them against existing proxy rules.
-func DiscoverContainers(dockerSvc *DockerService, caddySvc *CaddyService, discoveryIP string) ([]DiscoveryResult, error) {
+// DiscoverContainers lists running containers for a single host and matches them against existing proxy rules.
+func DiscoverContainers(dockerSvc *DockerService, caddySvc *CaddyService, host models.DiscoveryHost) ([]DiscoveryResult, error) {
+	sites, _ := caddySvc.GetAllSites()
+	return discoverHostSites(dockerSvc, host, sites)
+}
+
+// DiscoverAllHosts runs discovery for all configured hosts and merges the results.
+// Errors on individual hosts are logged but do not abort the whole operation.
+func DiscoverAllHosts(dockerSvc *DockerService, caddySvc *CaddyService, hosts []models.DiscoveryHost) ([]DiscoveryResult, error) {
+	sites, _ := caddySvc.GetAllSites()
+
+	var all []DiscoveryResult
+	for _, host := range hosts {
+		results, err := discoverHostSites(dockerSvc, host, sites)
+		if err != nil {
+			log.Printf("Discovery error for host %s: %v", host.IP, err)
+			continue
+		}
+		all = append(all, results...)
+	}
+	return all, nil
+}
+
+// discoverHostSites is the shared implementation used by both public discovery functions.
+func discoverHostSites(dockerSvc *DockerService, host models.DiscoveryHost, sites []*models.Site) ([]DiscoveryResult, error) {
 	containers, err := dockerSvc.ListDiscoverableContainers()
 	if err != nil {
 		return nil, err
 	}
-
-	sites, _ := caddySvc.GetAllSites()
 
 	var results []DiscoveryResult
 	for _, c := range containers {
@@ -40,12 +63,13 @@ func DiscoverContainers(dockerSvc *DockerService, caddySvc *CaddyService, discov
 			ContainerName: c.Name,
 			Port:          port,
 			PublicPort:    publicPort,
-			DiscoveryIP:   discoveryIP,
+			DiscoveryIP:   host.IP,
+			HostLabel:     host.Label,
 			SuggestedName: SuggestContainerName(c.Name),
 		}
 
 		if port > 0 {
-			result.Paired, result.PairedDomain = findPairedSite(sites, discoveryIP, port, publicPort)
+			result.Paired, result.PairedDomain = findPairedSite(sites, host.IP, port, publicPort)
 		}
 
 		results = append(results, result)
