@@ -2,9 +2,9 @@
 
 # Variables
 APP_NAME := cpm
-VERSION := 3.0.0
+VERSION := 3.1.3
 BUILD_DATE := $(shell date -u +%Y-%m-%d)
-DOCKER_REPO := ghcr.io/tomaszmek/cpm
+DOCKER_REPO := perteus/caddy-ui
 GO_FILES := $(shell find . -name '*.go' -type f)
 
 # Build flags
@@ -55,14 +55,20 @@ templ:
 
 # Docker build
 docker-build:
-	@echo "Building Docker image..."
-	@docker build -t $(DOCKER_REPO):$(VERSION) -t $(DOCKER_REPO):latest .
+	@echo "Building multi-platform Docker image v$(VERSION)..."
+	@docker buildx create --name multibuilder --use --bootstrap 2>/dev/null || \
+	 docker buildx use multibuilder
+	@docker buildx build \
+	  --platform linux/amd64,linux/arm64 \
+	  --push \
+	  --no-cache \
+	  -t $(DOCKER_REPO):$(VERSION) \
+	  -t $(DOCKER_REPO):latest \
+	  .
 
 # Docker push
-docker-push: docker-build
-	@echo "Pushing Docker image..."
-	@docker push $(DOCKER_REPO):$(VERSION)
-	@docker push $(DOCKER_REPO):latest
+docker-push:
+	@echo "Image already pushed during docker-build (buildx --push)"
 
 # Docker run locally
 docker-run:
