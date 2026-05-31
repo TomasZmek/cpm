@@ -2,10 +2,18 @@
 
 ## ✨ New Features
 
-- **Docker Auto-Discovery** — automatic detection of running containers on the host
-- **One-click rule creation** — create proxy rules directly from discovered containers
-- **Rule pairing** — existing proxy rules are matched to running containers
-- **Discovery IP setting** — configurable target IP in Settings → Docker tab
+### Docker Auto-Discovery
+- **Auto-Discovery** — automatic detection of running Docker containers on the host
+- **Multi-host support** — configure multiple Docker hosts (Settings → Docker)
+- **Local host flag** — mark one host as "Local Docker" for discovery; auto-detect its IP with one click
+- **Smart pairing** — existing proxy rules are automatically matched to running containers (by IP + port)
+- **One-click rule creation** — create proxy rules pre-filled with container name, IP and port
+- **Quick host selector** — new/edit site form includes a host dropdown to fill target IP instantly
+
+## 🐛 Bug Fixes
+
+- **Duplicate containers** — Docker API returns one entry per network interface; deduplication added
+- **Pairing detection** — pairing now checks both private port and host-mapped (public) port
 
 ---
 
