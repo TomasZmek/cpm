@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/TomasZmek/cpm/internal/models"
@@ -116,6 +115,7 @@ func (h *Handler) renderSettingsTab(c *fiber.Ctx, tab string) error {
 		data["Languages"] = []map[string]string{
 			{"code": "en", "name": "English"},
 			{"code": "cs", "name": "Čeština"},
+			{"code": "ko", "name": "한국어"},
 		}
 		data["Themes"] = []map[string]string{
 			{"code": "classic", "name": "Classic"},
@@ -194,9 +194,9 @@ func (h *Handler) BackupRestore(c *fiber.Ctx) error {
 		// Reload Caddy
 		reloadResult := h.caddyService.Reload()
 		if reloadResult.Success {
-			setFlash(c, "success", "Backup restored and Caddy reloaded")
+			setFlash(c, "success", tl(c, "msg_backup_reloaded"))
 		} else {
-			setFlash(c, "warning", "Backup restored but reload failed: "+reloadResult.Error)
+			setFlash(c, "warning", tl(c, "msg_backup_restore_reload_failed")+": "+reloadResult.Error)
 		}
 	}
 
@@ -238,7 +238,11 @@ func (h *Handler) ImportRules(c *fiber.Ctx) error {
 		h.caddyService.ReloadWithValidation()
 	}
 
-	setFlash(c, "success", formatImportResult(imported, skipped))
+	if skipped > 0 {
+		setFlash(c, "success", tl(c, "msg_import_result_with_skip", imported, skipped))
+	} else {
+		setFlash(c, "success", tl(c, "msg_import_result", imported))
+	}
 
 	if c.Get("HX-Request") == "true" {
 		c.Set("HX-Redirect", "/settings?tab=backup")
@@ -265,9 +269,3 @@ func (h *Handler) ExportRules(c *fiber.Ctx) error {
 	return c.Send(data)
 }
 
-func formatImportResult(imported, skipped int) string {
-	if skipped > 0 {
-		return fmt.Sprintf("Imported %d rules, skipped %d existing", imported, skipped)
-	}
-	return fmt.Sprintf("Imported %d rules", imported)
-}

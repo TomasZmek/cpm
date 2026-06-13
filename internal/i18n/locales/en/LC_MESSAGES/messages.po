@@ -1,0 +1,1033 @@
+# English translations for CPM - Caddy Proxy Manager
+# SPDX-License-Identifier: MIT
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+# General
+msgid "app_name"
+msgstr "CPM - Caddy Proxy Manager"
+
+msgid "app_version"
+msgstr "Version"
+
+msgid "save"
+msgstr "Save"
+
+msgid "cancel"
+msgstr "Cancel"
+
+msgid "delete"
+msgstr "Delete"
+
+msgid "edit"
+msgstr "Edit"
+
+msgid "create"
+msgstr "Create"
+
+msgid "back"
+msgstr "Back"
+
+msgid "back_to_dashboard"
+msgstr "Back to Dashboard"
+
+msgid "search"
+msgstr "Search"
+
+msgid "filter"
+msgstr "Filter"
+
+msgid "loading"
+msgstr "Loading..."
+
+msgid "success"
+msgstr "Success"
+
+msgid "error"
+msgstr "Error"
+
+msgid "warning"
+msgstr "Warning"
+
+msgid "confirm"
+msgstr "Confirm"
+
+msgid "yes"
+msgstr "Yes"
+
+msgid "no"
+msgstr "No"
+
+msgid "actions"
+msgstr "Actions"
+
+msgid "settings"
+msgstr "Settings"
+
+msgid "logout"
+msgstr "Logout"
+
+msgid "status"
+msgstr "Status"
+
+msgid "domain"
+msgstr "Domain"
+
+msgid "modified"
+msgstr "Modified"
+
+msgid "more"
+msgstr "more"
+
+msgid "rules"
+msgstr "rules"
+
+msgid "days"
+msgstr "days"
+
+msgid "today"
+msgstr "Today"
+
+msgid "never"
+msgstr "Never"
+
+msgid "not_set"
+msgstr "Not set"
+
+msgid "about"
+msgstr "About"
+
+msgid "build_date"
+msgstr "Build Date"
+
+msgid "about_description"
+msgstr "Web interface for managing Caddy reverse proxy."
+
+msgid "valid_from"
+msgstr "Valid From"
+
+msgid "auto_scroll"
+msgstr "Auto-scroll"
+
+msgid "username"
+msgstr "Username"
+
+msgid "password"
+msgstr "Password"
+
+msgid "role"
+msgstr "Role"
+
+msgid "created"
+msgstr "Created"
+
+msgid "last_login"
+msgstr "Last Login"
+
+# Navigation
+msgid "nav_dashboard"
+msgstr "Dashboard"
+
+msgid "nav_sites"
+msgstr "Proxy Rules"
+
+msgid "nav_snippets"
+msgstr "Snippets"
+
+msgid "nav_certificates"
+msgstr "Certificates"
+
+msgid "nav_logs"
+msgstr "Logs"
+
+msgid "nav_settings"
+msgstr "Settings"
+
+# Dashboard
+msgid "dashboard_title"
+msgstr "Dashboard"
+
+msgid "dashboard_rules"
+msgstr "Rules"
+
+msgid "dashboard_certificates"
+msgstr "Certificates"
+
+msgid "dashboard_snippets"
+msgstr "Snippets"
+
+msgid "dashboard_caddy_status"
+msgstr "Caddy Status"
+
+msgid "dashboard_running"
+msgstr "Running"
+
+msgid "dashboard_stopped"
+msgstr "Stopped"
+
+msgid "dashboard_recent_changes"
+msgstr "Recent Changes"
+
+msgid "dashboard_no_changes"
+msgstr "No recent changes"
+
+msgid "dashboard_alerts"
+msgstr "Alerts"
+
+msgid "dashboard_no_alerts"
+msgstr "All systems operational"
+
+msgid "dashboard_quick_actions"
+msgstr "Quick Actions"
+
+msgid "dashboard_reload"
+msgstr "Reload Caddy"
+
+msgid "dashboard_validate"
+msgstr "Validate Config"
+
+msgid "dashboard_new_rule"
+msgstr "New Rule"
+
+msgid "dashboard_backup"
+msgstr "Backup"
+
+# Sites
+msgid "sites_title"
+msgstr "Proxy Rules"
+
+msgid "sites_new"
+msgstr "New Rule"
+
+msgid "sites_edit"
+msgstr "Edit Rule"
+
+msgid "sites_delete"
+msgstr "Delete Rule"
+
+msgid "sites_duplicate"
+msgstr "Duplicate Rule"
+
+msgid "sites_empty"
+msgstr "No proxy rules found"
+
+msgid "sites_empty_title"
+msgstr "No Proxy Rules"
+
+msgid "sites_empty_desc"
+msgstr "Create your first proxy rule to get started."
+
+msgid "sites_create"
+msgstr "Create Rule"
+
+msgid "sites_search"
+msgstr "Search domains, IP, port..."
+
+msgid "sites_filter_tag"
+msgstr "Filter by tag"
+
+msgid "sites_all_tags"
+msgstr "All tags"
+
+msgid "sites_domain"
+msgstr "Domain(s)"
+
+msgid "sites_target"
+msgstr "Target"
+
+msgid "sites_port"
+msgstr "Port"
+
+msgid "sites_ip"
+msgstr "IP Address"
+
+msgid "sites_https_backend"
+msgstr "HTTPS Backend"
+
+msgid "sites_internal"
+msgstr "Internal Only"
+
+msgid "sites_websocket"
+msgstr "WebSocket Support"
+
+msgid "sites_health_check"
+msgstr "Health Check Path"
+
+msgid "sites_timeout"
+msgstr "Timeout (seconds)"
+
+msgid "sites_snippets"
+msgstr "Snippets"
+
+msgid "sites_tags"
+msgstr "Tags"
+
+msgid "sites_extra_config"
+msgstr "Extra Configuration"
+
+msgid "sites_raw_edit"
+msgstr "Raw Edit"
+
+msgid "sites_form_edit"
+msgstr "Form Edit"
+
+msgid "sites_preview"
+msgstr "Preview"
+
+msgid "sites_confirm_delete"
+msgstr "Are you sure you want to delete this rule?"
+
+msgid "sites_created"
+msgstr "Rule created successfully"
+
+msgid "sites_updated"
+msgstr "Rule updated successfully"
+
+msgid "sites_deleted"
+msgstr "Rule deleted successfully"
+
+msgid "sites_duplicated"
+msgstr "Rule duplicated successfully"
+
+msgid "sites_from_template"
+msgstr "From Template"
+
+msgid "sites_from_scratch"
+msgstr "From Scratch"
+
+msgid "sites_select_template"
+msgstr "Select Template"
+
+msgid "sites_template_category"
+msgstr "Category"
+
+msgid "domain_config"
+msgstr "Domain Configuration"
+
+msgid "backend_target"
+msgstr "Backend Target"
+
+msgid "domains_hint"
+msgstr "Separate multiple domains with comma or space"
+
+msgid "tags_hint"
+msgstr "Organize rules with comma-separated tags"
+
+msgid "advanced_options"
+msgstr "Advanced Options"
+
+msgid "extra_config_placeholder"
+msgstr "Additional Caddy directives..."
+
+# Snippets
+msgid "snippets_title"
+msgstr "Snippets Manager"
+
+msgid "snippets_description"
+msgstr "Configure reusable Caddy snippets that can be imported into proxy rules."
+
+msgid "snippets_cloudflare"
+msgstr "Cloudflare DNS"
+
+msgid "snippets_internal"
+msgstr "Internal Only"
+
+msgid "snippets_security"
+msgstr "Security Headers"
+
+msgid "snippets_compression"
+msgstr "Compression"
+
+msgid "snippets_rate_limit"
+msgstr "Rate Limit"
+
+msgid "snippets_basic_auth"
+msgstr "Basic Authentication"
+
+msgid "snippets_enabled"
+msgstr "Enabled"
+
+msgid "snippets_disabled"
+msgstr "Disabled"
+
+msgid "snippets_enable_cloudflare"
+msgstr "Enable Cloudflare DNS Challenge"
+
+msgid "snippets_enable_internal"
+msgstr "Enable Internal Network Restriction"
+
+msgid "snippets_enable_security"
+msgstr "Enable Security Headers"
+
+msgid "snippets_enable_compression"
+msgstr "Enable Compression"
+
+msgid "snippets_enable_rate_limit"
+msgstr "Enable Rate Limiting"
+
+msgid "snippets_use_env"
+msgstr "Use CF_API_TOKEN environment variable"
+
+msgid "snippets_api_token"
+msgstr "API Token (if not using env)"
+
+msgid "snippets_api_token_placeholder"
+msgstr "Enter Cloudflare API token"
+
+msgid "snippets_allowed_networks"
+msgstr "Allowed Networks (CIDR)"
+
+msgid "snippets_networks_help"
+msgstr "One network per line in CIDR notation"
+
+msgid "snippets_hsts_max_age"
+msgstr "HSTS Max Age (seconds)"
+
+msgid "snippets_include_subdomains"
+msgstr "Include Subdomains"
+
+msgid "snippets_x_frame_options"
+msgstr "X-Frame-Options"
+
+msgid "snippets_referrer_policy"
+msgstr "Referrer Policy"
+
+msgid "snippets_hide_server"
+msgstr "Hide Server Header"
+
+msgid "snippets_zstd"
+msgstr "Zstd"
+
+msgid "snippets_gzip"
+msgstr "Gzip"
+
+msgid "snippets_requests"
+msgstr "Requests"
+
+msgid "snippets_window"
+msgstr "Window (seconds)"
+
+msgid "snippets_users"
+msgstr "Users"
+
+msgid "snippets_add_user"
+msgstr "Add User"
+
+msgid "snippets_username"
+msgstr "Username"
+
+msgid "snippets_password"
+msgstr "Password"
+
+# Certificates
+msgid "certs_title"
+msgstr "SSL Certificates"
+
+msgid "certs_count"
+msgstr "certificates"
+
+msgid "certs_domain"
+msgstr "Domain"
+
+msgid "certs_issuer"
+msgstr "Issuer"
+
+msgid "certs_expires"
+msgstr "Expires"
+
+msgid "certs_status"
+msgstr "Status"
+
+msgid "certs_days_left"
+msgstr "Days Left"
+
+msgid "certs_valid"
+msgstr "Valid"
+
+msgid "certs_expiring"
+msgstr "Expiring (30d)"
+
+msgid "certs_critical"
+msgstr "Critical (7d)"
+
+msgid "certs_expired"
+msgstr "Expired"
+
+msgid "certs_delete"
+msgstr "Force Renewal"
+
+msgid "certs_force_renew"
+msgstr "Force Renew"
+
+msgid "certs_renew"
+msgstr "Renew"
+
+msgid "certs_confirm_renew"
+msgstr "Delete certificate and trigger renewal for"
+
+msgid "certs_confirm_delete"
+msgstr "Delete certificate for"
+
+msgid "certs_empty"
+msgstr "No certificates found"
+
+msgid "certs_empty_title"
+msgstr "No Certificates Found"
+
+msgid "certs_empty_desc"
+msgstr "Certificates will appear here once Caddy obtains them."
+
+msgid "certs_about_title"
+msgstr "About Certificate Management"
+
+msgid "certs_about_desc"
+msgstr "Caddy automatically renews certificates before they expire."
+
+msgid "certs_renew_desc"
+msgstr "Delete certificate and reload Caddy to trigger automatic renewal (use for active domains)"
+
+msgid "certs_delete_desc"
+msgstr "Only delete certificate without renewal (use for unused domains)"
+
+# Logs
+msgid "logs_title"
+msgstr "Caddy Logs"
+
+msgid "logs_lines"
+msgstr "Lines"
+
+msgid "logs_refresh"
+msgstr "Refresh"
+
+msgid "logs_search"
+msgstr "Search logs..."
+
+msgid "logs_stream"
+msgstr "Live Stream"
+
+msgid "logs_stop"
+msgstr "Stop Stream"
+
+msgid "logs_empty"
+msgstr "No logs available"
+
+# Settings
+msgid "settings_title"
+msgstr "Settings"
+
+msgid "settings_general"
+msgstr "General"
+
+msgid "settings_backup"
+msgstr "Backup"
+
+msgid "settings_caddy"
+msgstr "Caddy"
+
+msgid "settings_users"
+msgstr "Users"
+
+msgid "settings_wildcard"
+msgstr "Wildcard SSL"
+
+msgid "settings_language"
+msgstr "Language"
+
+msgid "settings_theme"
+msgstr "Theme"
+
+msgid "backup_restore"
+msgstr "Backup & Restore"
+
+msgid "backup_description"
+msgstr "Create or restore a complete backup of your Caddy configuration."
+
+msgid "backup_create"
+msgstr "Create Backup"
+
+msgid "backup_create_desc"
+msgstr "Download a ZIP file with all configuration files."
+
+msgid "backup_download"
+msgstr "Download Backup"
+
+msgid "backup_restore_title"
+msgstr "Restore Backup"
+
+msgid "backup_restore_desc"
+msgstr "Upload a backup ZIP file to restore configuration."
+
+msgid "backup_upload"
+msgstr "Restore Backup"
+
+msgid "import_export"
+msgstr "Import / Export Rules"
+
+msgid "import_export_desc"
+msgstr "Export rules as JSON or import from another CPM instance."
+
+msgid "export_rules"
+msgstr "Export Rules"
+
+msgid "export_rules_desc"
+msgstr "Download all proxy rules as JSON file."
+
+msgid "export_json"
+msgstr "Export JSON"
+
+msgid "import_rules"
+msgstr "Import Rules"
+
+msgid "import_rules_desc"
+msgstr "Import rules from a JSON file."
+
+msgid "import_upload"
+msgstr "Import Rules"
+
+msgid "skip_existing"
+msgstr "Skip existing rules"
+
+msgid "fallback_rule"
+msgstr "Fallback Rule"
+
+msgid "fallback_description"
+msgstr "Default rule for unknown domains (wildcard)."
+
+msgid "fallback_not_found"
+msgstr "Fallback rule not found."
+
+msgid "error_pages"
+msgstr "Error Pages"
+
+msgid "error_pages_description"
+msgstr "Custom HTML pages for error responses."
+
+msgid "user_management"
+msgstr "User Management"
+
+msgid "enable_auth"
+msgstr "Enable Authentication"
+
+msgid "auth_disabled_warning"
+msgstr "Authentication is disabled. Anyone can access the application."
+
+msgid "no_users_warning"
+msgstr "No users created yet. Create at least one user to enable authentication."
+
+msgid "existing_users"
+msgstr "Existing Users"
+
+msgid "add_user"
+msgstr "Add New User"
+
+msgid "create_user"
+msgstr "Create User"
+
+msgid "confirm_delete_user"
+msgstr "Delete user"
+
+msgid "settings_backup_create"
+msgstr "Create Backup"
+
+msgid "settings_backup_restore"
+msgstr "Restore Backup"
+
+msgid "settings_import"
+msgstr "Import Rules"
+
+msgid "settings_export"
+msgstr "Export Rules"
+
+msgid "settings_fallback"
+msgstr "Fallback Rule"
+
+msgid "settings_error_pages"
+msgstr "Error Pages"
+
+msgid "settings_auth_enabled"
+msgstr "Authentication Enabled"
+
+msgid "settings_auth_disabled"
+msgstr "Authentication Disabled"
+
+msgid "settings_add_user"
+msgstr "Add User"
+
+msgid "settings_role"
+msgstr "Role"
+
+msgid "settings_role_admin"
+msgstr "Admin"
+
+msgid "settings_role_editor"
+msgstr "Editor"
+
+msgid "settings_role_viewer"
+msgstr "Viewer"
+
+# Login
+msgid "login_title"
+msgstr "Login"
+
+msgid "login_username"
+msgstr "Username"
+
+msgid "login_password"
+msgstr "Password"
+
+msgid "login_submit"
+msgstr "Login"
+
+msgid "login_setup"
+msgstr "Create Admin Account"
+
+msgid "login_error"
+msgstr "Invalid credentials"
+
+# Flash messages (existing)
+msgid "msg_reload_success"
+msgstr "Configuration reloaded successfully"
+
+msgid "msg_reload_error"
+msgstr "Failed to reload configuration"
+
+msgid "msg_validate_success"
+msgstr "Configuration is valid"
+
+msgid "msg_validate_error"
+msgstr "Configuration validation failed"
+
+msgid "msg_backup_created"
+msgstr "Backup created successfully"
+
+msgid "msg_backup_restored"
+msgstr "Backup restored successfully"
+
+msgid "msg_import_success"
+msgstr "Rules imported successfully"
+
+msgid "msg_user_created"
+msgstr "User created successfully"
+
+msgid "msg_user_deleted"
+msgstr "User deleted successfully"
+
+# Flash messages (handler-level, added in i18n refactor)
+msgid "msg_user_created_name"
+msgstr "User '{0}' created successfully"
+
+msgid "msg_user_deleted_name"
+msgstr "User '{0}' deleted successfully"
+
+msgid "msg_role_updated"
+msgstr "Role updated successfully"
+
+msgid "msg_password_updated"
+msgstr "Password updated successfully"
+
+msgid "msg_auth_enabled"
+msgstr "Authentication enabled"
+
+msgid "msg_auth_disabled"
+msgstr "Authentication disabled"
+
+msgid "msg_cert_deleted"
+msgstr "Certificate for '{0}' deleted."
+
+msgid "msg_cert_reload_failed"
+msgstr "Certificate deleted but reload failed"
+
+msgid "msg_cert_renewed"
+msgstr "Certificate for '{0}' deleted. Renewal will be triggered."
+
+msgid "msg_snippet_updated"
+msgstr "Snippet '{0}' updated successfully"
+
+msgid "msg_snippet_reload_failed"
+msgstr "Snippet updated but reload failed"
+
+msgid "msg_rule_created_name"
+msgstr "Rule '{0}' created successfully"
+
+msgid "msg_rule_create_reload_failed"
+msgstr "Rule created but reload failed"
+
+msgid "msg_rule_updated_name"
+msgstr "Rule '{0}' updated successfully"
+
+msgid "msg_rule_update_reload_failed"
+msgstr "Rule updated but reload failed"
+
+msgid "msg_rule_deleted_name"
+msgstr "Rule '{0}' deleted successfully"
+
+msgid "msg_rule_delete_reload_failed"
+msgstr "Rule deleted but reload failed"
+
+msgid "msg_rule_dup_reload_failed"
+msgstr "Rule duplicated but reload failed"
+
+msgid "msg_wildcard_unavailable"
+msgstr "Wildcard service not available"
+
+msgid "msg_wildcard_domain_required"
+msgstr "Domain is required"
+
+msgid "msg_wildcard_exists"
+msgstr "Wildcard domain already exists"
+
+msgid "msg_wildcard_add_failed"
+msgstr "Failed to add wildcard domain"
+
+msgid "msg_wildcard_config_failed"
+msgstr "Domain added but failed to update Caddy config"
+
+msgid "msg_wildcard_info_failed"
+msgstr "Failed to get migration info"
+
+msgid "msg_wildcard_migrate_backup_failed"
+msgstr "Failed to create backup before migration"
+
+msgid "msg_wildcard_migrate_errors"
+msgstr "Migration completed with errors. Check logs."
+
+msgid "msg_wildcard_delete_failed"
+msgstr "Failed to delete wildcard domain"
+
+msgid "msg_wildcard_config_update_failed"
+msgstr "Domain removed but failed to update Caddy config"
+
+msgid "msg_wildcard_reload_failed_delete"
+msgstr "Domain removed but Caddy reload failed"
+
+msgid "msg_backup_reloaded"
+msgstr "Backup restored and Caddy reloaded"
+
+msgid "msg_backup_restore_reload_failed"
+msgstr "Backup restored but reload failed"
+
+msgid "msg_reload_failed"
+msgstr "Reload failed"
+
+msgid "msg_validate_failed"
+msgstr "Validation failed"
+
+msgid "msg_import_result"
+msgstr "Imported {0} rules"
+
+msgid "msg_import_result_with_skip"
+msgstr "Imported {0} rules, skipped {1} existing"
+
+# Wildcard SSL
+msgid "wildcard_title"
+msgstr "Wildcard SSL Certificates"
+
+msgid "wildcard_description"
+msgstr "Configure wildcard SSL certificates for your domains. Wildcard certificates cover all subdomains (*.example.com)."
+
+msgid "wildcard_info_title"
+msgstr "DNS Challenge Required"
+
+msgid "wildcard_info_desc"
+msgstr "Wildcard certificates require DNS challenge verification. You need API access to your DNS provider (e.g., Cloudflare API token)."
+
+msgid "wildcard_existing"
+msgstr "Configured Wildcard Domains"
+
+msgid "wildcard_add"
+msgstr "Add Wildcard Domain"
+
+msgid "wildcard_domain"
+msgstr "Domain"
+
+msgid "wildcard_domain_help"
+msgstr "Enter the base domain (without *. prefix)"
+
+msgid "wildcard_provider"
+msgstr "DNS Provider"
+
+msgid "wildcard_use_env"
+msgstr "Use CF_API_TOKEN environment variable"
+
+msgid "wildcard_env_help"
+msgstr "Recommended: Set CF_API_TOKEN in your Docker environment"
+
+msgid "wildcard_api_token"
+msgstr "API Token"
+
+msgid "wildcard_api_token_placeholder"
+msgstr "Enter your Cloudflare API token"
+
+msgid "wildcard_api_token_help"
+msgstr "Token needs Zone:DNS:Edit permissions"
+
+msgid "wildcard_add_btn"
+msgstr "Add Wildcard Domain"
+
+msgid "wildcard_confirm_delete"
+msgstr "Remove wildcard configuration for"
+
+msgid "wildcard_created"
+msgstr "Wildcard domain added successfully"
+
+msgid "wildcard_deleted"
+msgstr "Wildcard domain removed successfully"
+
+msgid "wildcard_usage_title"
+msgstr "How to use wildcard TLS"
+
+msgid "wildcard_usage_desc"
+msgstr "Add the import directive to your site configs to use the wildcard TLS certificate:"
+
+msgid "wildcard_snippets_hint"
+msgstr "cloudflare_dns is handled automatically at wildcard level"
+
+msgid "wildcard_tls_active"
+msgstr "Wildcard TLS active - DNS challenge handled automatically"
+
+# Migration
+msgid "migrate_title"
+msgstr "Migrate to Wildcard SSL"
+
+msgid "migrate_info_title"
+msgstr "Automatic Migration"
+
+msgid "migrate_info_desc"
+msgstr "CPM will update your site configurations to use the wildcard certificate and optionally delete old individual certificates."
+
+msgid "migrate_sites_title"
+msgstr "Site Configurations"
+
+msgid "migrate_sites_desc"
+msgstr "These site configs match your wildcard domain and will be updated:"
+
+msgid "migrate_sites_checkbox"
+msgstr "Migrate site configs to use wildcard TLS"
+
+msgid "migrate_no_sites"
+msgstr "No matching site configurations found."
+
+msgid "migrate_certs_title"
+msgstr "Individual Certificates"
+
+msgid "migrate_certs_desc"
+msgstr "These certificates can be deleted (wildcard will be used instead):"
+
+msgid "migrate_certs_checkbox"
+msgstr "Delete individual certificates"
+
+msgid "migrate_no_certs"
+msgstr "No individual certificates found."
+
+msgid "migrate_backup_title"
+msgstr "Backup will be created"
+
+msgid "migrate_backup_desc"
+msgstr "A backup will be automatically created before any changes are made."
+
+msgid "migrate_execute"
+msgstr "Execute Migration"
+
+msgid "migrate_skip"
+msgstr "Skip, configure manually"
+
+msgid "migrate_btn"
+msgstr "Migrate"
+
+msgid "files"
+msgstr "files"
+
+msgid "certificates"
+msgstr "certificates"
+
+# TLS Certificate
+msgid "tls_certificate"
+msgstr "TLS Certificate"
+
+msgid "tls_mode"
+msgstr "Certificate Mode"
+
+msgid "tls_auto"
+msgstr "Automatic (new certificate)"
+
+msgid "tls_use_wildcard"
+msgstr "Use wildcard"
+
+msgid "tls_hint"
+msgstr "Wildcard certificates are shared across all subdomains - more private and efficient"
+
+# Docker Auto-Discovery (v3.2.0)
+msgid "settings_docker"
+msgstr "Docker"
+
+msgid "settings_docker_title"
+msgstr "Docker Auto-Discovery"
+
+msgid "discovery_title"
+msgstr "Docker Auto-Discovery"
+
+msgid "discovery_hosts_label"
+msgstr "Discovery Hosts"
+
+msgid "discovery_hosts_description"
+msgstr "Docker hosts to scan for running containers."
+
+msgid "discovery_host_ip"
+msgstr "IP Address"
+
+msgid "discovery_host_label"
+msgstr "Label (optional)"
+
+msgid "discovery_host_add"
+msgstr "Add host"
+
+msgid "discovery_hosts_saved"
+msgstr "Discovery hosts saved"
+
+msgid "discovery_no_hosts"
+msgstr "No hosts configured."
+
+msgid "discovery_no_hosts_desc"
+msgstr "Please add at least one Docker host in Settings → Docker first."
+
+msgid "discovery_container"
+msgstr "Container"
+
+msgid "discovery_host_column"
+msgstr "Host"
+
+msgid "discovery_not_paired"
+msgstr "Not paired"
+
+msgid "discovery_create_rule"
+msgstr "Create rule"
+
+msgid "discovery_empty"
+msgstr "No running containers found (excluding Caddy and CPM)."
+
+msgid "discovery_docker_error"
+msgstr "Docker error:"
+
+msgid "discovery_local_docker"
+msgstr "Local Docker host"
+
+msgid "discovery_detect_ip"
+msgstr "Detect Local IP"
+
+msgid "discovery_use_ip"
+msgstr "Use this IP"
+
+msgid "discovery_no_local_host"
+msgstr "No local Docker host configured."
+
+msgid "discovery_no_local_host_desc"
+msgstr "Mark one host as \"Local Docker\" in"
+
+msgid "sites_quick_host"
+msgstr "Quick Host Select"
+
+msgid "sites_select_host"
+msgstr "Select Docker host…"

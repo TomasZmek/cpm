@@ -23,8 +23,9 @@ import (
 )
 
 const (
-	Version   = "3.2.0"
-	BuildDate = "2026-05-30"
+	Version   = "3.3.0"
+	BuildDate = "2026-06-13"
+
 )
 
 func main() {
@@ -67,6 +68,7 @@ func main() {
 	// Initialize template engine
 	engine := html.New("./templates/themes/classic", ".html")
 	engine.AddFunc("t", i18n.T)
+	engine.AddFunc("tn", i18n.TN)
 	engine.AddFunc("timeAgo", services.TimeAgo)
 	engine.AddFunc("contains", func(slice []string, item string) bool {
 		for _, s := range slice {

@@ -36,7 +36,7 @@ func (h *Handler) WildcardSettings(c *fiber.Ctx) error {
 // WildcardAdd adds a new wildcard domain
 func (h *Handler) WildcardAdd(c *fiber.Ctx) error {
 	if h.wildcardService == nil {
-		setFlash(c, "error", "Wildcard service not available")
+		setFlash(c, "error", tl(c, "msg_wildcard_unavailable"))
 		return c.Redirect("/settings/wildcard")
 	}
 
@@ -48,7 +48,7 @@ func (h *Handler) WildcardAdd(c *fiber.Ctx) error {
 	log.Printf("WildcardAdd: domain=%s, provider=%s, useEnv=%v", domain, provider, useEnv)
 
 	if domain == "" {
-		setFlash(c, "error", "Domain is required")
+		setFlash(c, "error", tl(c, "msg_wildcard_domain_required"))
 		return c.Redirect("/settings/wildcard")
 	}
 
@@ -56,7 +56,7 @@ func (h *Handler) WildcardAdd(c *fiber.Ctx) error {
 	existing, _ := h.wildcardService.GetDomains()
 	for _, d := range existing {
 		if d.Domain == domain {
-			setFlash(c, "info", "Wildcard domain already exists")
+			setFlash(c, "info", tl(c, "msg_wildcard_exists"))
 			return c.Redirect("/settings/wildcard/migrate/" + domain)
 		}
 	}
@@ -70,14 +70,14 @@ func (h *Handler) WildcardAdd(c *fiber.Ctx) error {
 
 	if err := h.wildcardService.AddDomain(wildcard); err != nil {
 		log.Printf("Error adding wildcard domain: %v", err)
-		setFlash(c, "error", "Failed to add wildcard domain: "+err.Error())
+		setFlash(c, "error", tl(c, "msg_wildcard_add_failed")+": "+err.Error())
 		return c.Redirect("/settings/wildcard")
 	}
 
 	// Regenerate wildcard Caddy config
 	if err := h.regenerateWildcardConfig(); err != nil {
 		log.Printf("Error regenerating wildcard config: %v", err)
-		setFlash(c, "warning", "Domain added but failed to update Caddy config: "+err.Error())
+		setFlash(c, "warning", tl(c, "msg_wildcard_config_failed")+": "+err.Error())
 		return c.Redirect("/settings/wildcard")
 	}
 
@@ -90,7 +90,7 @@ func (h *Handler) WildcardMigratePage(c *fiber.Ctx) error {
 	domain := c.Params("domain")
 	
 	if h.wildcardService == nil {
-		setFlash(c, "error", "Wildcard service not available")
+		setFlash(c, "error", tl(c, "msg_wildcard_unavailable"))
 		return c.Redirect("/settings/wildcard")
 	}
 
@@ -102,7 +102,7 @@ func (h *Handler) WildcardMigratePage(c *fiber.Ctx) error {
 	)
 	if err != nil {
 		log.Printf("Error getting migration info: %v", err)
-		setFlash(c, "error", "Failed to get migration info")
+		setFlash(c, "error", tl(c, "msg_wildcard_info_failed"))
 		return c.Redirect("/settings/wildcard")
 	}
 
@@ -126,7 +126,7 @@ func (h *Handler) WildcardMigrateExecute(c *fiber.Ctx) error {
 	_, backupName, err := h.backupService.CreateBackup()
 	if err != nil {
 		log.Printf("Error creating backup: %v", err)
-		setFlash(c, "error", "Failed to create backup before migration: "+err.Error())
+		setFlash(c, "error", tl(c, "msg_wildcard_migrate_backup_failed")+": "+err.Error())
 		return c.Redirect("/settings/wildcard/migrate/" + domain)
 	}
 	log.Printf("Backup created: %s", backupName)
@@ -170,7 +170,7 @@ func (h *Handler) WildcardMigrateExecute(c *fiber.Ctx) error {
 
 	// Build result message
 	if len(errors) > 0 {
-		setFlash(c, "warning", "Migration completed with errors. Check logs.")
+		setFlash(c, "warning", tl(c, "msg_wildcard_migrate_errors"))
 	} else {
 		msg := "Migration completed successfully!"
 		if migratedCount > 0 {
@@ -188,7 +188,7 @@ func (h *Handler) WildcardMigrateExecute(c *fiber.Ctx) error {
 // WildcardDelete removes a wildcard domain
 func (h *Handler) WildcardDelete(c *fiber.Ctx) error {
 	if h.wildcardService == nil {
-		setFlash(c, "error", "Wildcard service not available")
+		setFlash(c, "error", tl(c, "msg_wildcard_unavailable"))
 		if c.Get("HX-Request") == "true" {
 			c.Set("HX-Redirect", "/settings/wildcard")
 			return c.SendStatus(fiber.StatusOK)
@@ -201,7 +201,7 @@ func (h *Handler) WildcardDelete(c *fiber.Ctx) error {
 
 	if err := h.wildcardService.DeleteDomain(domain); err != nil {
 		log.Printf("Error deleting wildcard domain: %v", err)
-		setFlash(c, "error", "Failed to delete wildcard domain: "+err.Error())
+		setFlash(c, "error", tl(c, "msg_wildcard_delete_failed")+": "+err.Error())
 		if c.Get("HX-Request") == "true" {
 			c.Set("HX-Redirect", "/settings/wildcard")
 			return c.SendStatus(fiber.StatusOK)
@@ -212,14 +212,14 @@ func (h *Handler) WildcardDelete(c *fiber.Ctx) error {
 	// Regenerate wildcard Caddy config
 	if err := h.regenerateWildcardConfig(); err != nil {
 		log.Printf("Error regenerating wildcard config after delete: %v", err)
-		setFlash(c, "warning", "Domain removed but failed to update Caddy config")
+		setFlash(c, "warning", tl(c, "msg_wildcard_config_update_failed"))
 	} else {
 		// Reload Caddy
 		result := h.caddyService.Reload()
 		if !result.Success {
-			setFlash(c, "warning", "Domain removed but Caddy reload failed")
+			setFlash(c, "warning", tl(c, "msg_wildcard_reload_failed_delete"))
 		} else {
-			setFlash(c, "success", "Wildcard domain removed successfully")
+			setFlash(c, "success", tl(c, "wildcard_deleted"))
 		}
 	}
 

@@ -130,10 +130,9 @@ func (h *Handler) SiteCreate(c *fiber.Ctx) error {
 	// Reload Caddy
 	result := h.caddyService.ReloadWithValidation()
 	if !result.Success {
-		// Site was created but reload failed
-		setFlash(c, "warning", "Rule created but reload failed: "+result.Error)
+		setFlash(c, "warning", tl(c, "msg_rule_create_reload_failed")+": "+result.Error)
 	} else {
-		setFlash(c, "success", "Rule '"+site.PrimaryDomain()+"' created successfully")
+		setFlash(c, "success", tl(c, "msg_rule_created_name", site.PrimaryDomain()))
 	}
 
 	// HTMX redirect
@@ -243,9 +242,9 @@ func (h *Handler) SiteUpdate(c *fiber.Ctx) error {
 	// Reload Caddy
 	result := h.caddyService.ReloadWithValidation()
 	if !result.Success {
-		setFlash(c, "warning", "Rule updated but reload failed: "+result.Error)
+		setFlash(c, "warning", tl(c, "msg_rule_update_reload_failed")+": "+result.Error)
 	} else {
-		setFlash(c, "success", "Rule '"+site.PrimaryDomain()+"' updated successfully")
+		setFlash(c, "success", tl(c, "msg_rule_updated_name", site.PrimaryDomain()))
 	}
 
 	if c.Get("HX-Request") == "true" {
@@ -272,9 +271,9 @@ func (h *Handler) SiteDelete(c *fiber.Ctx) error {
 	// Reload Caddy
 	result := h.caddyService.ReloadWithValidation()
 	if !result.Success {
-		setFlash(c, "warning", "Rule deleted but reload failed: "+result.Error)
+		setFlash(c, "warning", tl(c, "msg_rule_delete_reload_failed")+": "+result.Error)
 	} else {
-		setFlash(c, "success", "Rule '"+site.PrimaryDomain()+"' deleted successfully")
+		setFlash(c, "success", tl(c, "msg_rule_deleted_name", site.PrimaryDomain()))
 	}
 
 	if c.Get("HX-Request") == "true" {
@@ -302,9 +301,9 @@ func (h *Handler) SiteDuplicate(c *fiber.Ctx) error {
 	// Reload Caddy
 	result := h.caddyService.ReloadWithValidation()
 	if !result.Success {
-		setFlash(c, "warning", "Rule duplicated but reload failed: "+result.Error)
+		setFlash(c, "warning", tl(c, "msg_rule_dup_reload_failed")+": "+result.Error)
 	} else {
-		setFlash(c, "success", "Rule '"+newSite.PrimaryDomain()+"' created successfully")
+		setFlash(c, "success", tl(c, "msg_rule_created_name", newSite.PrimaryDomain()))
 	}
 
 	if c.Get("HX-Request") == "true" {

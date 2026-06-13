@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-3.2.0-blue" alt="Version">
+  <img src="https://img.shields.io/badge/version-3.3.0-blue" alt="Version">
   <img src="https://img.shields.io/badge/Go-1.26-00ADD8?logo=go" alt="Go">
   <img src="https://img.shields.io/badge/Docker-ready-2496ED?logo=docker" alt="Docker">
   <img src="https://img.shields.io/badge/platforms-amd64%20%7C%20arm64-lightgrey" alt="Platforms">
@@ -54,7 +54,7 @@
 | 📜 **Certificates** | SSL overview with expiration warnings |
 | 👥 **Multi-User** | Role-based access (Admin, Editor, Viewer) |
 | 💾 **Backup** | Full config backup & restore |
-| 🌐 **i18n** | English & Czech |
+| 🌐 **i18n** | English, Czech & Korean |
 | 📋 **Templates** | 17+ pre-configured service templates |
 | 🐳 **Docker Auto-Discovery** | Automatic container detection with one-click rule creation |
 
@@ -254,6 +254,7 @@ docker push perteus/caddy-ui:latest
 
 | Version | Date | Notes |
 |---------|------|-------|
+| **3.3.0** | 2026-06-13 | 🌐 i18n refactor — PO/MO format, Korean language, plural support infrastructure |
 | **3.2.0** | 2026-05-31 | 🐳 Docker Auto-Discovery — automatic container detection, multi-host support |
 | **3.1.3** | 2026-05-30 | 🔒 Security patch — x/crypto CVE fixes, moby/moby/client |
 | **3.1.2** | 2026-05-16 | 🔒 Security fixes, refactoring |
@@ -316,6 +317,7 @@ MIT License - see [LICENSE](LICENSE) for details.
 - Interactivity: [HTMX](https://htmx.org/)
 - Dialogs: [SweetAlert2](https://sweetalert2.github.io/)
 - Developed with assistance from [Claude AI](https://claude.ai)
+- 🇰🇷 Korean translation: [@redstar-programmer](https://github.com/redstar-programmer)
 
 ---
 

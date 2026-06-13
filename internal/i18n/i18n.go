@@ -1,735 +1,180 @@
 package i18n
 
 import (
+	"embed"
 	"fmt"
 	"strings"
+	"sync"
+
+	"github.com/leonelquinteros/gotext"
 )
 
-// Translations holds all translations
-var translations = map[string]map[string]string{
-	"en": englishTranslations,
-	"cs": czechTranslations,
-}
+//go:embed locales
+var localesFS embed.FS
 
-// AvailableLanguages returns all available languages
+// AvailableLanguages maps language codes to display names.
 var AvailableLanguages = map[string]string{
 	"en": "English",
 	"cs": "Čeština",
+	"ko": "한국어",
 }
 
-// Init initializes the i18n system
+// pluralFunc selects the plural form index for a given n.
+type pluralFunc func(n int) int
+
+// pluralRules contains hardcoded plural selectors for supported languages.
+// These match the Plural-Forms headers in the corresponding .po files.
+var pluralRules = map[string]pluralFunc{
+	"en": func(n int) int {
+		if n != 1 {
+			return 1
+		}
+		return 0
+	},
+	"cs": func(n int) int {
+		if n == 1 {
+			return 0
+		}
+		if n >= 2 && n <= 4 {
+			return 1
+		}
+		return 2
+	},
+	"ko": func(_ int) int { return 0 },
+}
+
+// langData holds extracted translation maps for one language.
+type langData struct {
+	singular map[string]string          // msgid → msgstr
+	plural   map[string]map[int]string  // msgid → {form_index → msgstr}
+	selectN  pluralFunc
+}
+
+var (
+	mu      sync.RWMutex
+	locales = map[string]*langData{}
+)
+
+// Init loads all PO files from the embedded locales directory.
 func Init() error {
-	// Translations are already loaded as variables
+	for lang := range AvailableLanguages {
+		path := "locales/" + lang + "/LC_MESSAGES/messages.po"
+		data, err := localesFS.ReadFile(path)
+		if err != nil {
+			return fmt.Errorf("loading locale %q: %w", lang, err)
+		}
+
+		po := gotext.NewPo()
+		po.Parse(data)
+
+		ld := &langData{
+			singular: make(map[string]string),
+			plural:   make(map[string]map[int]string),
+			selectN:  pluralRules[lang],
+		}
+		if ld.selectN == nil {
+			ld.selectN = pluralRules["en"]
+		}
+
+		for msgid, tr := range po.GetDomain().GetTranslations() {
+			// Singular: stored in Trs[0]
+			if s, ok := tr.Trs[0]; ok && s != "" {
+				ld.singular[msgid] = s
+			}
+			// Plural: entries with a PluralID have form[n] in Trs
+			if tr.PluralID != "" && len(tr.Trs) > 0 {
+				forms := make(map[int]string, len(tr.Trs))
+				for form, s := range tr.Trs {
+					forms[form] = s
+				}
+				ld.plural[msgid] = forms
+			}
+		}
+
+		mu.Lock()
+		locales[lang] = ld
+		mu.Unlock()
+	}
 	return nil
 }
 
-// T translates a key to the specified language
+// T returns the translation for key in the given language.
+// Falls back to English when key is missing in the requested language.
+// Supports {0}, {1}, … positional placeholders in translation strings.
 func T(lang, key string, args ...interface{}) string {
-	// Get language translations
-	langTranslations, ok := translations[lang]
-	if !ok {
-		langTranslations = translations["en"]
-	}
+	mu.RLock()
+	ld := locales[lang]
+	enLd := locales["en"]
+	mu.RUnlock()
 
-	// Get translation
-	text, ok := langTranslations[key]
-	if !ok {
-		// Fallback to English
-		text, ok = translations["en"][key]
-		if !ok {
-			return key // Return key if not found
+	result := key
+	if ld != nil {
+		if s, ok := ld.singular[key]; ok {
+			result = s
 		}
 	}
 
-	// Replace placeholders
-	if len(args) > 0 {
-		// Support both {0}, {1} style and {name} style
-		for i, arg := range args {
-			placeholder := fmt.Sprintf("{%d}", i)
-			text = strings.ReplaceAll(text, placeholder, fmt.Sprint(arg))
+	// Fall back to English when key was not translated.
+	if result == key && lang != "en" && enLd != nil {
+		if s, ok := enLd.singular[key]; ok {
+			result = s
 		}
 	}
 
-	return text
+	return applyArgs(result, args)
 }
 
-// IsValidLanguage checks if a language is supported
+// TN returns the plural-aware translation for the given singular/plural keys.
+// n determines which plural form to select according to the language's Plural-Forms rule.
+// Supports {0}, {1}, … positional placeholders.
+func TN(lang, singular, plural string, n int, args ...interface{}) string {
+	mu.RLock()
+	ld := locales[lang]
+	enLd := locales["en"]
+	mu.RUnlock()
+
+	result := singular
+	if n != 1 {
+		result = plural
+	}
+
+	if ld != nil {
+		if forms, ok := ld.plural[singular]; ok {
+			form := ld.selectN(n)
+			if s, ok := forms[form]; ok && s != "" {
+				result = s
+			}
+		}
+	}
+
+	// Fall back to English.
+	if (result == singular || result == plural) && lang != "en" && enLd != nil {
+		if forms, ok := enLd.plural[singular]; ok {
+			form := enLd.selectN(n)
+			if s, ok := forms[form]; ok && s != "" {
+				result = s
+			}
+		}
+	}
+
+	return applyArgs(result, args)
+}
+
+// applyArgs replaces {0}, {1}, … placeholders with the corresponding args.
+func applyArgs(s string, args []interface{}) string {
+	for i, arg := range args {
+		s = strings.ReplaceAll(s, fmt.Sprintf("{%d}", i), fmt.Sprint(arg))
+	}
+	return s
+}
+
+// IsValidLanguage reports whether lang is a supported language code.
 func IsValidLanguage(lang string) bool {
-	_, ok := translations[lang]
+	_, ok := AvailableLanguages[lang]
 	return ok
 }
 
-// GetLanguages returns available languages
+// GetLanguages returns the map of supported language codes to display names.
 func GetLanguages() map[string]string {
 	return AvailableLanguages
-}
-
-// English translations
-var englishTranslations = map[string]string{
-	// General
-	"app_name":     "CPM - Caddy Proxy Manager",
-	"app_version":  "Version",
-	"save":         "Save",
-	"cancel":       "Cancel",
-	"delete":       "Delete",
-	"edit":         "Edit",
-	"create":       "Create",
-	"back":         "Back",
-	"back_to_dashboard": "Back to Dashboard",
-	"search":       "Search",
-	"filter":       "Filter",
-	"loading":      "Loading...",
-	"success":      "Success",
-	"error":        "Error",
-	"warning":      "Warning",
-	"confirm":      "Confirm",
-	"yes":          "Yes",
-	"no":           "No",
-	"actions":      "Actions",
-	"settings":     "Settings",
-	"logout":       "Logout",
-	"status":       "Status",
-	"domain":       "Domain",
-	"modified":     "Modified",
-	"more":         "more",
-	"rules":        "rules",
-	"days":         "days",
-	"today":        "Today",
-	"never":        "Never",
-	"not_set":      "Not set",
-	"about":        "About",
-	"build_date":   "Build Date",
-	"about_description": "Web interface for managing Caddy reverse proxy.",
-	"valid_from":   "Valid From",
-	"auto_scroll":  "Auto-scroll",
-	"username":     "Username",
-	"password":     "Password",
-	"role":         "Role",
-	"created":      "Created",
-	"last_login":   "Last Login",
-
-	// Navigation
-	"nav_dashboard":    "Dashboard",
-	"nav_sites":        "Proxy Rules",
-	"nav_snippets":     "Snippets",
-	"nav_certificates": "Certificates",
-	"nav_logs":         "Logs",
-	"nav_settings":     "Settings",
-
-	// Dashboard
-	"dashboard_title":          "Dashboard",
-	"dashboard_rules":          "Rules",
-	"dashboard_certificates":   "Certificates",
-	"dashboard_snippets":       "Snippets",
-	"dashboard_caddy_status":   "Caddy Status",
-	"dashboard_running":        "Running",
-	"dashboard_stopped":        "Stopped",
-	"dashboard_recent_changes": "Recent Changes",
-	"dashboard_no_changes":     "No recent changes",
-	"dashboard_alerts":         "Alerts",
-	"dashboard_no_alerts":      "All systems operational",
-	"dashboard_quick_actions":  "Quick Actions",
-	"dashboard_reload":         "Reload Caddy",
-	"dashboard_validate":       "Validate Config",
-	"dashboard_new_rule":       "New Rule",
-	"dashboard_backup":         "Backup",
-
-	// Sites
-	"sites_title":            "Proxy Rules",
-	"sites_new":              "New Rule",
-	"sites_edit":             "Edit Rule",
-	"sites_delete":           "Delete Rule",
-	"sites_duplicate":        "Duplicate Rule",
-	"sites_empty":            "No proxy rules found",
-	"sites_empty_title":      "No Proxy Rules",
-	"sites_empty_desc":       "Create your first proxy rule to get started.",
-	"sites_create":           "Create Rule",
-	"sites_search":           "Search domains, IP, port...",
-	"sites_filter_tag":       "Filter by tag",
-	"sites_all_tags":         "All tags",
-	"sites_domain":           "Domain(s)",
-	"sites_target":           "Target",
-	"sites_port":             "Port",
-	"sites_ip":               "IP Address",
-	"sites_https_backend":    "HTTPS Backend",
-	"sites_internal":         "Internal Only",
-	"sites_websocket":        "WebSocket Support",
-	"sites_health_check":     "Health Check Path",
-	"sites_timeout":          "Timeout (seconds)",
-	"sites_snippets":         "Snippets",
-	"sites_tags":             "Tags",
-	"sites_extra_config":     "Extra Configuration",
-	"sites_raw_edit":         "Raw Edit",
-	"sites_form_edit":        "Form Edit",
-	"sites_preview":          "Preview",
-	"sites_confirm_delete":   "Are you sure you want to delete this rule?",
-	"sites_created":          "Rule created successfully",
-	"sites_updated":          "Rule updated successfully",
-	"sites_deleted":          "Rule deleted successfully",
-	"sites_duplicated":       "Rule duplicated successfully",
-	"sites_from_template":    "From Template",
-	"sites_from_scratch":     "From Scratch",
-	"sites_select_template":  "Select Template",
-	"sites_template_category": "Category",
-	"domain_config":          "Domain Configuration",
-	"backend_target":         "Backend Target",
-	"domains_hint":           "Separate multiple domains with comma or space",
-	"tags_hint":              "Organize rules with comma-separated tags",
-	"advanced_options":       "Advanced Options",
-	"extra_config_placeholder": "Additional Caddy directives...",
-
-	// Snippets
-	"snippets_title":              "Snippets Manager",
-	"snippets_description":        "Configure reusable Caddy snippets that can be imported into proxy rules.",
-	"snippets_cloudflare":         "Cloudflare DNS",
-	"snippets_internal":           "Internal Only",
-	"snippets_security":           "Security Headers",
-	"snippets_compression":        "Compression",
-	"snippets_rate_limit":         "Rate Limit",
-	"snippets_basic_auth":         "Basic Authentication",
-	"snippets_enabled":            "Enabled",
-	"snippets_disabled":           "Disabled",
-	"snippets_enable_cloudflare":  "Enable Cloudflare DNS Challenge",
-	"snippets_enable_internal":    "Enable Internal Network Restriction",
-	"snippets_enable_security":    "Enable Security Headers",
-	"snippets_enable_compression": "Enable Compression",
-	"snippets_enable_rate_limit":  "Enable Rate Limiting",
-	"snippets_use_env":            "Use CF_API_TOKEN environment variable",
-	"snippets_api_token":          "API Token (if not using env)",
-	"snippets_api_token_placeholder": "Enter Cloudflare API token",
-	"snippets_allowed_networks":   "Allowed Networks (CIDR)",
-	"snippets_networks_help":      "One network per line in CIDR notation",
-	"snippets_hsts_max_age":       "HSTS Max Age (seconds)",
-	"snippets_include_subdomains": "Include Subdomains",
-	"snippets_x_frame_options":    "X-Frame-Options",
-	"snippets_referrer_policy":    "Referrer Policy",
-	"snippets_hide_server":        "Hide Server Header",
-	"snippets_zstd":               "Zstd",
-	"snippets_gzip":               "Gzip",
-	"snippets_requests":           "Requests",
-	"snippets_window":             "Window (seconds)",
-	"snippets_users":              "Users",
-	"snippets_add_user":           "Add User",
-	"snippets_username":           "Username",
-	"snippets_password":           "Password",
-
-	// Certificates
-	"certs_title":          "SSL Certificates",
-	"certs_count":          "certificates",
-	"certs_domain":         "Domain",
-	"certs_issuer":         "Issuer",
-	"certs_expires":        "Expires",
-	"certs_status":         "Status",
-	"certs_days_left":      "Days Left",
-	"certs_valid":          "Valid",
-	"certs_expiring":       "Expiring (30d)",
-	"certs_critical":       "Critical (7d)",
-	"certs_expired":        "Expired",
-	"certs_delete":         "Force Renewal",
-	"certs_force_renew":    "Force Renew",
-	"certs_renew":          "Renew",
-	"certs_confirm_renew":  "Delete certificate and trigger renewal for",
-	"certs_confirm_delete": "Delete certificate for",
-	"certs_empty":          "No certificates found",
-	"certs_empty_title":    "No Certificates Found",
-	"certs_empty_desc":     "Certificates will appear here once Caddy obtains them.",
-	"certs_about_title":    "About Certificate Management",
-	"certs_about_desc":     "Caddy automatically renews certificates before they expire.",
-	"certs_renew_desc":     "Delete certificate and reload Caddy to trigger automatic renewal (use for active domains)",
-	"certs_delete_desc":    "Only delete certificate without renewal (use for unused domains)",
-
-	// Logs
-	"logs_title":   "Caddy Logs",
-	"logs_lines":   "Lines",
-	"logs_refresh": "Refresh",
-	"logs_search":  "Search logs...",
-	"logs_stream":  "Live Stream",
-	"logs_stop":    "Stop Stream",
-	"logs_empty":   "No logs available",
-
-	// Settings
-	"settings_title":          "Settings",
-	"settings_general":        "General",
-	"settings_backup":         "Backup",
-	"settings_caddy":          "Caddy",
-	"settings_users":          "Users",
-	"settings_wildcard":       "Wildcard SSL",
-	"settings_language":       "Language",
-	"settings_theme":          "Theme",
-	"backup_restore":          "Backup & Restore",
-	"backup_description":      "Create or restore a complete backup of your Caddy configuration.",
-	"backup_create":           "Create Backup",
-	"backup_create_desc":      "Download a ZIP file with all configuration files.",
-	"backup_download":         "Download Backup",
-	"backup_restore_title":    "Restore Backup",
-	"backup_restore_desc":     "Upload a backup ZIP file to restore configuration.",
-	"backup_upload":           "Restore Backup",
-	"import_export":           "Import / Export Rules",
-	"import_export_desc":      "Export rules as JSON or import from another CPM instance.",
-	"export_rules":            "Export Rules",
-	"export_rules_desc":       "Download all proxy rules as JSON file.",
-	"export_json":             "Export JSON",
-	"import_rules":            "Import Rules",
-	"import_rules_desc":       "Import rules from a JSON file.",
-	"import_upload":           "Import Rules",
-	"skip_existing":           "Skip existing rules",
-	"fallback_rule":           "Fallback Rule",
-	"fallback_description":    "Default rule for unknown domains (wildcard).",
-	"fallback_not_found":      "Fallback rule not found.",
-	"error_pages":             "Error Pages",
-	"error_pages_description": "Custom HTML pages for error responses.",
-	"user_management":         "User Management",
-	"enable_auth":             "Enable Authentication",
-	"auth_disabled_warning":   "Authentication is disabled. Anyone can access the application.",
-	"no_users_warning":        "No users created yet. Create at least one user to enable authentication.",
-	"existing_users":          "Existing Users",
-	"add_user":                "Add New User",
-	"create_user":             "Create User",
-	"confirm_delete_user":     "Delete user",
-	"settings_backup_create":  "Create Backup",
-	"settings_backup_restore": "Restore Backup",
-	"settings_import":         "Import Rules",
-	"settings_export":         "Export Rules",
-	"settings_fallback":       "Fallback Rule",
-	"settings_error_pages":    "Error Pages",
-	"settings_auth_enabled":   "Authentication Enabled",
-	"settings_auth_disabled":  "Authentication Disabled",
-	"settings_add_user":       "Add User",
-	"settings_role":           "Role",
-	"settings_role_admin":     "Admin",
-	"settings_role_editor":    "Editor",
-	"settings_role_viewer":    "Viewer",
-
-	// Login
-	"login_title":    "Login",
-	"login_username": "Username",
-	"login_password": "Password",
-	"login_submit":   "Login",
-	"login_setup":    "Create Admin Account",
-	"login_error":    "Invalid credentials",
-
-	// Messages
-	"msg_reload_success":   "Configuration reloaded successfully",
-	"msg_reload_error":     "Failed to reload configuration",
-	"msg_validate_success": "Configuration is valid",
-	"msg_validate_error":   "Configuration validation failed",
-	"msg_backup_created":   "Backup created successfully",
-	"msg_backup_restored":  "Backup restored successfully",
-	"msg_import_success":   "Rules imported successfully",
-	"msg_user_created":     "User created successfully",
-	"msg_user_deleted":     "User deleted successfully",
-
-	// Wildcard SSL
-	"wildcard_title":              "Wildcard SSL Certificates",
-	"wildcard_description":        "Configure wildcard SSL certificates for your domains. Wildcard certificates cover all subdomains (*.example.com).",
-	"wildcard_info_title":         "DNS Challenge Required",
-	"wildcard_info_desc":          "Wildcard certificates require DNS challenge verification. You need API access to your DNS provider (e.g., Cloudflare API token).",
-	"wildcard_existing":           "Configured Wildcard Domains",
-	"wildcard_add":                "Add Wildcard Domain",
-	"wildcard_domain":             "Domain",
-	"wildcard_domain_help":        "Enter the base domain (without *. prefix)",
-	"wildcard_provider":           "DNS Provider",
-	"wildcard_use_env":            "Use CF_API_TOKEN environment variable",
-	"wildcard_env_help":           "Recommended: Set CF_API_TOKEN in your Docker environment",
-	"wildcard_api_token":          "API Token",
-	"wildcard_api_token_placeholder": "Enter your Cloudflare API token",
-	"wildcard_api_token_help":     "Token needs Zone:DNS:Edit permissions",
-	"wildcard_add_btn":            "Add Wildcard Domain",
-	"wildcard_confirm_delete":     "Remove wildcard configuration for",
-	"wildcard_created":            "Wildcard domain added successfully",
-	"wildcard_deleted":            "Wildcard domain removed successfully",
-	"wildcard_usage_title":        "How to use wildcard TLS",
-	"wildcard_usage_desc":         "Add the import directive to your site configs to use the wildcard TLS certificate:",
-
-	// Migration
-	"migrate_title":         "Migrate to Wildcard SSL",
-	"migrate_info_title":    "Automatic Migration",
-	"migrate_info_desc":     "CPM will update your site configurations to use the wildcard certificate and optionally delete old individual certificates.",
-	"migrate_sites_title":   "Site Configurations",
-	"migrate_sites_desc":    "These site configs match your wildcard domain and will be updated:",
-	"migrate_sites_checkbox": "Migrate site configs to use wildcard TLS",
-	"migrate_no_sites":      "No matching site configurations found.",
-	"migrate_certs_title":   "Individual Certificates",
-	"migrate_certs_desc":    "These certificates can be deleted (wildcard will be used instead):",
-	"migrate_certs_checkbox": "Delete individual certificates",
-	"migrate_no_certs":      "No individual certificates found.",
-	"migrate_backup_title":  "Backup will be created",
-	"migrate_backup_desc":   "A backup will be automatically created before any changes are made.",
-	"migrate_execute":       "Execute Migration",
-	"migrate_skip":          "Skip, configure manually",
-	"migrate_btn":           "Migrate",
-	"files":                 "files",
-	"certificates":          "certificates",
-
-	// TLS Certificate
-	"tls_certificate":       "TLS Certificate",
-	"tls_mode":              "Certificate Mode",
-	"tls_auto":              "Automatic (new certificate)",
-	"tls_use_wildcard":      "Use wildcard",
-	"tls_hint":              "Wildcard certificates are shared across all subdomains - more private and efficient",
-	"wildcard_snippets_hint": "cloudflare_dns is handled automatically at wildcard level",
-	"wildcard_tls_active":   "Wildcard TLS active - DNS challenge handled automatically",
-
-	// Docker Auto-Discovery
-	"settings_docker":               "Docker",
-	"settings_docker_title":         "Docker Auto-Discovery",
-	"discovery_title":               "Docker Auto-Discovery",
-	"discovery_hosts_label":         "Discovery Hosts",
-	"discovery_hosts_description":   "Docker hosts to scan for running containers.",
-	"discovery_host_ip":             "IP Address",
-	"discovery_host_label":          "Label (optional)",
-	"discovery_host_add":            "Add host",
-	"discovery_hosts_saved":         "Discovery hosts saved",
-	"discovery_no_hosts":            "No hosts configured.",
-	"discovery_no_hosts_desc":       "Please add at least one Docker host in Settings → Docker first.",
-	"discovery_container":           "Container",
-	"discovery_host_column":         "Host",
-	"discovery_not_paired":          "Not paired",
-	"discovery_create_rule":         "Create rule",
-	"discovery_empty":               "No running containers found (excluding Caddy and CPM).",
-	"discovery_docker_error":        "Docker error:",
-	"discovery_local_docker":        "Local Docker host",
-	"discovery_detect_ip":           "Detect Local IP",
-	"discovery_use_ip":              "Use this IP",
-	"discovery_no_local_host":       "No local Docker host configured.",
-	"discovery_no_local_host_desc":  "Mark one host as \"Local Docker\" in",
-
-	// Sites form quick-host selector
-	"sites_quick_host":              "Quick Host Select",
-	"sites_select_host":             "Select Docker host…",
-}
-
-// Czech translations
-var czechTranslations = map[string]string{
-	// General
-	"app_name":     "CPM - Caddy Proxy Manager",
-	"app_version":  "Verze",
-	"save":         "Uložit",
-	"cancel":       "Zrušit",
-	"delete":       "Smazat",
-	"edit":         "Upravit",
-	"create":       "Vytvořit",
-	"back":         "Zpět",
-	"back_to_dashboard": "Zpět na Dashboard",
-	"search":       "Hledat",
-	"filter":       "Filtr",
-	"loading":      "Načítání...",
-	"success":      "Úspěch",
-	"error":        "Chyba",
-	"warning":      "Varování",
-	"confirm":      "Potvrdit",
-	"yes":          "Ano",
-	"no":           "Ne",
-	"actions":      "Akce",
-	"settings":     "Nastavení",
-	"logout":       "Odhlásit",
-	"status":       "Stav",
-	"domain":       "Doména",
-	"modified":     "Upraveno",
-	"more":         "další",
-	"rules":        "pravidel",
-	"days":         "dní",
-	"today":        "Dnes",
-	"never":        "Nikdy",
-	"not_set":      "Nenastaveno",
-	"about":        "O aplikaci",
-	"build_date":   "Datum buildu",
-	"about_description": "Webové rozhraní pro správu Caddy reverse proxy.",
-	"valid_from":   "Platný od",
-	"auto_scroll":  "Automaticky scrollovat",
-	"username":     "Uživatelské jméno",
-	"password":     "Heslo",
-	"role":         "Role",
-	"created":      "Vytvořeno",
-	"last_login":   "Poslední přihlášení",
-
-	// Navigation
-	"nav_dashboard":    "Dashboard",
-	"nav_sites":        "Proxy pravidla",
-	"nav_snippets":     "Snippety",
-	"nav_certificates": "Certifikáty",
-	"nav_logs":         "Logy",
-	"nav_settings":     "Nastavení",
-
-	// Dashboard
-	"dashboard_title":          "Dashboard",
-	"dashboard_rules":          "Pravidel",
-	"dashboard_certificates":   "Certifikátů",
-	"dashboard_snippets":       "Snippetů",
-	"dashboard_caddy_status":   "Stav Caddy",
-	"dashboard_running":        "Běží",
-	"dashboard_stopped":        "Zastaveno",
-	"dashboard_recent_changes": "Poslední změny",
-	"dashboard_no_changes":     "Žádné nedávné změny",
-	"dashboard_alerts":         "Upozornění",
-	"dashboard_no_alerts":      "Vše v pořádku",
-	"dashboard_quick_actions":  "Rychlé akce",
-	"dashboard_reload":         "Reload Caddy",
-	"dashboard_validate":       "Validovat config",
-	"dashboard_new_rule":       "Nové pravidlo",
-	"dashboard_backup":         "Záloha",
-
-	// Sites
-	"sites_title":            "Proxy pravidla",
-	"sites_new":              "Nové pravidlo",
-	"sites_edit":             "Upravit pravidlo",
-	"sites_delete":           "Smazat pravidlo",
-	"sites_duplicate":        "Duplikovat pravidlo",
-	"sites_empty":            "Žádná pravidla nenalezena",
-	"sites_empty_title":      "Žádná proxy pravidla",
-	"sites_empty_desc":       "Vytvořte první proxy pravidlo.",
-	"sites_create":           "Vytvořit pravidlo",
-	"sites_search":           "Hledat podle domény, IP nebo portu...",
-	"sites_filter_tag":       "Filtrovat podle štítku",
-	"sites_all_tags":         "Všechny štítky",
-	"sites_domain":           "Doména(y)",
-	"sites_target":           "Cíl",
-	"sites_port":             "Port",
-	"sites_ip":               "IP adresa",
-	"sites_https_backend":    "HTTPS backend",
-	"sites_internal":         "Pouze interní",
-	"sites_websocket":        "WebSocket podpora",
-	"sites_health_check":     "Health check cesta",
-	"sites_timeout":          "Timeout (sekundy)",
-	"sites_snippets":         "Snippety",
-	"sites_tags":             "Štítky",
-	"sites_extra_config":     "Extra konfigurace",
-	"sites_raw_edit":         "Raw editace",
-	"sites_form_edit":        "Formulář",
-	"sites_preview":          "Náhled",
-	"sites_confirm_delete":   "Opravdu chcete smazat toto pravidlo pro",
-	"sites_created":          "Pravidlo úspěšně vytvořeno",
-	"sites_updated":          "Pravidlo úspěšně aktualizováno",
-	"sites_deleted":          "Pravidlo úspěšně smazáno",
-	"sites_duplicated":       "Pravidlo úspěšně zduplikováno",
-	"sites_from_template":    "Ze šablony",
-	"sites_from_scratch":     "Od začátku",
-	"sites_select_template":  "Vybrat šablonu",
-	"sites_template_category": "Kategorie",
-	"domain_config":          "Konfigurace domény",
-	"backend_target":         "Backend cíl",
-	"domains_hint":           "Oddělte více domén čárkou nebo mezerou",
-	"tags_hint":              "Organizujte pravidla pomocí štítků oddělených čárkou",
-	"advanced_options":       "Pokročilé možnosti",
-	"extra_config_placeholder": "Dodatečné Caddy direktivy...",
-
-	// Snippets
-	"snippets_title":              "Správce snippetů",
-	"snippets_description":        "Konfigurace znovupoužitelných Caddy snippetů, které lze importovat do proxy pravidel.",
-	"snippets_cloudflare":         "Cloudflare DNS",
-	"snippets_internal":           "Pouze interní",
-	"snippets_security":           "Bezpečnostní hlavičky",
-	"snippets_compression":        "Komprese",
-	"snippets_rate_limit":         "Rate limit",
-	"snippets_basic_auth":         "Basic autentizace",
-	"snippets_enabled":            "Zapnuto",
-	"snippets_disabled":           "Vypnuto",
-	"snippets_enable_cloudflare":  "Povolit Cloudflare DNS Challenge",
-	"snippets_enable_internal":    "Povolit omezení na interní síť",
-	"snippets_enable_security":    "Povolit bezpečnostní hlavičky",
-	"snippets_enable_compression": "Povolit kompresi",
-	"snippets_enable_rate_limit":  "Povolit rate limiting",
-	"snippets_use_env":            "Použít proměnnou prostředí CF_API_TOKEN",
-	"snippets_api_token":          "API token (pokud nepoužíváte env)",
-	"snippets_api_token_placeholder": "Zadejte Cloudflare API token",
-	"snippets_allowed_networks":   "Povolené sítě (CIDR)",
-	"snippets_networks_help":      "Jedna síť na řádek v CIDR notaci",
-	"snippets_hsts_max_age":       "HSTS Max Age (sekundy)",
-	"snippets_include_subdomains": "Zahrnout subdomény",
-	"snippets_x_frame_options":    "X-Frame-Options",
-	"snippets_referrer_policy":    "Referrer Policy",
-	"snippets_hide_server":        "Skrýt Server hlavičku",
-	"snippets_zstd":               "Zstd",
-	"snippets_gzip":               "Gzip",
-	"snippets_requests":           "Požadavků",
-	"snippets_window":             "Okno (sekundy)",
-	"snippets_users":              "Uživatelé",
-	"snippets_add_user":           "Přidat uživatele",
-	"snippets_username":           "Uživatelské jméno",
-	"snippets_password":           "Heslo",
-
-	// Certificates
-	"certs_title":          "SSL certifikáty",
-	"certs_count":          "certifikátů",
-	"certs_domain":         "Doména",
-	"certs_issuer":         "Vydavatel",
-	"certs_expires":        "Vyprší",
-	"certs_status":         "Stav",
-	"certs_days_left":      "Zbývá dní",
-	"certs_valid":          "Platný",
-	"certs_expiring":       "Brzy vyprší (30d)",
-	"certs_critical":       "Kritické (7d)",
-	"certs_expired":        "Vypršel",
-	"certs_delete":         "Vynutit obnovu",
-	"certs_force_renew":    "Vynutit obnovu",
-	"certs_renew":          "Obnovit",
-	"certs_confirm_renew":  "Smazat certifikát a vynutit obnovu pro",
-	"certs_confirm_delete": "Smazat certifikát pro",
-	"certs_empty":          "Žádné certifikáty nenalezeny",
-	"certs_empty_title":    "Žádné certifikáty",
-	"certs_empty_desc":     "Certifikáty se zde zobrazí poté, co je Caddy získá.",
-	"certs_about_title":    "O správě certifikátů",
-	"certs_about_desc":     "Caddy automaticky obnovuje certifikáty před vypršením.",
-	"certs_renew_desc":     "Smaže certifikát a restartuje Caddy pro automatickou obnovu (pro aktivní domény)",
-	"certs_delete_desc":    "Pouze smaže certifikát bez obnovy (pro nepoužívané domény)",
-
-	// Logs
-	"logs_title":   "Caddy logy",
-	"logs_lines":   "Řádků",
-	"logs_refresh": "Obnovit",
-	"logs_search":  "Hledat v logách...",
-	"logs_stream":  "Živě",
-	"logs_stop":    "Zastavit",
-	"logs_empty":   "Žádné logy k dispozici",
-
-	// Settings
-	"settings_title":          "Nastavení",
-	"settings_general":        "Obecné",
-	"settings_backup":         "Zálohy",
-	"settings_caddy":          "Caddy",
-	"settings_users":          "Uživatelé",
-	"settings_wildcard":       "Wildcard SSL",
-	"settings_language":       "Jazyk",
-	"settings_theme":          "Téma",
-	"backup_restore":          "Záloha a obnova",
-	"backup_description":      "Vytvořte nebo obnovte kompletní zálohu konfigurace Caddy.",
-	"backup_create":           "Vytvořit zálohu",
-	"backup_create_desc":      "Stáhněte ZIP soubor se všemi konfiguračními soubory.",
-	"backup_download":         "Stáhnout zálohu",
-	"backup_restore_title":    "Obnovit zálohu",
-	"backup_restore_desc":     "Nahrajte ZIP soubor se zálohou pro obnovu konfigurace.",
-	"backup_upload":           "Obnovit zálohu",
-	"import_export":           "Import / Export pravidel",
-	"import_export_desc":      "Exportujte pravidla jako JSON nebo importujte z jiné CPM instance.",
-	"export_rules":            "Exportovat pravidla",
-	"export_rules_desc":       "Stáhněte všechna proxy pravidla jako JSON soubor.",
-	"export_json":             "Exportovat JSON",
-	"import_rules":            "Importovat pravidla",
-	"import_rules_desc":       "Importujte pravidla z JSON souboru.",
-	"import_upload":           "Importovat pravidla",
-	"skip_existing":           "Přeskočit existující pravidla",
-	"fallback_rule":           "Fallback pravidlo",
-	"fallback_description":    "Výchozí pravidlo pro neznámé domény (wildcard).",
-	"fallback_not_found":      "Fallback pravidlo nenalezeno.",
-	"error_pages":             "Chybové stránky",
-	"error_pages_description": "Vlastní HTML stránky pro chybové odpovědi.",
-	"user_management":         "Správa uživatelů",
-	"enable_auth":             "Povolit autentizaci",
-	"auth_disabled_warning":   "Autentizace je vypnuta. Kdokoliv má přístup k aplikaci.",
-	"no_users_warning":        "Zatím nebyli vytvořeni žádní uživatelé. Vytvořte alespoň jednoho uživatele pro povolení autentizace.",
-	"existing_users":          "Existující uživatelé",
-	"add_user":                "Přidat nového uživatele",
-	"create_user":             "Vytvořit uživatele",
-	"confirm_delete_user":     "Smazat uživatele",
-	"settings_backup_create":  "Vytvořit zálohu",
-	"settings_backup_restore": "Obnovit zálohu",
-	"settings_import":         "Import pravidel",
-	"settings_export":         "Export pravidel",
-	"settings_fallback":       "Fallback pravidlo",
-	"settings_error_pages":    "Chybové stránky",
-	"settings_auth_enabled":   "Autentizace zapnuta",
-	"settings_auth_disabled":  "Autentizace vypnuta",
-	"settings_add_user":       "Přidat uživatele",
-	"settings_role":           "Role",
-	"settings_role_admin":     "Administrátor",
-	"settings_role_editor":    "Editor",
-	"settings_role_viewer":    "Čtenář",
-
-	// Login
-	"login_title":    "Přihlášení",
-	"login_username": "Uživatelské jméno",
-	"login_password": "Heslo",
-	"login_submit":   "Přihlásit",
-	"login_setup":    "Vytvořit administrátorský účet",
-	"login_error":    "Neplatné přihlašovací údaje",
-
-	// Messages
-	"msg_reload_success":   "Konfigurace úspěšně načtena",
-	"msg_reload_error":     "Nepodařilo se načíst konfiguraci",
-	"msg_validate_success": "Konfigurace je platná",
-	"msg_validate_error":   "Validace konfigurace selhala",
-	"msg_backup_created":   "Záloha úspěšně vytvořena",
-	"msg_backup_restored":  "Záloha úspěšně obnovena",
-	"msg_import_success":   "Pravidla úspěšně importována",
-	"msg_user_created":     "Uživatel úspěšně vytvořen",
-	"msg_user_deleted":     "Uživatel úspěšně smazán",
-
-	// Wildcard SSL
-	"wildcard_title":              "Wildcard SSL certifikáty",
-	"wildcard_description":        "Konfigurace wildcard SSL certifikátů pro vaše domény. Wildcard certifikáty pokrývají všechny subdomény (*.example.com).",
-	"wildcard_info_title":         "Vyžadováno DNS ověření",
-	"wildcard_info_desc":          "Wildcard certifikáty vyžadují DNS challenge ověření. Potřebujete API přístup k vašemu DNS providerovi (např. Cloudflare API token).",
-	"wildcard_existing":           "Nakonfigurované wildcard domény",
-	"wildcard_add":                "Přidat wildcard doménu",
-	"wildcard_domain":             "Doména",
-	"wildcard_domain_help":        "Zadejte základní doménu (bez *. prefixu)",
-	"wildcard_provider":           "DNS provider",
-	"wildcard_use_env":            "Použít proměnnou prostředí CF_API_TOKEN",
-	"wildcard_env_help":           "Doporučeno: Nastavte CF_API_TOKEN v Docker prostředí",
-	"wildcard_api_token":          "API token",
-	"wildcard_api_token_placeholder": "Zadejte váš Cloudflare API token",
-	"wildcard_api_token_help":     "Token potřebuje oprávnění Zone:DNS:Edit",
-	"wildcard_add_btn":            "Přidat wildcard doménu",
-	"wildcard_confirm_delete":     "Odstranit wildcard konfiguraci pro",
-	"wildcard_created":            "Wildcard doména úspěšně přidána",
-	"wildcard_deleted":            "Wildcard doména úspěšně odstraněna",
-	"wildcard_usage_title":        "Jak použít wildcard TLS",
-	"wildcard_usage_desc":         "Přidejte import direktivu do konfigurace vašich sites pro použití wildcard TLS certifikátu:",
-
-	// Migration
-	"migrate_title":         "Migrace na Wildcard SSL",
-	"migrate_info_title":    "Automatická migrace",
-	"migrate_info_desc":     "CPM aktualizuje vaše site konfigurace pro použití wildcard certifikátu a volitelně smaže staré jednotlivé certifikáty.",
-	"migrate_sites_title":   "Konfigurace sites",
-	"migrate_sites_desc":    "Tyto site konfigurace odpovídají vaší wildcard doméně a budou aktualizovány:",
-	"migrate_sites_checkbox": "Migrovat site konfigurace na wildcard TLS",
-	"migrate_no_sites":      "Nenalezeny žádné odpovídající site konfigurace.",
-	"migrate_certs_title":   "Jednotlivé certifikáty",
-	"migrate_certs_desc":    "Tyto certifikáty mohou být smazány (místo nich se použije wildcard):",
-	"migrate_certs_checkbox": "Smazat jednotlivé certifikáty",
-	"migrate_no_certs":      "Nenalezeny žádné jednotlivé certifikáty.",
-	"migrate_backup_title":  "Záloha bude vytvořena",
-	"migrate_backup_desc":   "Před provedením jakýchkoliv změn bude automaticky vytvořena záloha.",
-	"migrate_execute":       "Provést migraci",
-	"migrate_skip":          "Přeskočit, nastavit ručně",
-	"migrate_btn":           "Migrovat",
-	"files":                 "souborů",
-	"certificates":          "certifikátů",
-
-	// TLS Certificate
-	"tls_certificate":       "TLS Certifikát",
-	"tls_mode":              "Režim certifikátu",
-	"tls_auto":              "Automatický (nový certifikát)",
-	"tls_use_wildcard":      "Použít wildcard",
-	"tls_hint":              "Wildcard certifikáty jsou sdílené pro všechny subdomény - více soukromí a efektivnější",
-	"wildcard_snippets_hint": "cloudflare_dns je řešeno automaticky na úrovni wildcard",
-	"wildcard_tls_active":   "Wildcard TLS aktivní - DNS challenge je řešeno automaticky",
-
-	// Docker Auto-Discovery
-	"settings_docker":               "Docker",
-	"settings_docker_title":         "Docker Auto-Discovery",
-	"discovery_title":               "Docker Auto-Discovery",
-	"discovery_hosts_label":         "Discovery Hosts",
-	"discovery_hosts_description":   "Docker hosté ke skenování běžících kontejnerů.",
-	"discovery_host_ip":             "IP Adresa",
-	"discovery_host_label":          "Popis (volitelný)",
-	"discovery_host_add":            "Přidat host",
-	"discovery_hosts_saved":         "Discovery hosts uloženy",
-	"discovery_no_hosts":            "Žádné hosty nenakonfigurovány.",
-	"discovery_no_hosts_desc":       "Přidejte alespoň jeden Docker host v Nastavení → Docker.",
-	"discovery_container":           "Kontejner",
-	"discovery_host_column":         "Host",
-	"discovery_not_paired":          "Nespárováno",
-	"discovery_create_rule":         "Vytvořit pravidlo",
-	"discovery_empty":               "Žádné běžící kontejnery nenalezeny (s výjimkou Caddy a CPM).",
-	"discovery_docker_error":        "Chyba Dockeru:",
-	"discovery_local_docker":        "Lokální Docker host",
-	"discovery_detect_ip":           "Zjistit lokální IP",
-	"discovery_use_ip":              "Použít tuto IP",
-	"discovery_no_local_host":       "Žádný lokální Docker host není nastaven.",
-	"discovery_no_local_host_desc":  "Označte jeden host jako \"Lokální Docker\" v",
-
-	// Sites form quick-host selector
-	"sites_quick_host":              "Rychlý výběr hostu",
-	"sites_select_host":             "Vyberte Docker host…",
 }

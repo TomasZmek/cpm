@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-3.2.0-blue" alt="Version">
+  <img src="https://img.shields.io/badge/version-3.3.0-blue" alt="Version">
   <img src="https://img.shields.io/badge/Go-1.26-00ADD8?logo=go" alt="Go">
   <img src="https://img.shields.io/badge/image_size-~6MB-green" alt="Image Size">
   <img src="https://img.shields.io/badge/platforms-amd64%20%7C%20arm64-lightgrey" alt="Platforms">
@@ -53,7 +53,7 @@
 | 📜 **Certificates** | SSL overview with expiration alerts |
 | 👥 **Multi-User** | Role-based access control |
 | 💾 **Backup** | Full config backup & restore |
-| 🌐 **i18n** | English & Czech |
+| 🌐 **i18n** | English, Czech & Korean |
 | 🏠 **Internal-only** | Restrict sites to internal network only |
 | 🐳 **Docker Auto-Discovery** | Automatic container detection with one-click rule creation |
 
@@ -128,6 +128,10 @@ cpm:
 
 | Version | Notes |
 |---------|-------|
+| **3.3.0** | 🌐 i18n refactor — PO/MO format, Korean language, plural support infrastructure |
+| **3.1.0** | 🔐 Wildcard refactor - new architecture, handle blocks |
+| **3.0.2** | 🐛 Wildcard TLS fix, parser fix, 405 fix |
+| **3.0.1** | 🔐 Wildcard SSL, migration tools, UI improvements |
 | **3.2.0** | 🐳 Docker Auto-Discovery — automatic container detection, multi-host support |
 | **3.1.3** | 🔒 Security patch — CVE fixes, migrace na moby/moby/client |
 | **3.1.2** | 🔒 Security fixes, CSRF, race condition, path traversal |
@@ -157,6 +161,12 @@ cpm:
 - 📦 **Source Code**: [github.com/TomasZmek/cpm](https://github.com/TomasZmek/cpm)
 - 🐛 **Report Bugs**: [GitHub Issues](https://github.com/TomasZmek/cpm/issues)
 - 💡 **Feature Requests**: [GitHub Discussions](https://github.com/TomasZmek/cpm/discussions)
+
+---
+
+## 🙏 Acknowledgments
+
+- 🇰🇷 Korean translation: [@redstar-programmer](https://github.com/redstar-programmer)
 
 ---
 

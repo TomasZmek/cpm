@@ -100,9 +100,9 @@ func (h *Handler) CaddyReload(c *fiber.Ctx) error {
 	}
 
 	if result.Success {
-		setFlash(c, "success", "Configuration reloaded successfully")
+		setFlash(c, "success", tl(c, "msg_reload_success"))
 	} else {
-		setFlash(c, "error", "Reload failed: "+result.Error)
+		setFlash(c, "error", tl(c, "msg_reload_failed")+": "+result.Error)
 	}
 
 	return c.Redirect(c.Get("Referer", "/"))
@@ -137,9 +137,9 @@ func (h *Handler) CaddyValidate(c *fiber.Ctx) error {
 	}
 
 	if result.Success {
-		setFlash(c, "success", "Configuration is valid")
+		setFlash(c, "success", tl(c, "msg_validate_success"))
 	} else {
-		setFlash(c, "error", "Validation failed: "+result.Error)
+		setFlash(c, "error", tl(c, "msg_validate_failed")+": "+result.Error)
 	}
 
 	return c.Redirect(c.Get("Referer", "/"))
