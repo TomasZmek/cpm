@@ -369,6 +369,34 @@ var englishTranslations = map[string]string{
 	"tls_hint":              "Wildcard certificates are shared across all subdomains - more private and efficient",
 	"wildcard_snippets_hint": "cloudflare_dns is handled automatically at wildcard level",
 	"wildcard_tls_active":   "Wildcard TLS active - DNS challenge handled automatically",
+
+	// Docker Auto-Discovery
+	"settings_docker":               "Docker",
+	"settings_docker_title":         "Docker Auto-Discovery",
+	"discovery_title":               "Docker Auto-Discovery",
+	"discovery_hosts_label":         "Discovery Hosts",
+	"discovery_hosts_description":   "Docker hosts to scan for running containers.",
+	"discovery_host_ip":             "IP Address",
+	"discovery_host_label":          "Label (optional)",
+	"discovery_host_add":            "Add host",
+	"discovery_hosts_saved":         "Discovery hosts saved",
+	"discovery_no_hosts":            "No hosts configured.",
+	"discovery_no_hosts_desc":       "Please add at least one Docker host in Settings → Docker first.",
+	"discovery_container":           "Container",
+	"discovery_host_column":         "Host",
+	"discovery_not_paired":          "Not paired",
+	"discovery_create_rule":         "Create rule",
+	"discovery_empty":               "No running containers found (excluding Caddy and CPM).",
+	"discovery_docker_error":        "Docker error:",
+	"discovery_local_docker":        "Local Docker host",
+	"discovery_detect_ip":           "Detect Local IP",
+	"discovery_use_ip":              "Use this IP",
+	"discovery_no_local_host":       "No local Docker host configured.",
+	"discovery_no_local_host_desc":  "Mark one host as \"Local Docker\" in",
+
+	// Sites form quick-host selector
+	"sites_quick_host":              "Quick Host Select",
+	"sites_select_host":             "Select Docker host…",
 }
 
 // Czech translations
@@ -676,4 +704,32 @@ var czechTranslations = map[string]string{
 	"tls_hint":              "Wildcard certifikáty jsou sdílené pro všechny subdomény - více soukromí a efektivnější",
 	"wildcard_snippets_hint": "cloudflare_dns je řešeno automaticky na úrovni wildcard",
 	"wildcard_tls_active":   "Wildcard TLS aktivní - DNS challenge je řešeno automaticky",
+
+	// Docker Auto-Discovery
+	"settings_docker":               "Docker",
+	"settings_docker_title":         "Docker Auto-Discovery",
+	"discovery_title":               "Docker Auto-Discovery",
+	"discovery_hosts_label":         "Discovery Hosts",
+	"discovery_hosts_description":   "Docker hosté ke skenování běžících kontejnerů.",
+	"discovery_host_ip":             "IP Adresa",
+	"discovery_host_label":          "Popis (volitelný)",
+	"discovery_host_add":            "Přidat host",
+	"discovery_hosts_saved":         "Discovery hosts uloženy",
+	"discovery_no_hosts":            "Žádné hosty nenakonfigurovány.",
+	"discovery_no_hosts_desc":       "Přidejte alespoň jeden Docker host v Nastavení → Docker.",
+	"discovery_container":           "Kontejner",
+	"discovery_host_column":         "Host",
+	"discovery_not_paired":          "Nespárováno",
+	"discovery_create_rule":         "Vytvořit pravidlo",
+	"discovery_empty":               "Žádné běžící kontejnery nenalezeny (s výjimkou Caddy a CPM).",
+	"discovery_docker_error":        "Chyba Dockeru:",
+	"discovery_local_docker":        "Lokální Docker host",
+	"discovery_detect_ip":           "Zjistit lokální IP",
+	"discovery_use_ip":              "Použít tuto IP",
+	"discovery_no_local_host":       "Žádný lokální Docker host není nastaven.",
+	"discovery_no_local_host_desc":  "Označte jeden host jako \"Lokální Docker\" v",
+
+	// Sites form quick-host selector
+	"sites_quick_host":              "Rychlý výběr hostu",
+	"sites_select_host":             "Vyberte Docker host…",
 }

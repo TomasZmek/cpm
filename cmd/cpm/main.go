@@ -23,7 +23,7 @@ import (
 )
 
 const (
-	Version   = "3.1.3"
+	Version   = "3.2.0"
 	BuildDate = "2026-05-30"
 )
 
@@ -50,6 +50,7 @@ func main() {
 	authService := services.NewAuthService(cfg.ConfigDir)
 	backupService := services.NewBackupService(cfg)
 	wildcardService := services.NewWildcardService(cfg.ConfigDir)
+	settingsService := services.NewSettingsService(cfg.ConfigDir)
 
 	// Link wildcard service to snippets service for combined config generation
 	snippetsService.SetWildcardService(wildcardService)
@@ -141,6 +142,7 @@ func main() {
 		backupService,
 		dockerService,
 		wildcardService,
+		settingsService,
 	)
 
 	// Setup routes
@@ -228,6 +230,13 @@ func setupRoutes(app *fiber.App, h *handlers.Handler, authService *services.Auth
 	protected.Post("/settings/users/:username/role", h.UserUpdateRole)
 	protected.Post("/settings/users/:username/password", h.UserUpdatePassword)
 	protected.Post("/settings/auth/toggle", h.ToggleAuth)
+
+	// Docker Auto-Discovery
+	protected.Get("/discovery", h.DiscoveryPage)
+	protected.Post("/discovery/create", h.DiscoveryCreate)
+	protected.Get("/settings/docker", h.SettingsDocker)
+	protected.Post("/settings/discovery-hosts", h.SettingsDiscoveryHostsSave)
+	protected.Get("/settings/discovery-detect", h.SettingsDiscoveryDetect)
 
 	// Wildcard SSL
 	protected.Get("/settings/wildcard", h.WildcardSettings)

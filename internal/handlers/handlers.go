@@ -18,6 +18,7 @@ type Handler struct {
 	backupService   *services.BackupService
 	dockerService   *services.DockerService
 	wildcardService *services.WildcardService
+	settingsService *services.SettingsService
 }
 
 // New creates a new Handler instance
@@ -30,6 +31,7 @@ func New(
 	backupService *services.BackupService,
 	dockerService *services.DockerService,
 	wildcardService *services.WildcardService,
+	settingsService *services.SettingsService,
 ) *Handler {
 	return &Handler{
 		config:          cfg,
@@ -40,6 +42,7 @@ func New(
 		backupService:   backupService,
 		dockerService:   dockerService,
 		wildcardService: wildcardService,
+		settingsService: settingsService,
 	}
 }
 

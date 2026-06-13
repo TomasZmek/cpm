@@ -1,0 +1,96 @@
+<div class="page-header">
+    <div class="page-header-title">
+        <h1>🐳 {{t .Lang "discovery_title"}}</h1>
+    </div>
+    <div class="page-header-actions">
+        <a href="/settings/docker" class="btn btn-secondary">⚙️ {{t .Lang "settings"}}</a>
+    </div>
+</div>
+
+{{if not .HasLocalHost}}
+<!-- No local docker host configured -->
+<div class="alert alert-warning">
+    <strong>⚠️ {{t .Lang "discovery_no_local_host"}}</strong>
+    {{t .Lang "discovery_no_local_host_desc"}}
+    <a href="/settings/docker">{{t .Lang "settings"}} → Docker</a>
+</div>
+
+{{else if .DiscoveryError}}
+<!-- Docker error -->
+<div class="alert alert-error">
+    <strong>❌ {{t .Lang "discovery_docker_error"}}</strong> {{.DiscoveryError}}
+</div>
+
+{{else}}
+<!-- Results table -->
+<div class="table-container">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>{{t .Lang "discovery_host_column"}}</th>
+                <th>{{t .Lang "discovery_container"}}</th>
+                <th>{{t .Lang "sites_port"}}</th>
+                <th>{{t .Lang "status"}}</th>
+                <th>{{t .Lang "actions"}}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{if .Results}}
+                {{range .Results}}
+                <tr>
+                    <td>
+                        {{if .HostLabel}}
+                        <span class="badge">{{.HostLabel}}</span>
+                        {{else}}
+                        <code>{{.DiscoveryIP}}</code>
+                        {{end}}
+                    </td>
+                    <td><strong>{{.ContainerName}}</strong></td>
+                    <td>
+                        {{if .Port}}
+                        <code>{{.DiscoveryIP}}:{{.Port}}</code>
+                        {{else}}
+                        <span class="text-muted">—</span>
+                        {{end}}
+                    </td>
+                    <td>
+                        {{if .Paired}}
+                        <span class="text-success">
+                            ✅ <a href="/sites/{{.PairedDomain}}/edit">{{.PairedDomain}}</a>
+                        </span>
+                        {{else}}
+                        <span class="text-muted">⚠️ {{t $.Lang "discovery_not_paired"}}</span>
+                        {{end}}
+                    </td>
+                    <td>
+                        {{if and (not .Paired) .Port}}
+                        <form action="/discovery/create" method="POST" style="display:inline">
+                            <input type="hidden" name="_csrf" value="{{$.CSRFToken}}">
+                            <input type="hidden" name="container_name" value="{{.ContainerName}}">
+                            <input type="hidden" name="port" value="{{.Port}}">
+                            <input type="hidden" name="ip" value="{{.DiscoveryIP}}">
+                            <button type="submit" class="btn btn-sm btn-primary">
+                                ➕ {{t $.Lang "discovery_create_rule"}}
+                            </button>
+                        </form>
+                        {{else if .Paired}}
+                        <a href="/sites/{{.PairedDomain}}/edit" class="btn btn-sm btn-secondary">
+                            ✏️ {{t $.Lang "edit"}}
+                        </a>
+                        {{end}}
+                    </td>
+                </tr>
+                {{end}}
+            {{else}}
+            <tr>
+                <td colspan="5">
+                    <div class="alert alert-info" style="margin:0">
+                        ℹ️ {{t .Lang "discovery_empty"}}
+                    </div>
+                </td>
+            </tr>
+            {{end}}
+        </tbody>
+    </table>
+</div>
+{{end}}

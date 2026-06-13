@@ -19,6 +19,9 @@
         <a href="/settings/wildcard" class="tab {{if eq .ActiveTab "wildcard"}}active{{end}}">
             🔐 {{t .Lang "settings_wildcard"}}
         </a>
+        <a href="/settings/docker" class="tab {{if eq .ActiveTab "docker"}}active{{end}}">
+            🐳 {{t .Lang "settings_docker"}}
+        </a>
         <a href="/settings/users" class="tab {{if eq .ActiveTab "users"}}active{{end}}">
             👥 {{t .Lang "settings_users"}}
         </a>
@@ -303,6 +306,151 @@ subdomain.example.com {
         }
         </script>
         
+        {{else if eq .ActiveTab "docker"}}
+        <!-- Docker Auto-Discovery Settings -->
+        <div class="settings-section">
+            <h2>🐳 {{t .Lang "settings_docker_title"}}</h2>
+            <p class="text-muted">{{t .Lang "discovery_hosts_description"}}</p>
+
+            <form action="/settings/discovery-hosts" method="POST" class="mt-4" id="docker-hosts-form">
+                <input type="hidden" name="_csrf" value="{{$.CSRFToken}}">
+                <input type="hidden" name="local_docker_ip" id="local_docker_ip" value="{{.LocalDockerIP}}">
+
+                <div class="form-row mb-2" style="align-items:center">
+                    <div style="width:32px"></div>
+                    <div style="flex:1"><small class="text-muted">{{t .Lang "discovery_host_label"}}</small></div>
+                    <div style="flex:2"><small class="text-muted">{{t .Lang "discovery_host_ip"}}</small></div>
+                    <div style="width:40px"></div>
+                </div>
+
+                <div id="discovery-hosts-list">
+                    {{range .DiscoveryHosts}}
+                    <div class="form-row host-row mb-2" style="align-items:center">
+                        <div style="width:32px;display:flex;align-items:center;justify-content:center">
+                            <input type="radio" name="local_docker_marker"
+                                   value="{{.IP}}"
+                                   {{if .IsLocalDocker}}checked{{end}}
+                                   title="{{t $.Lang "discovery_local_docker"}}"
+                                   onchange="setLocalDockerIP(this.value)">
+                        </div>
+                        <div class="form-group" style="flex:1;margin:0">
+                            <input type="text" name="label[]" value="{{.Label}}"
+                                   placeholder="{{t $.Lang "discovery_host_label"}}">
+                        </div>
+                        <div class="form-group" style="flex:2;margin:0">
+                            <input type="text" name="ip[]" value="{{.IP}}"
+                                   placeholder="192.168.1.100" required
+                                   oninput="syncLocalIPIfSelected(this)">
+                        </div>
+                        <button type="button" class="btn btn-sm btn-danger"
+                                onclick="removeHostRow(this)" title="{{t $.Lang "delete"}}">🗑️</button>
+                    </div>
+                    {{end}}
+                </div>
+
+                <div class="form-row mt-3" style="gap:0.5rem;flex-wrap:wrap">
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="addHostRow()">
+                        ➕ {{t .Lang "discovery_host_add"}}
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="detectLocalIP()">
+                        🔍 {{t .Lang "discovery_detect_ip"}}
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        💾 {{t .Lang "save"}}
+                    </button>
+                </div>
+                <div id="detect-result" class="mt-2" style="display:none"></div>
+            </form>
+        </div>
+
+        <script>
+        function setLocalDockerIP(ip) {
+            document.getElementById('local_docker_ip').value = ip;
+        }
+        function syncLocalIPIfSelected(input) {
+            const row = input.closest('.host-row');
+            const radio = row.querySelector('input[type="radio"]');
+            if (radio && radio.checked) {
+                radio.value = input.value;
+                document.getElementById('local_docker_ip').value = input.value;
+            }
+        }
+        function addHostRow() {
+            const list = document.getElementById('discovery-hosts-list');
+            const row = document.createElement('div');
+            row.className = 'form-row host-row mb-2';
+            row.style.alignItems = 'center';
+            row.innerHTML = [
+                '<div style="width:32px;display:flex;align-items:center;justify-content:center">',
+                '  <input type="radio" name="local_docker_marker" value=""',
+                '         title="{{t .Lang "discovery_local_docker"}}"',
+                '         onchange="setLocalDockerIP(this.value)">',
+                '</div>',
+                '<div class="form-group" style="flex:1;margin:0">',
+                '  <input type="text" name="label[]" placeholder="{{t .Lang "discovery_host_label"}}">',
+                '</div>',
+                '<div class="form-group" style="flex:2;margin:0">',
+                '  <input type="text" name="ip[]" placeholder="192.168.1.100" required',
+                '         oninput="syncLocalIPIfSelected(this)">',
+                '</div>',
+                '<button type="button" class="btn btn-sm btn-danger" onclick="removeHostRow(this)">🗑️</button>'
+            ].join('');
+            list.appendChild(row);
+            row.querySelector('input[name="ip[]"]').focus();
+        }
+        function removeHostRow(btn) {
+            const row = btn.closest('.host-row');
+            const radio = row.querySelector('input[type="radio"]');
+            if (radio && radio.checked) {
+                document.getElementById('local_docker_ip').value = '';
+            }
+            row.remove();
+        }
+        function detectLocalIP() {
+            const resultDiv = document.getElementById('detect-result');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '⏳ Detecting…';
+            fetch('/settings/discovery-detect')
+                .then(r => r.json())
+                .then(data => {
+                    if (data.error) {
+                        resultDiv.innerHTML = '<span class="text-danger">❌ ' + data.error + '</span>';
+                        return;
+                    }
+                    resultDiv.innerHTML =
+                        '✅ Detected: <code>' + data.ip + '</code> ' +
+                        '<button type="button" class="btn btn-sm btn-secondary" ' +
+                        'onclick="useDetectedIP(\'' + data.ip + '\')">' +
+                        '{{t .Lang "discovery_use_ip"}}</button>';
+                })
+                .catch(() => {
+                    resultDiv.innerHTML = '<span class="text-danger">❌ Request failed</span>';
+                });
+        }
+        function useDetectedIP(ip) {
+            // Find existing local docker row or add new one
+            const list = document.getElementById('discovery-hosts-list');
+            const radios = list.querySelectorAll('input[type="radio"]');
+            // Check if any radio is already checked
+            let localRow = null;
+            radios.forEach(r => { if (r.checked) localRow = r.closest('.host-row'); });
+            if (localRow) {
+                localRow.querySelector('input[name="ip[]"]').value = ip;
+                localRow.querySelector('input[type="radio"]').value = ip;
+            } else {
+                addHostRow();
+                const rows = list.querySelectorAll('.host-row');
+                const newRow = rows[rows.length - 1];
+                newRow.querySelector('input[name="ip[]"]').value = ip;
+                newRow.querySelector('input[type="radio"]').value = ip;
+                newRow.querySelector('input[type="radio"]').checked = true;
+            }
+            document.getElementById('local_docker_ip').value = ip;
+            document.getElementById('detect-result').innerHTML =
+                '✅ IP <code>' + ip + '</code> set as local Docker host.';
+        }
+        </script>
+
         {{else if eq .ActiveTab "users"}}
         <!-- Users Settings -->
         <div class="settings-section">

@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-3.1.3-blue" alt="Version">
+  <img src="https://img.shields.io/badge/version-3.2.0-blue" alt="Version">
   <img src="https://img.shields.io/badge/Go-1.26-00ADD8?logo=go" alt="Go">
   <img src="https://img.shields.io/badge/Docker-ready-2496ED?logo=docker" alt="Docker">
   <img src="https://img.shields.io/badge/platforms-amd64%20%7C%20arm64-lightgrey" alt="Platforms">
@@ -56,6 +56,7 @@
 | 💾 **Backup** | Full config backup & restore |
 | 🌐 **i18n** | English & Czech |
 | 📋 **Templates** | 17+ pre-configured service templates |
+| 🐳 **Docker Auto-Discovery** | Automatic container detection with one-click rule creation |
 
 ---
 
@@ -64,7 +65,7 @@
 ### Docker Hub
 
 ```bash
-docker pull perteus/caddy-ui:3.1.3
+docker pull perteus/caddy-ui:3.2.0
 docker pull perteus/caddy-ui:latest
 ```
 
@@ -85,7 +86,7 @@ services:
       - ./caddy-data:/data
 
   cpm:
-    image: perteus/caddy-ui:3.1.3
+    image: perteus/caddy-ui:3.2.0
     container_name: cpm
     ports:
       - "8501:8501"
@@ -115,7 +116,7 @@ services:
       - ./caddy-data:/data
 
   cpm:
-    image: perteus/caddy-ui:3.1.3
+    image: perteus/caddy-ui:3.2.0
     container_name: cpm
     privileged: true  # Required for Synology
     ports:
@@ -204,7 +205,7 @@ For Synology Docker, use `privileged: true` to allow Docker socket access:
 
 ```yaml
 cpm:
-  image: perteus/caddy-ui:3.1.3
+  image: perteus/caddy-ui:3.2.0
   privileged: true
   volumes:
     - /volume1/docker/caddy-config:/caddy-config
@@ -242,8 +243,8 @@ go build -o cpm ./cmd/cpm
 ### Docker Build
 
 ```bash
-docker build -t perteus/caddy-ui:3.1.3 --no-cache .
-docker push perteus/caddy-ui:3.1.3
+docker build -t perteus/caddy-ui:3.2.0 --no-cache .
+docker push perteus/caddy-ui:3.2.0
 docker push perteus/caddy-ui:latest
 ```
 
@@ -253,6 +254,7 @@ docker push perteus/caddy-ui:latest
 
 | Version | Date | Notes |
 |---------|------|-------|
+| **3.2.0** | 2026-05-31 | 🐳 Docker Auto-Discovery — automatic container detection, multi-host support |
 | **3.1.3** | 2026-05-30 | 🔒 Security patch — x/crypto CVE fixes, moby/moby/client |
 | **3.1.2** | 2026-05-16 | 🔒 Security fixes, refactoring |
 | **3.1.1** | 2026-05-16 | 🔒 Security update, Go 1.26, multi-platform (amd64/arm64) |
@@ -261,6 +263,13 @@ docker push perteus/caddy-ui:latest
 | **3.0.1** | 2026-01 | 🔐 Wildcard SSL, migration tools, UI improvements |
 | **3.0.0** | 2026-01 | 🎉 Complete Go rewrite (794MB → 6MB) |
 | 2.2.1 | 2025-12 | Python version (deprecated) |
+
+### v3.2.0 - Docker Auto-Discovery
+- ✅ **Auto-Discovery** — automatic detection of running containers
+- ✅ **Multi-host support** — monitor multiple Docker hosts
+- ✅ **Smart pairing** — match existing proxy rules with containers
+- ✅ **One-click rule creation** — pre-filled from discovered containers
+- ✅ **Local IP autodetection** — detects host IP automatically
 
 ### v3.1.2 - Security Fixes & Code Quality
 - ✅ **Race condition fix** - ValidateSession no longer writes to map under read lock
