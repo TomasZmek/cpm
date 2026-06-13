@@ -1,0 +1,1035 @@
+# Korean translations for CPM - Caddy Proxy Manager
+# Source: PR #9 by @redstar-programmer (https://github.com/TomasZmek/cpm/pull/9)
+# Migrated to PO format as part of issue #10 i18n refactoring.
+# SPDX-License-Identifier: MIT
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+# General
+msgid "app_name"
+msgstr "CPM - Caddy Proxy Manager"
+
+msgid "app_version"
+msgstr "버전"
+
+msgid "save"
+msgstr "저장"
+
+msgid "cancel"
+msgstr "취소"
+
+msgid "delete"
+msgstr "삭제"
+
+msgid "edit"
+msgstr "수정"
+
+msgid "create"
+msgstr "생성"
+
+msgid "back"
+msgstr "이전"
+
+msgid "back_to_dashboard"
+msgstr "대시보드로 돌아가기"
+
+msgid "search"
+msgstr "검색"
+
+msgid "filter"
+msgstr "필터"
+
+msgid "loading"
+msgstr "로딩 중..."
+
+msgid "success"
+msgstr "성공"
+
+msgid "error"
+msgstr "오류"
+
+msgid "warning"
+msgstr "경고"
+
+msgid "confirm"
+msgstr "확인"
+
+msgid "yes"
+msgstr "예"
+
+msgid "no"
+msgstr "아니오"
+
+msgid "actions"
+msgstr "작업"
+
+msgid "settings"
+msgstr "설정"
+
+msgid "logout"
+msgstr "로그아웃"
+
+msgid "status"
+msgstr "상태"
+
+msgid "domain"
+msgstr "도메인"
+
+msgid "modified"
+msgstr "수정일"
+
+msgid "more"
+msgstr "더 보기"
+
+msgid "rules"
+msgstr "개 규칙"
+
+msgid "days"
+msgstr "일"
+
+msgid "today"
+msgstr "오늘"
+
+msgid "never"
+msgstr "없음"
+
+msgid "not_set"
+msgstr "설정되지 않음"
+
+msgid "about"
+msgstr "정보"
+
+msgid "build_date"
+msgstr "빌드 날짜"
+
+msgid "about_description"
+msgstr "Caddy 역방향 프록시(Reverse Proxy) 관리를 위한 웹 인터페이스입니다."
+
+msgid "valid_from"
+msgstr "유효 시작일"
+
+msgid "auto_scroll"
+msgstr "자동 스크롤"
+
+msgid "username"
+msgstr "사용자명"
+
+msgid "password"
+msgstr "비밀번호"
+
+msgid "role"
+msgstr "권한"
+
+msgid "created"
+msgstr "생성일"
+
+msgid "last_login"
+msgstr "최근 로그인"
+
+# Navigation
+msgid "nav_dashboard"
+msgstr "대시보드"
+
+msgid "nav_sites"
+msgstr "프록시 규칙"
+
+msgid "nav_snippets"
+msgstr "코드 조각(Snippet)"
+
+msgid "nav_certificates"
+msgstr "인증서"
+
+msgid "nav_logs"
+msgstr "로그"
+
+msgid "nav_settings"
+msgstr "설정"
+
+# Dashboard
+msgid "dashboard_title"
+msgstr "대시보드"
+
+msgid "dashboard_rules"
+msgstr "프록시 규칙"
+
+msgid "dashboard_certificates"
+msgstr "인증서"
+
+msgid "dashboard_snippets"
+msgstr "코드 조각"
+
+msgid "dashboard_caddy_status"
+msgstr "Caddy 상태"
+
+msgid "dashboard_running"
+msgstr "실행 중"
+
+msgid "dashboard_stopped"
+msgstr "중지됨"
+
+msgid "dashboard_recent_changes"
+msgstr "최근 변경 사항"
+
+msgid "dashboard_no_changes"
+msgstr "최근 변경 사항이 없습니다"
+
+msgid "dashboard_alerts"
+msgstr "알림"
+
+msgid "dashboard_no_alerts"
+msgstr "모든 시스템이 정상 작동 중입니다"
+
+msgid "dashboard_quick_actions"
+msgstr "빠른 작업"
+
+msgid "dashboard_reload"
+msgstr "Caddy 재로드"
+
+msgid "dashboard_validate"
+msgstr "설정 검증"
+
+msgid "dashboard_new_rule"
+msgstr "새 규칙 추가"
+
+msgid "dashboard_backup"
+msgstr "백업"
+
+# Sites
+msgid "sites_title"
+msgstr "프록시 규칙"
+
+msgid "sites_new"
+msgstr "새 규칙"
+
+msgid "sites_edit"
+msgstr "규칙 수정"
+
+msgid "sites_delete"
+msgstr "규칙 삭제"
+
+msgid "sites_duplicate"
+msgstr "규칙 복제"
+
+msgid "sites_empty"
+msgstr "등록된 프록시 규칙이 없습니다"
+
+msgid "sites_empty_title"
+msgstr "프록시 규칙 없음"
+
+msgid "sites_empty_desc"
+msgstr "서비스를 시작하려면 첫 번째 프록시 규칙을 생성해 보세요."
+
+msgid "sites_create"
+msgstr "규칙 생성"
+
+msgid "sites_search"
+msgstr "도메인, IP, 포트 검색..."
+
+msgid "sites_filter_tag"
+msgstr "태그로 필터링"
+
+msgid "sites_all_tags"
+msgstr "모든 태그"
+
+msgid "sites_domain"
+msgstr "도메인"
+
+msgid "sites_target"
+msgstr "대상(Target)"
+
+msgid "sites_port"
+msgstr "포트"
+
+msgid "sites_ip"
+msgstr "IP 주소"
+
+msgid "sites_https_backend"
+msgstr "HTTPS 백엔드"
+
+msgid "sites_internal"
+msgstr "내부망 전용(Internal Only)"
+
+msgid "sites_websocket"
+msgstr "WebSocket 지원"
+
+msgid "sites_health_check"
+msgstr "헬스 체크 경로"
+
+msgid "sites_timeout"
+msgstr "타임아웃 (초)"
+
+msgid "sites_snippets"
+msgstr "코드 조각(Snippet)"
+
+msgid "sites_tags"
+msgstr "태그"
+
+msgid "sites_extra_config"
+msgstr "추가 설정"
+
+msgid "sites_raw_edit"
+msgstr "직접 편집(Raw)"
+
+msgid "sites_form_edit"
+msgstr "폼 편집"
+
+msgid "sites_preview"
+msgstr "미리보기"
+
+msgid "sites_confirm_delete"
+msgstr "이 규칙을 정말로 삭제하시겠습니까?"
+
+msgid "sites_created"
+msgstr "프록시 규칙이 생성되었습니다"
+
+msgid "sites_updated"
+msgstr "프록시 규칙이 업데이트되었습니다"
+
+msgid "sites_deleted"
+msgstr "프록시 규칙이 삭제되었습니다"
+
+msgid "sites_duplicated"
+msgstr "프록시 규칙이 복제되었습니다"
+
+msgid "sites_from_template"
+msgstr "템플릿에서 생성"
+
+msgid "sites_from_scratch"
+msgstr "새로 생성"
+
+msgid "sites_select_template"
+msgstr "템플릿 선택"
+
+msgid "sites_template_category"
+msgstr "카테고리"
+
+msgid "domain_config"
+msgstr "도메인 설정"
+
+msgid "backend_target"
+msgstr "백엔드 대상"
+
+msgid "domains_hint"
+msgstr "여러 도메인은 콤마(,)나 공백으로 구분하세요"
+
+msgid "tags_hint"
+msgstr "콤마(,)로 태그를 구분하여 규칙을 분류하세요"
+
+msgid "advanced_options"
+msgstr "고급 옵션"
+
+msgid "extra_config_placeholder"
+msgstr "추가할 Caddy 지시어(Directive)..."
+
+# Snippets
+msgid "snippets_title"
+msgstr "코드 조각(Snippet) 관리"
+
+msgid "snippets_description"
+msgstr "프록시 규칙에 재사용 및 가져오기(Import)가 가능한 Caddy 코드 조각을 설정합니다."
+
+msgid "snippets_cloudflare"
+msgstr "Cloudflare DNS"
+
+msgid "snippets_internal"
+msgstr "내부망 전용"
+
+msgid "snippets_security"
+msgstr "보안 헤더"
+
+msgid "snippets_compression"
+msgstr "압축"
+
+msgid "snippets_rate_limit"
+msgstr "속도 제한(Rate Limit)"
+
+msgid "snippets_basic_auth"
+msgstr "기본 인증(Basic Auth)"
+
+msgid "snippets_enabled"
+msgstr "활성화됨"
+
+msgid "snippets_disabled"
+msgstr "비활성화됨"
+
+msgid "snippets_enable_cloudflare"
+msgstr "Cloudflare DNS 챌린지 활성화"
+
+msgid "snippets_enable_internal"
+msgstr "내부 네트워크 접근 제한 활성화"
+
+msgid "snippets_enable_security"
+msgstr "보안 헤더 활성화"
+
+msgid "snippets_enable_compression"
+msgstr "압축 활성화"
+
+msgid "snippets_enable_rate_limit"
+msgstr "속도 제한 활성화"
+
+msgid "snippets_use_env"
+msgstr "CF_API_TOKEN 환경 변수 사용"
+
+msgid "snippets_api_token"
+msgstr "API 토큰 (환경 변수 미사용 시)"
+
+msgid "snippets_api_token_placeholder"
+msgstr "Cloudflare API 토큰을 입력하세요"
+
+msgid "snippets_allowed_networks"
+msgstr "허용할 네트워크 대역 (CIDR)"
+
+msgid "snippets_networks_help"
+msgstr "한 줄에 하나씩 CIDR 표기법으로 입력하세요"
+
+msgid "snippets_hsts_max_age"
+msgstr "HSTS Max Age (초)"
+
+msgid "snippets_include_subdomains"
+msgstr "서브도메인 포함"
+
+msgid "snippets_x_frame_options"
+msgstr "X-Frame-Options"
+
+msgid "snippets_referrer_policy"
+msgstr "Referrer Policy"
+
+msgid "snippets_hide_server"
+msgstr "Server 헤더 숨기기"
+
+msgid "snippets_zstd"
+msgstr "Zstd"
+
+msgid "snippets_gzip"
+msgstr "Gzip"
+
+msgid "snippets_requests"
+msgstr "요청 수"
+
+msgid "snippets_window"
+msgstr "윈도우 시간 (초)"
+
+msgid "snippets_users"
+msgstr "사용자 목록"
+
+msgid "snippets_add_user"
+msgstr "사용자 추가"
+
+msgid "snippets_username"
+msgstr "사용자명"
+
+msgid "snippets_password"
+msgstr "비밀번호"
+
+# Certificates
+msgid "certs_title"
+msgstr "SSL 인증서"
+
+msgid "certs_count"
+msgstr "개 인증서"
+
+msgid "certs_domain"
+msgstr "도메인"
+
+msgid "certs_issuer"
+msgstr "발급기관"
+
+msgid "certs_expires"
+msgstr "만료일"
+
+msgid "certs_status"
+msgstr "상태"
+
+msgid "certs_days_left"
+msgstr "남은 일수"
+
+msgid "certs_valid"
+msgstr "유효함"
+
+msgid "certs_expiring"
+msgstr "만료 임박 (30일 이내)"
+
+msgid "certs_critical"
+msgstr "만료 위험 (7일 이내)"
+
+msgid "certs_expired"
+msgstr "만료됨"
+
+msgid "certs_delete"
+msgstr "강제 갱신"
+
+msgid "certs_force_renew"
+msgstr "강제 갱신"
+
+msgid "certs_renew"
+msgstr "갱신"
+
+msgid "certs_confirm_renew"
+msgstr "인증서를 삭제하고 다음 도메인의 갱신을 트리거합니다:"
+
+msgid "certs_confirm_delete"
+msgstr "다음 도메인의 인증서를 삭제합니다:"
+
+msgid "certs_empty"
+msgstr "인증서를 찾을 수 없습니다"
+
+msgid "certs_empty_title"
+msgstr "인증서 없음"
+
+msgid "certs_empty_desc"
+msgstr "Caddy가 인증서를 발급받으면 여기에 표시됩니다."
+
+msgid "certs_about_title"
+msgstr "인증서 관리 안내"
+
+msgid "certs_about_desc"
+msgstr "Caddy는 만료되기 전에 인증서를 자동으로 갱신합니다."
+
+msgid "certs_renew_desc"
+msgstr "인증서를 삭제하고 Caddy를 재로드하여 자동 갱신을 트리거합니다. (활성 도메인에 사용)"
+
+msgid "certs_delete_desc"
+msgstr "갱신 없이 인증서만 삭제합니다. (더 이상 사용하지 않는 도메인에 사용)"
+
+# Logs
+msgid "logs_title"
+msgstr "Caddy 로그"
+
+msgid "logs_lines"
+msgstr "줄 수"
+
+msgid "logs_refresh"
+msgstr "새로고침"
+
+msgid "logs_search"
+msgstr "로그 검색..."
+
+msgid "logs_stream"
+msgstr "실시간 스트림"
+
+msgid "logs_stop"
+msgstr "스트림 중지"
+
+msgid "logs_empty"
+msgstr "사용 가능한 로그가 없습니다"
+
+# Settings
+msgid "settings_title"
+msgstr "설정"
+
+msgid "settings_general"
+msgstr "일반"
+
+msgid "settings_backup"
+msgstr "백업"
+
+msgid "settings_caddy"
+msgstr "Caddy"
+
+msgid "settings_users"
+msgstr "사용자"
+
+msgid "settings_wildcard"
+msgstr "와일드카드 SSL"
+
+msgid "settings_language"
+msgstr "언어"
+
+msgid "settings_theme"
+msgstr "테마"
+
+msgid "backup_restore"
+msgstr "백업 및 복구"
+
+msgid "backup_description"
+msgstr "현재 Caddy 설정의 전체 백업을 생성하거나 복구합니다."
+
+msgid "backup_create"
+msgstr "백업 생성"
+
+msgid "backup_create_desc"
+msgstr "모든 설정 파일이 포함된 ZIP 파일을 다운로드합니다."
+
+msgid "backup_download"
+msgstr "백업 다운로드"
+
+msgid "backup_restore_title"
+msgstr "백업 복구"
+
+msgid "backup_restore_desc"
+msgstr "백업 ZIP 파일을 업로드하여 설정을 복구합니다."
+
+msgid "backup_upload"
+msgstr "백업 복구"
+
+msgid "import_export"
+msgstr "규칙 가져오기 / 내보내기"
+
+msgid "import_export_desc"
+msgstr "규칙을 JSON으로 내보내거나 다른 CPM 인스턴스에서 가져옵니다."
+
+msgid "export_rules"
+msgstr "규칙 내보내기"
+
+msgid "export_rules_desc"
+msgstr "모든 프록시 규칙을 JSON 파일로 다운로드합니다."
+
+msgid "export_json"
+msgstr "JSON 내보내기"
+
+msgid "import_rules"
+msgstr "규칙 가져오기"
+
+msgid "import_rules_desc"
+msgstr "JSON 파일에서 규칙을 가져옵니다."
+
+msgid "import_upload"
+msgstr "규칙 가져오기"
+
+msgid "skip_existing"
+msgstr "기존 규칙 건너뛰기"
+
+msgid "fallback_rule"
+msgstr "대체(Fallback) 규칙"
+
+msgid "fallback_description"
+msgstr "알 수 없는 도메인(와일드카드)에 대한 기본 규칙입니다."
+
+msgid "fallback_not_found"
+msgstr "대체 규칙을 찾을 수 없습니다."
+
+msgid "error_pages"
+msgstr "에러 페이지"
+
+msgid "error_pages_description"
+msgstr "에러 응답에 사용할 사용자 정의 HTML 페이지입니다."
+
+msgid "user_management"
+msgstr "사용자 관리"
+
+msgid "enable_auth"
+msgstr "인증 활성화"
+
+msgid "auth_disabled_warning"
+msgstr "인증이 비활성화되어 있습니다. 누구나 애플리케이션에 접근할 수 있습니다."
+
+msgid "no_users_warning"
+msgstr "생성된 사용자가 없습니다. 인증을 활성화하려면 최소 한 명의 사용자를 생성하세요."
+
+msgid "existing_users"
+msgstr "기존 사용자"
+
+msgid "add_user"
+msgstr "새 사용자 추가"
+
+msgid "create_user"
+msgstr "사용자 생성"
+
+msgid "confirm_delete_user"
+msgstr "사용자 삭제"
+
+msgid "settings_backup_create"
+msgstr "백업 생성"
+
+msgid "settings_backup_restore"
+msgstr "백업 복구"
+
+msgid "settings_import"
+msgstr "규칙 가져오기"
+
+msgid "settings_export"
+msgstr "규칙 내보내기"
+
+msgid "settings_fallback"
+msgstr "대체 규칙"
+
+msgid "settings_error_pages"
+msgstr "에러 페이지"
+
+msgid "settings_auth_enabled"
+msgstr "인증 활성화됨"
+
+msgid "settings_auth_disabled"
+msgstr "인증 비활성화됨"
+
+msgid "settings_add_user"
+msgstr "사용자 추가"
+
+msgid "settings_role"
+msgstr "권한"
+
+msgid "settings_role_admin"
+msgstr "관리자(Admin)"
+
+msgid "settings_role_editor"
+msgstr "편집자(Editor)"
+
+msgid "settings_role_viewer"
+msgstr "조회자(Viewer)"
+
+# Login
+msgid "login_title"
+msgstr "로그인"
+
+msgid "login_username"
+msgstr "사용자명"
+
+msgid "login_password"
+msgstr "비밀번호"
+
+msgid "login_submit"
+msgstr "로그인"
+
+msgid "login_setup"
+msgstr "관리자 계정 생성"
+
+msgid "login_error"
+msgstr "잘못된 인증 정보입니다"
+
+# Flash messages (existing)
+msgid "msg_reload_success"
+msgstr "설정이 성공적으로 재로드되었습니다"
+
+msgid "msg_reload_error"
+msgstr "설정 재로드에 실패했습니다"
+
+msgid "msg_validate_success"
+msgstr "올바른 설정입니다"
+
+msgid "msg_validate_error"
+msgstr "설정 검증에 실패했습니다"
+
+msgid "msg_backup_created"
+msgstr "백업이 성공적으로 생성되었습니다"
+
+msgid "msg_backup_restored"
+msgstr "백업이 성공적으로 복구되었습니다"
+
+msgid "msg_import_success"
+msgstr "규칙을 성공적으로 가져왔습니다"
+
+msgid "msg_user_created"
+msgstr "사용자가 성공적으로 생성되었습니다"
+
+msgid "msg_user_deleted"
+msgstr "사용자가 성공적으로 삭제되었습니다"
+
+# Flash messages (handler-level, added in i18n refactor)
+msgid "msg_user_created_name"
+msgstr "사용자 '{0}'이(가) 성공적으로 생성되었습니다"
+
+msgid "msg_user_deleted_name"
+msgstr "사용자 '{0}'이(가) 성공적으로 삭제되었습니다"
+
+msgid "msg_role_updated"
+msgstr "권한이 성공적으로 업데이트되었습니다"
+
+msgid "msg_password_updated"
+msgstr "비밀번호가 성공적으로 업데이트되었습니다"
+
+msgid "msg_auth_enabled"
+msgstr "인증이 활성화되었습니다"
+
+msgid "msg_auth_disabled"
+msgstr "인증이 비활성화되었습니다"
+
+msgid "msg_cert_deleted"
+msgstr "'{0}'의 인증서가 삭제되었습니다."
+
+msgid "msg_cert_reload_failed"
+msgstr "인증서가 삭제되었지만 재로드에 실패했습니다"
+
+msgid "msg_cert_renewed"
+msgstr "'{0}'의 인증서가 삭제되었습니다. 갱신이 시작됩니다."
+
+msgid "msg_snippet_updated"
+msgstr "코드 조각 '{0}'이(가) 성공적으로 업데이트되었습니다"
+
+msgid "msg_snippet_reload_failed"
+msgstr "코드 조각이 업데이트되었지만 재로드에 실패했습니다"
+
+msgid "msg_rule_created_name"
+msgstr "규칙 '{0}'이(가) 성공적으로 생성되었습니다"
+
+msgid "msg_rule_create_reload_failed"
+msgstr "규칙이 생성되었지만 재로드에 실패했습니다"
+
+msgid "msg_rule_updated_name"
+msgstr "규칙 '{0}'이(가) 성공적으로 업데이트되었습니다"
+
+msgid "msg_rule_update_reload_failed"
+msgstr "규칙이 업데이트되었지만 재로드에 실패했습니다"
+
+msgid "msg_rule_deleted_name"
+msgstr "규칙 '{0}'이(가) 성공적으로 삭제되었습니다"
+
+msgid "msg_rule_delete_reload_failed"
+msgstr "규칙이 삭제되었지만 재로드에 실패했습니다"
+
+msgid "msg_rule_dup_reload_failed"
+msgstr "규칙이 복제되었지만 재로드에 실패했습니다"
+
+msgid "msg_wildcard_unavailable"
+msgstr "와일드카드 서비스를 사용할 수 없습니다"
+
+msgid "msg_wildcard_domain_required"
+msgstr "도메인은 필수입니다"
+
+msgid "msg_wildcard_exists"
+msgstr "와일드카드 도메인이 이미 존재합니다"
+
+msgid "msg_wildcard_add_failed"
+msgstr "와일드카드 도메인 추가에 실패했습니다"
+
+msgid "msg_wildcard_config_failed"
+msgstr "도메인이 추가되었지만 Caddy 설정 업데이트에 실패했습니다"
+
+msgid "msg_wildcard_info_failed"
+msgstr "마이그레이션 정보를 가져오는 데 실패했습니다"
+
+msgid "msg_wildcard_migrate_backup_failed"
+msgstr "마이그레이션 전 백업 생성에 실패했습니다"
+
+msgid "msg_wildcard_migrate_errors"
+msgstr "마이그레이션이 오류와 함께 완료되었습니다. 로그를 확인하세요."
+
+msgid "msg_wildcard_delete_failed"
+msgstr "와일드카드 도메인 삭제에 실패했습니다"
+
+msgid "msg_wildcard_config_update_failed"
+msgstr "도메인이 제거되었지만 Caddy 설정 업데이트에 실패했습니다"
+
+msgid "msg_wildcard_reload_failed_delete"
+msgstr "도메인이 제거되었지만 Caddy 재로드에 실패했습니다"
+
+msgid "msg_backup_reloaded"
+msgstr "백업이 복구되고 Caddy가 재로드되었습니다"
+
+msgid "msg_backup_restore_reload_failed"
+msgstr "백업은 복구되었지만 재로드에 실패했습니다"
+
+msgid "msg_reload_failed"
+msgstr "재로드에 실패했습니다"
+
+msgid "msg_validate_failed"
+msgstr "검증에 실패했습니다"
+
+msgid "msg_import_result"
+msgstr "{0}개의 규칙을 가져왔습니다"
+
+msgid "msg_import_result_with_skip"
+msgstr "{0}개의 규칙을 가져왔습니다. {1}개의 기존 규칙을 건너뛰었습니다"
+
+# Wildcard SSL
+msgid "wildcard_title"
+msgstr "와일드카드 SSL 인증서"
+
+msgid "wildcard_description"
+msgstr "도메인에 대한 와일드카드 SSL 인증서를 설정합니다. 와일드카드 인증서는 모든 하위 서브도메인(*.example.com)을 포함합니다."
+
+msgid "wildcard_info_title"
+msgstr "DNS 챌린지 필요"
+
+msgid "wildcard_info_desc"
+msgstr "와일드카드 인증서는 DNS 챌린지 인증이 필요합니다. DNS 공급자의 API 접근 권한(예: Cloudflare API 토큰)이 필요합니다."
+
+msgid "wildcard_existing"
+msgstr "설정된 와일드카드 도메인"
+
+msgid "wildcard_add"
+msgstr "와일드카드 도메인 추가"
+
+msgid "wildcard_domain"
+msgstr "도메인"
+
+msgid "wildcard_domain_help"
+msgstr "기본 도메인을 입력하세요 (*. 접두사 제외)"
+
+msgid "wildcard_provider"
+msgstr "DNS 공급자"
+
+msgid "wildcard_use_env"
+msgstr "CF_API_TOKEN 환경 변수 사용"
+
+msgid "wildcard_env_help"
+msgstr "권장사항: Docker 환경 변수에 CF_API_TOKEN을 설정하세요"
+
+msgid "wildcard_api_token"
+msgstr "API 토큰"
+
+msgid "wildcard_api_token_placeholder"
+msgstr "Cloudflare API 토큰을 입력하세요"
+
+msgid "wildcard_api_token_help"
+msgstr "토큰에 Zone:DNS:Edit 권한이 필요합니다"
+
+msgid "wildcard_add_btn"
+msgstr "와일드카드 도메인 추가"
+
+msgid "wildcard_confirm_delete"
+msgstr "다음 도메인의 와일드카드 설정을 제거합니다:"
+
+msgid "wildcard_created"
+msgstr "와일드카드 도메인이 추가되었습니다"
+
+msgid "wildcard_deleted"
+msgstr "와일드카드 도메인이 제거되었습니다"
+
+msgid "wildcard_usage_title"
+msgstr "와일드카드 TLS 사용 방법"
+
+msgid "wildcard_usage_desc"
+msgstr "와일드카드 TLS 인증서를 사용하려면 사이트 설정에 import 지시어를 추가하세요:"
+
+msgid "wildcard_snippets_hint"
+msgstr "cloudflare_dns는 와일드카드 수준에서 자동으로 처리됩니다"
+
+msgid "wildcard_tls_active"
+msgstr "와일드카드 TLS 활성 상태 - DNS 챌린지가 자동으로 처리됩니다"
+
+# Migration
+msgid "migrate_title"
+msgstr "와일드카드 SSL로 마이그레이션"
+
+msgid "migrate_info_title"
+msgstr "자동 마이그레이션"
+
+msgid "migrate_info_desc"
+msgstr "CPM은 와일드카드 인증서를 사용하도록 사이트 설정을 업데이트하고, 선택 시 기존의 개별 인증서들을 삭제합니다."
+
+msgid "migrate_sites_title"
+msgstr "사이트 설정"
+
+msgid "migrate_sites_desc"
+msgstr "와일드카드 도메인과 일치하는 다음 사이트 설정들이 업데이트됩니다:"
+
+msgid "migrate_sites_checkbox"
+msgstr "사이트 설정이 와일드카드 TLS를 사용하도록 마이그레이션"
+
+msgid "migrate_no_sites"
+msgstr "일치하는 사이트 설정을 찾을 수 없습니다."
+
+msgid "migrate_certs_title"
+msgstr "개별 인증서"
+
+msgid "migrate_certs_desc"
+msgstr "다음 인증서들은 삭제할 수 있습니다 (대신 와일드카드 인증서가 사용됨):"
+
+msgid "migrate_certs_checkbox"
+msgstr "개별 인증서 삭제"
+
+msgid "migrate_no_certs"
+msgstr "개별 인증서를 찾을 수 없습니다."
+
+msgid "migrate_backup_title"
+msgstr "백업이 생성됩니다"
+
+msgid "migrate_backup_desc"
+msgstr "변경 사항을 적용하기 전에 백업이 자동으로 생성됩니다."
+
+msgid "migrate_execute"
+msgstr "마이그레이션 실행"
+
+msgid "migrate_skip"
+msgstr "건너뛰고 수동으로 설정"
+
+msgid "migrate_btn"
+msgstr "마이그레이션"
+
+msgid "files"
+msgstr "개 파일"
+
+msgid "certificates"
+msgstr "개 인증서"
+
+# TLS Certificate
+msgid "tls_certificate"
+msgstr "TLS 인증서"
+
+msgid "tls_mode"
+msgstr "인증서 모드"
+
+msgid "tls_auto"
+msgstr "자동 발급 (새 인증서)"
+
+msgid "tls_use_wildcard"
+msgstr "와일드카드 사용"
+
+msgid "tls_hint"
+msgstr "와일드카드 인증서는 모든 서브도메인에서 공유되므로 더 효율적이며 보안상 유리합니다"
+
+# Docker Auto-Discovery (v3.2.0)
+msgid "settings_docker"
+msgstr "도커"
+
+msgid "settings_docker_title"
+msgstr "도커 자동 검색"
+
+msgid "discovery_title"
+msgstr "도커 자동 검색"
+
+msgid "discovery_hosts_label"
+msgstr "검색 호스트"
+
+msgid "discovery_hosts_description"
+msgstr "실행 중인 컨테이너를 검색할 도커 호스트입니다."
+
+msgid "discovery_host_ip"
+msgstr "IP 주소"
+
+msgid "discovery_host_label"
+msgstr "레이블 (선택)"
+
+msgid "discovery_host_add"
+msgstr "호스트 추가"
+
+msgid "discovery_hosts_saved"
+msgstr "검색 호스트가 저장되었습니다"
+
+msgid "discovery_no_hosts"
+msgstr "설정된 호스트가 없습니다."
+
+msgid "discovery_no_hosts_desc"
+msgstr "설정 → 도커에서 최소 하나의 도커 호스트를 추가하세요."
+
+msgid "discovery_container"
+msgstr "컨테이너"
+
+msgid "discovery_host_column"
+msgstr "호스트"
+
+msgid "discovery_not_paired"
+msgstr "연결되지 않음"
+
+msgid "discovery_create_rule"
+msgstr "규칙 생성"
+
+msgid "discovery_empty"
+msgstr "실행 중인 컨테이너를 찾을 수 없습니다 (Caddy 및 CPM 제외)."
+
+msgid "discovery_docker_error"
+msgstr "도커 오류:"
+
+msgid "discovery_local_docker"
+msgstr "로컬 도커 호스트"
+
+msgid "discovery_detect_ip"
+msgstr "로컬 IP 감지"
+
+msgid "discovery_use_ip"
+msgstr "이 IP 사용"
+
+msgid "discovery_no_local_host"
+msgstr "로컬 도커 호스트가 설정되지 않았습니다."
+
+msgid "discovery_no_local_host_desc"
+msgstr "다음에서 하나의 호스트를 \"로컬 도커\"로 표시하세요:"
+
+msgid "sites_quick_host"
+msgstr "빠른 호스트 선택"
+
+msgid "sites_select_host"
+msgstr "도커 호스트 선택…"

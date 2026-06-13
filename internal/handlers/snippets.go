@@ -83,9 +83,9 @@ func (h *Handler) SnippetUpdate(c *fiber.Ctx) error {
 	// Reload Caddy
 	result := h.caddyService.ReloadWithValidation()
 	if !result.Success {
-		setFlash(c, "warning", "Snippet updated but reload failed: "+result.Error)
+		setFlash(c, "warning", tl(c, "msg_snippet_reload_failed")+": "+result.Error)
 	} else {
-		setFlash(c, "success", "Snippet '"+snippetName+"' updated successfully")
+		setFlash(c, "success", tl(c, "msg_snippet_updated", snippetName))
 	}
 
 	if c.Get("HX-Request") == "true" {
