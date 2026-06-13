@@ -1,3 +1,18 @@
+# CPM v3.3.0 - i18n Refactor & Korean Language
+
+## 🌐 i18n System Refactor
+- **PO/MO format** — translations migrated from monolithic Go maps to standard gettext PO files
+- **Per-language files** — locales/en, locales/cs, locales/ko (easy to add new languages)
+- **Korean language** — 한국어 added as third supported language
+- **Plural support infrastructure** — ngettext/TN() ready for future use
+- **Flash messages translated** — 35 UI messages now translated in all languages
+- **Login page translated** — previously hardcoded English strings now localized
+
+## 🙏 Credits
+Korean translation by [@redstar-programmer](https://github.com/redstar-programmer)
+
+---
+
 # CPM v3.2.0 - Docker Auto-Discovery
 
 ## ✨ New Features
