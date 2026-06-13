@@ -34,8 +34,9 @@
             <h2>🌐 {{t .Lang "settings_language"}}</h2>
             <div class="form-group">
                 <select id="language" name="language" onchange="changeLanguage(this.value)">
-                    <option value="en" {{if eq .Lang "en"}}selected{{end}}>🇬🇧 English</option>
-                    <option value="cs" {{if eq .Lang "cs"}}selected{{end}}>🇨🇿 Čeština</option>
+                    {{range .Languages}}
+                    <option value="{{.code}}" {{if eq $.Lang .code}}selected{{end}}>{{.name}}</option>
+                    {{end}}
                 </select>
             </div>
         </div>
