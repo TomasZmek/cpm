@@ -1,3 +1,10 @@
+# CPM v3.3.1 - Security Patch
+
+## 🔒 Security Fixes
+- **Go 1.26.4** — fixes CVE-2026-42504 (High), CVE-2026-27145 (Medium), CVE-2026-42507 (Medium)
+
+---
+
 # CPM v3.3.0 - i18n Refactor & Korean Language
 
 ## 🌐 i18n System Refactor

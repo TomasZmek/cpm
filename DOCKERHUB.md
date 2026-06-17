@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-3.3.0-blue" alt="Version">
+  <img src="https://img.shields.io/badge/version-3.3.1-blue" alt="Version">
   <img src="https://img.shields.io/badge/Go-1.26-00ADD8?logo=go" alt="Go">
   <img src="https://img.shields.io/badge/image_size-~6MB-green" alt="Image Size">
   <img src="https://img.shields.io/badge/platforms-amd64%20%7C%20arm64-lightgrey" alt="Platforms">
@@ -128,6 +128,7 @@ cpm:
 
 | Version | Notes |
 |---------|-------|
+| **3.3.1** | 🔒 Security patch — Go 1.26.4 (CVE-2026-42504, CVE-2026-27145, CVE-2026-42507) |
 | **3.3.0** | 🌐 i18n refactor — PO/MO format, Korean language, plural support infrastructure |
 | **3.1.0** | 🔐 Wildcard refactor - new architecture, handle blocks |
 | **3.0.2** | 🐛 Wildcard TLS fix, parser fix, 405 fix |
