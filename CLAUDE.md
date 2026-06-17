@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-**CPM - Caddy Proxy Manager** — a lightweight Go web UI for managing a Caddy reverse proxy. Distributed as a ~6 MB Docker image (`perteus/caddy-ui` on Docker Hub). Current unreleased version is **3.1.1** (the last Docker Hub release was 3.1.0).
+**CPM - Caddy Proxy Manager** — a lightweight Go web UI for managing a Caddy reverse proxy. Distributed as a ~6 MB Docker image (`perteus/caddy-ui` on Docker Hub). Current version: **3.3.1**.
 
 - GitHub: https://github.com/TomasZmek/cpm
 - Docker Hub: `perteus/caddy-ui`
@@ -28,23 +28,21 @@ go test -v ./internal/services/...   # single package
 # Format
 gofmt -s -w .
 
-# Docker build & push for release
-docker build -t perteus/caddy-ui:3.1.1 --no-cache .
-docker push perteus/caddy-ui:3.1.1
-docker push perteus/caddy-ui:latest
+# Docker build & push for release — see Release process section for multi-platform buildx command
 ```
 
 The Makefile `VERSION` variable is stale (still `3.0.0`). Version is authoritative in `cmd/cpm/main.go` constants `Version` and `BuildDate`.
 
 ## Tech stack
 
-- **Go 1.25** (module: `github.com/TomasZmek/cpm`)
+- **Go 1.26** (module: `github.com/TomasZmek/cpm`)
 - **Fiber v2** — HTTP framework
 - **gofiber/template/html** — HTML template engine (Go `html/template`-compatible)
 - **HTMX** — frontend interactivity (no build step, CDN)
 - **SweetAlert2** — dialogs
+- **github.com/leonelquinteros/gotext** — i18n library
 - Templates live in `templates/themes/classic/`, static assets in `web/static/`
-- i18n: English + Czech, managed in `internal/i18n/i18n.go`
+- i18n: English, Czech & Korean — PO/MO format via `github.com/leonelquinteros/gotext`, files in `locales/{en,cs,ko}/LC_MESSAGES/messages.po`, embedded via `embed.FS`
 
 ## Architecture
 
@@ -145,4 +143,14 @@ Types: `feat`, `fix`, `docs`, `refactor`, `chore`
    POZNÁMKA: `buildx --push` pushuje přímo během buildu. `make docker-push` není potřeba volat zvlášť.
 5. Commit with `chore: bump version to vVERSION`
 
-v3.1.1 has never been pushed to Docker Hub — it exists only on the `CPM-v3.1.1-internal-only-wildcard-fix` branch.
+## i18n
+
+Translations use gettext PO format via `github.com/leonelquinteros/gotext`.
+
+**Adding a new language:**
+1. Create `locales/{lang}/LC_MESSAGES/messages.po` with correct plural forms header
+2. Copy all msgid keys from `locales/en/LC_MESSAGES/messages.po`
+3. Add `"{lang}": "Language Name"` to `AvailableLanguages` in `internal/i18n/i18n.go`
+4. Run `go build ./...` to verify embed compiles correctly
+
+**Plural strings** use `i18n.TN(lang, singular, plural, n)` in Go and `{{tn .Lang "singular" "plural" .Count}}` in templates.
