@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-3.3.0-blue" alt="Version">
+  <img src="https://img.shields.io/badge/version-3.3.1-blue" alt="Version">
   <img src="https://img.shields.io/badge/Go-1.26-00ADD8?logo=go" alt="Go">
   <img src="https://img.shields.io/badge/Docker-ready-2496ED?logo=docker" alt="Docker">
   <img src="https://img.shields.io/badge/platforms-amd64%20%7C%20arm64-lightgrey" alt="Platforms">
@@ -254,6 +254,7 @@ docker push perteus/caddy-ui:latest
 
 | Version | Date | Notes |
 |---------|------|-------|
+| **3.3.1** | 2026-06-17 | 🔒 Security patch — Go 1.26.4 (CVE-2026-42504, CVE-2026-27145, CVE-2026-42507) |
 | **3.3.0** | 2026-06-13 | 🌐 i18n refactor — PO/MO format, Korean language, plural support infrastructure |
 | **3.2.0** | 2026-05-31 | 🐳 Docker Auto-Discovery — automatic container detection, multi-host support |
 | **3.1.3** | 2026-05-30 | 🔒 Security patch — x/crypto CVE fixes, moby/moby/client |
