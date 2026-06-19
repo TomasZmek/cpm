@@ -1,6 +1,7 @@
 package services
 
 import (
+	"regexp"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -147,15 +148,39 @@ func (s *SnippetsService) GenerateSnippetsFile(cfg *models.SnippetConfig) error 
 	lines = append(lines, "# DO NOT EDIT MANUALLY - Use the CPM web interface")
 	lines = append(lines, "")
 
-	// Cloudflare DNS
-	if cfg.CloudflareDNS.Enabled {
+	// Cloudflare DNS.
+	// Emit the (cloudflare_dns) snippet whenever it is enabled in the snippet
+	// config OR whenever any wildcard domain uses the cloudflare provider.
+	// Standard sites "import cloudflare_dns", so the definition must always be
+	// present while those sites exist — otherwise Caddy fails to validate with
+	// "File to import not found: cloudflare_dns". This prevents the snippet from
+	// being silently dropped when the form toggle happens to be off.
+	cfEnabled := cfg.CloudflareDNS.Enabled
+	cfUseEnv := cfg.CloudflareDNS.UseEnv
+	cfToken := cfg.CloudflareDNS.APIToken
+	if s.wildcardService != nil {
+		if wc, err := s.wildcardService.GetConfig(); err == nil && wc != nil {
+			for _, d := range wc.Domains {
+				if d.Provider == "cloudflare" {
+					cfEnabled = true
+					if d.UseEnv {
+						cfUseEnv = true
+					} else if cfToken == "" && d.APIToken != "" {
+						cfToken = d.APIToken
+					}
+					break
+				}
+			}
+		}
+	}
+	if cfEnabled {
 		lines = append(lines, "# --- CLOUDFLARE DNS CHALLENGE ---")
 		lines = append(lines, "(cloudflare_dns) {")
 		lines = append(lines, "    tls {")
-		if cfg.CloudflareDNS.UseEnv {
+		if cfUseEnv || cfToken == "" {
 			lines = append(lines, "        dns cloudflare {env.CF_API_TOKEN}")
-		} else if cfg.CloudflareDNS.APIToken != "" {
-			lines = append(lines, fmt.Sprintf("        dns cloudflare %s", cfg.CloudflareDNS.APIToken))
+		} else {
+			lines = append(lines, fmt.Sprintf("        dns cloudflare %s", cfToken))
 		}
 		lines = append(lines, "    }")
 		lines = append(lines, "}")
@@ -277,10 +302,50 @@ func (s *SnippetsService) GenerateSnippetsFile(cfg *models.SnippetConfig) error 
 		}
 	}
 
+	// Preserve any custom (user-defined) snippets that CPM does not manage,
+	// so importing a real Caddyfile that references them keeps working.
+	if custom := s.preserveCustomSnippets(); custom != "" {
+		lines = append(lines, "# --- CUSTOM SNIPPETS (preserved by CPM) ---")
+		lines = append(lines, custom)
+		lines = append(lines, "")
+	}
+
 	content := strings.Join(lines, "\n")
 	snippetsPath := filepath.Join(s.config.ConfigDir, "snippets.caddy")
 
 	return os.WriteFile(snippetsPath, []byte(content), 0644)
+}
+
+// managedSnippetNames are the snippet names CPM generates itself.
+var managedSnippetNames = map[string]bool{
+	"cloudflare_dns": true, "internal_only": true, "security_headers": true,
+	"compression": true, "rate_limit": true, "basic_auth": true,
+}
+
+// preserveCustomSnippets reads the current snippets.caddy and returns any
+// snippet definitions whose names are NOT managed by CPM (e.g. custom snippets
+// from an imported Caddyfile), so they survive regeneration.
+func (s *SnippetsService) preserveCustomSnippets() string {
+	data, err := os.ReadFile(filepath.Join(s.config.ConfigDir, "snippets.caddy"))
+	if err != nil {
+		return ""
+	}
+	content := string(data)
+	re := regexp.MustCompile(`\(([A-Za-z0-9_\-]+)\)\s*\{`)
+	var blocks []string
+	for _, loc := range re.FindAllStringSubmatchIndex(content, -1) {
+		name := content[loc[2]:loc[3]]
+		if managedSnippetNames[name] || strings.HasPrefix(name, "wildcard-tls-") {
+			continue
+		}
+		openIdx := loc[1] - 1 // index of "{"
+		end := matchBrace(content, openIdx)
+		if end < 0 {
+			continue
+		}
+		blocks = append(blocks, content[loc[0]:end+1])
+	}
+	return strings.Join(blocks, "\n\n")
 }
 
 // GetAvailableSnippets returns list of enabled snippets

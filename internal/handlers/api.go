@@ -108,6 +108,15 @@ func (h *Handler) CaddyReload(c *fiber.Ctx) error {
 	return c.Redirect(c.Get("Referer", "/"))
 }
 
+// CaddyReloadForce forces a Caddy config reload (re-issues missing certs).
+func (h *Handler) CaddyReloadForce(c *fiber.Ctx) error {
+	result := h.caddyService.ReloadForce()
+	if result.Success {
+		return c.JSON(fiber.Map{"ok": true})
+	}
+	return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"ok": false, "error": result.Error})
+}
+
 // CaddyValidate validates Caddy configuration
 func (h *Handler) CaddyValidate(c *fiber.Ctx) error {
 	result := h.caddyService.Validate()

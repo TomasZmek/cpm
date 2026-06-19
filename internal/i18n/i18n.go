@@ -17,6 +17,11 @@ var AvailableLanguages = map[string]string{
 	"en": "English",
 	"cs": "Čeština",
 	"ko": "한국어",
+	"ja": "日本語",
+	"zh": "中文",
+	"es": "Español",
+	"de": "Deutsch",
+	"fr": "Français",
 }
 
 // pluralFunc selects the plural form index for a given n.
@@ -41,6 +46,26 @@ var pluralRules = map[string]pluralFunc{
 		return 2
 	},
 	"ko": func(_ int) int { return 0 },
+	"ja": func(_ int) int { return 0 },
+	"zh": func(_ int) int { return 0 },
+	"es": func(n int) int {
+		if n != 1 {
+			return 1
+		}
+		return 0
+	},
+	"de": func(n int) int {
+		if n != 1 {
+			return 1
+		}
+		return 0
+	},
+	"fr": func(n int) int {
+		if n > 1 {
+			return 1
+		}
+		return 0
+	},
 }
 
 // langData holds extracted translation maps for one language.

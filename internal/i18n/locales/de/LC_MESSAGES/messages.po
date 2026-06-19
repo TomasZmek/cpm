@@ -1,0 +1,107 @@
+# German translations for CPM - Caddy Proxy Manager
+# SPDX-License-Identifier: MIT
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "nav_dashboard"
+msgstr "Übersicht"
+
+msgid "nav_sites"
+msgstr "Proxy-Regeln"
+
+msgid "nav_snippets"
+msgstr "Snippets"
+
+msgid "nav_certificates"
+msgstr "Zertifikate"
+
+msgid "nav_logs"
+msgstr "Protokolle"
+
+msgid "nav_settings"
+msgstr "Einstellungen"
+
+msgid "save"
+msgstr "Speichern"
+
+msgid "cancel"
+msgstr "Abbrechen"
+
+msgid "delete"
+msgstr "Löschen"
+
+msgid "edit"
+msgstr "Bearbeiten"
+
+msgid "back"
+msgstr "Zurück"
+
+msgid "create"
+msgstr "Erstellen"
+
+msgid "dashboard_title"
+msgstr "Übersicht"
+
+msgid "sites_title"
+msgstr "Proxy-Regeln"
+
+msgid "settings_title"
+msgstr "Einstellungen"
+
+msgid "settings_general"
+msgstr "Allgemein"
+
+msgid "settings_backup"
+msgstr "Sicherung"
+
+msgid "settings_caddy"
+msgstr "Caddy"
+
+msgid "settings_wildcard"
+msgstr "Wildcard-SSL"
+
+msgid "settings_docker"
+msgstr "Docker"
+
+msgid "settings_users"
+msgstr "Benutzer"
+
+msgid "status_up"
+msgstr "Aktiv"
+
+msgid "status_down"
+msgstr "Gestoppt"
+
+msgid "status_unknown"
+msgstr "Unbekannt"
+
+msgid "theme_system"
+msgstr "System"
+
+msgid "theme_light"
+msgstr "Hell"
+
+msgid "theme_dark"
+msgstr "Dunkel"
+
+msgid "view_card"
+msgstr "Kartenansicht"
+
+msgid "view_list"
+msgstr "Listenansicht"
+
+msgid "dashboard_public"
+msgstr "Öffentlich"
+
+msgid "dashboard_internal"
+msgstr "Intern"
+
+msgid "dashboard_with_auth"
+msgstr "Mit Auth"
+
+msgid "dashboard_backend_status"
+msgstr "Backend-Status"
+

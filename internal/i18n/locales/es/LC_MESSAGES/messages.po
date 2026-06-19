@@ -1,0 +1,107 @@
+# Spanish translations for CPM - Caddy Proxy Manager
+# SPDX-License-Identifier: MIT
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "nav_dashboard"
+msgstr "Panel"
+
+msgid "nav_sites"
+msgstr "Reglas de proxy"
+
+msgid "nav_snippets"
+msgstr "Fragmentos"
+
+msgid "nav_certificates"
+msgstr "Certificados"
+
+msgid "nav_logs"
+msgstr "Registros"
+
+msgid "nav_settings"
+msgstr "Ajustes"
+
+msgid "save"
+msgstr "Guardar"
+
+msgid "cancel"
+msgstr "Cancelar"
+
+msgid "delete"
+msgstr "Eliminar"
+
+msgid "edit"
+msgstr "Editar"
+
+msgid "back"
+msgstr "Volver"
+
+msgid "create"
+msgstr "Crear"
+
+msgid "dashboard_title"
+msgstr "Panel"
+
+msgid "sites_title"
+msgstr "Reglas de proxy"
+
+msgid "settings_title"
+msgstr "Ajustes"
+
+msgid "settings_general"
+msgstr "General"
+
+msgid "settings_backup"
+msgstr "Copia de seguridad"
+
+msgid "settings_caddy"
+msgstr "Caddy"
+
+msgid "settings_wildcard"
+msgstr "SSL comodín"
+
+msgid "settings_docker"
+msgstr "Docker"
+
+msgid "settings_users"
+msgstr "Usuarios"
+
+msgid "status_up"
+msgstr "En ejecución"
+
+msgid "status_down"
+msgstr "Detenido"
+
+msgid "status_unknown"
+msgstr "Desconocido"
+
+msgid "theme_system"
+msgstr "Sistema"
+
+msgid "theme_light"
+msgstr "Claro"
+
+msgid "theme_dark"
+msgstr "Oscuro"
+
+msgid "view_card"
+msgstr "Vista de tarjetas"
+
+msgid "view_list"
+msgstr "Vista de lista"
+
+msgid "dashboard_public"
+msgstr "Público"
+
+msgid "dashboard_internal"
+msgstr "Interno"
+
+msgid "dashboard_with_auth"
+msgstr "Con auth"
+
+msgid "dashboard_backend_status"
+msgstr "Estado del backend"
+

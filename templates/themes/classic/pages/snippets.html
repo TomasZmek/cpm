@@ -8,156 +8,227 @@
     {{t .Lang "snippets_description"}}
 </p>
 
-<div class="snippets-grid">
-    <!-- Cloudflare DNS -->
-    <div class="snippet-card" x-data="{ expanded: false }">
-        <div class="snippet-card-header" @click="expanded = !expanded">
-            <div class="snippet-info">
-                <span class="snippet-icon">☁️</span>
-                <span class="snippet-name">{{t .Lang "snippets_cloudflare"}}</span>
-                <span class="snippet-status {{if .Config.CloudflareDNS.Enabled}}enabled{{else}}disabled{{end}}">
-                    {{if .Config.CloudflareDNS.Enabled}}{{t .Lang "snippets_enabled"}}{{else}}{{t .Lang "snippets_disabled"}}{{end}}
-                </span>
+<style>
+/* --- Snippet management cards (namespaced to avoid classic.css collisions) --- */
+.snipc-list {
+    column-width: 340px;   /* masonry-style columns; no row-height gaps */
+    column-gap: 18px;
+    width: 100%;
+}
+
+.snipc-card {
+    display: block;
+    width: 100%;
+    break-inside: avoid;
+    -webkit-column-break-inside: avoid;
+    margin-bottom: 18px;   /* vertical gap between stacked cards in a column */
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    transition: border-color .15s ease, box-shadow .15s ease;
+}
+.snipc-card:hover { border-color: var(--accent); box-shadow: none; transform: none; }
+.snipc-card > form { display: block; width: 100%; margin: 0; }
+
+.snipc-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+}
+.snipc-info { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
+.snipc-icon {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 40px; height: 40px; border-radius: 10px;
+    background: var(--accent-soft); font-size: 20px; flex-shrink: 0;
+}
+.snipc-titles { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.snipc-name { font-weight: 600; font-size: 15px; color: var(--text); line-height: 1.25; }
+.snipc-sub { font-size: 12.5px; color: var(--text-muted); }
+
+.snipc-status {
+    font-size: 11px; font-weight: 600; letter-spacing: .03em;
+    padding: 3px 9px; border-radius: 999px; text-transform: uppercase; flex-shrink: 0;
+}
+.snipc-status.on  { background: color-mix(in srgb, var(--success, #22c55e) 16%, transparent); color: var(--success, #22c55e); }
+.snipc-status.off { background: color-mix(in srgb, var(--text-muted) 16%, transparent); color: var(--text-muted); }
+
+.snipc-header .toggle-switch { flex-shrink: 0; }
+
+.snipc-body { padding: 18px 20px; display: flex; flex-direction: column; gap: 16px; }
+.snipc-body.is-disabled { opacity: .45; }
+
+.snipc-fg { display: flex; flex-direction: column; gap: 6px; margin: 0; }
+.snipc-fg > label { font-size: 13px; font-weight: 500; color: var(--text); }
+.snipc-help { font-size: 12px; color: var(--text-muted); }
+.snipc-body input[type="text"],
+.snipc-body input[type="number"],
+.snipc-body input[type="password"],
+.snipc-body select,
+.snipc-body textarea {
+    width: 100%; box-sizing: border-box;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 8px; padding: 9px 11px; color: var(--text);
+    font-size: 13.5px;
+}
+.snipc-body input:focus, .snipc-body select:focus, .snipc-body textarea:focus {
+    outline: none; border-color: var(--accent);
+}
+.snipc-fr { display: flex; gap: 16px; flex-wrap: wrap; }
+.snipc-fr > * { flex: 1; min-width: 170px; }
+
+.snipc-rowtog {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 10px 12px; background: var(--surface-2);
+    border: 1px solid var(--border); border-radius: 8px;
+}
+.snipc-rowtog .snipc-togtext { font-size: 13px; color: var(--text); }
+
+.snipc-foot {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 20px; border-top: 1px solid var(--border);
+    background: color-mix(in srgb, var(--surface-2) 50%, transparent);
+}
+.snipc-btn-ghost {
+    background: transparent; border: 1px solid var(--border); color: var(--text-muted);
+}
+.snipc-btn-ghost:hover { border-color: var(--accent); color: var(--text); }
+</style>
+
+<div class="snipc-list">
+
+    {{/* ---------- Cloudflare DNS ---------- */}}
+    <div class="snipc-card" data-snippet="cloudflare_dns">
+        <form action="/snippets/cloudflare_dns" method="POST" hx-boost="true">
+            <input type="hidden" name="_csrf" value="{{.CSRFToken}}">
+            <div class="snipc-header">
+                <div class="snipc-info">
+                    <span class="snipc-icon">☁️</span>
+                    <span class="snipc-titles">
+                        <span class="snipc-name">{{t .Lang "snippets_cloudflare"}}</span>
+                        <span class="snipc-sub">{{t .Lang "snippets_enable_cloudflare"}}</span>
+                    </span>
+                    <span class="snipc-status {{if .Config.CloudflareDNS.Enabled}}on{{else}}off{{end}}" data-status>
+                        {{if .Config.CloudflareDNS.Enabled}}{{t .Lang "snippets_enabled"}}{{else}}{{t .Lang "snippets_disabled"}}{{end}}
+                    </span>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" name="enabled" data-card-toggle {{if .Config.CloudflareDNS.Enabled}}checked{{end}}>
+                    <span class="toggle-slider"></span>
+                </label>
             </div>
-            <span class="expand-icon" :class="{ 'rotated': expanded }">▼</span>
-        </div>
-        
-        <div class="snippet-card-body" x-show="expanded" x-collapse>
-            <form action="/snippets/cloudflare_dns" method="POST" hx-boost="true">
-                <input type="hidden" name="_csrf" value="{{.CSRFToken}}">
-                <label class="toggle-label">
-                    <span class="toggle-text">{{t .Lang "snippets_enable_cloudflare"}}</span>
+            <div class="snipc-body" data-card-body>
+                <div class="snipc-rowtog">
+                    <span class="snipc-togtext">{{t .Lang "snippets_use_env"}}</span>
                     <label class="toggle-switch">
-                        <input type="checkbox" name="enabled" {{if .Config.CloudflareDNS.Enabled}}checked{{end}}>
+                        <input type="checkbox" name="use_env" {{if .Config.CloudflareDNS.UseEnv}}checked{{end}}>
                         <span class="toggle-slider"></span>
                     </label>
-                </label>
-                
-                <div class="form-group mt-4">
-                    <label class="toggle-label">
-                        <span class="toggle-text">{{t .Lang "snippets_use_env"}}</span>
-                        <label class="toggle-switch">
-                            <input type="checkbox" name="use_env" {{if .Config.CloudflareDNS.UseEnv}}checked{{end}}>
-                            <span class="toggle-slider"></span>
-                        </label>
-                    </label>
                 </div>
-                
-                <div class="form-group">
+                <div class="snipc-fg">
                     <label for="cf_api_token">{{t .Lang "snippets_api_token"}}</label>
-                    <input type="password" 
-                           id="cf_api_token" 
-                           name="api_token" 
+                    <input type="password" id="cf_api_token" name="api_token"
                            value="{{.Config.CloudflareDNS.APIToken}}"
                            placeholder="{{t .Lang "snippets_api_token_placeholder"}}">
                 </div>
-                
-                <button type="submit" class="btn btn-primary btn-sm">{{t .Lang "save"}}</button>
-            </form>
-        </div>
-    </div>
-    
-    <!-- Internal Only -->
-    <div class="snippet-card" x-data="{ expanded: false }">
-        <div class="snippet-card-header" @click="expanded = !expanded">
-            <div class="snippet-info">
-                <span class="snippet-icon">🔒</span>
-                <span class="snippet-name">{{t .Lang "snippets_internal"}}</span>
-                <span class="snippet-status {{if .Config.InternalOnly.Enabled}}enabled{{else}}disabled{{end}}">
-                    {{if .Config.InternalOnly.Enabled}}{{t .Lang "snippets_enabled"}}{{else}}{{t .Lang "snippets_disabled"}}{{end}}
-                </span>
             </div>
-            <span class="expand-icon" :class="{ 'rotated': expanded }">▼</span>
-        </div>
-        
-        <div class="snippet-card-body" x-show="expanded" x-collapse>
-            <form action="/snippets/internal_only" method="POST" hx-boost="true">
-                <input type="hidden" name="_csrf" value="{{.CSRFToken}}">
-                <label class="toggle-label">
-                    <span class="toggle-text">{{t .Lang "snippets_enable_internal"}}</span>
-                    <label class="toggle-switch">
-                        <input type="checkbox" name="enabled" {{if .Config.InternalOnly.Enabled}}checked{{end}}>
-                        <span class="toggle-slider"></span>
-                    </label>
+            <div class="snipc-foot">
+                <button type="button" class="btn btn-sm snipc-btn-ghost" data-reset>↺ {{t .Lang "snippets_reset_defaults"}}</button>
+                <button type="submit" class="btn btn-primary btn-sm">{{t .Lang "save"}}</button>
+            </div>
+        </form>
+    </div>
+
+    {{/* ---------- Internal Only ---------- */}}
+    <div class="snipc-card" data-snippet="internal_only">
+        <form action="/snippets/internal_only" method="POST" hx-boost="true">
+            <input type="hidden" name="_csrf" value="{{.CSRFToken}}">
+            <div class="snipc-header">
+                <div class="snipc-info">
+                    <span class="snipc-icon">🔒</span>
+                    <span class="snipc-titles">
+                        <span class="snipc-name">{{t .Lang "snippets_internal"}}</span>
+                        <span class="snipc-sub">{{t .Lang "snippets_enable_internal"}}</span>
+                    </span>
+                    <span class="snipc-status {{if .Config.InternalOnly.Enabled}}on{{else}}off{{end}}" data-status>
+                        {{if .Config.InternalOnly.Enabled}}{{t .Lang "snippets_enabled"}}{{else}}{{t .Lang "snippets_disabled"}}{{end}}
+                    </span>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" name="enabled" data-card-toggle {{if .Config.InternalOnly.Enabled}}checked{{end}}>
+                    <span class="toggle-slider"></span>
                 </label>
-                
-                <div class="form-group mt-4">
+            </div>
+            <div class="snipc-body" data-card-body>
+                <div class="snipc-fg">
                     <label for="allowed_networks">{{t .Lang "snippets_allowed_networks"}}</label>
-                    <textarea id="allowed_networks" 
-                              name="allowed_networks" 
-                              rows="4"
+                    <textarea id="allowed_networks" name="allowed_networks" rows="4"
                               placeholder="192.168.0.0/16&#10;172.16.0.0/12&#10;10.0.0.0/8">{{range .Config.InternalOnly.AllowedNetworks}}{{.}}
 {{end}}</textarea>
-                    <small class="form-help">{{t .Lang "snippets_networks_help"}}</small>
+                    <small class="snipc-help">{{t .Lang "snippets_networks_help"}}</small>
                 </div>
-                
-                <button type="submit" class="btn btn-primary btn-sm">{{t .Lang "save"}}</button>
-            </form>
-        </div>
-    </div>
-    
-    <!-- Security Headers -->
-    <div class="snippet-card" x-data="{ expanded: false }">
-        <div class="snippet-card-header" @click="expanded = !expanded">
-            <div class="snippet-info">
-                <span class="snippet-icon">🛡️</span>
-                <span class="snippet-name">{{t .Lang "snippets_security"}}</span>
-                <span class="snippet-status {{if .Config.SecurityHeaders.Enabled}}enabled{{else}}disabled{{end}}">
-                    {{if .Config.SecurityHeaders.Enabled}}{{t .Lang "snippets_enabled"}}{{else}}{{t .Lang "snippets_disabled"}}{{end}}
-                </span>
             </div>
-            <span class="expand-icon" :class="{ 'rotated': expanded }">▼</span>
-        </div>
-        
-        <div class="snippet-card-body" x-show="expanded" x-collapse>
-            <form action="/snippets/security_headers" method="POST" hx-boost="true">
-                <input type="hidden" name="_csrf" value="{{.CSRFToken}}">
-                <label class="toggle-label">
-                    <span class="toggle-text">{{t .Lang "snippets_enable_security"}}</span>
-                    <label class="toggle-switch">
-                        <input type="checkbox" name="enabled" {{if .Config.SecurityHeaders.Enabled}}checked{{end}}>
-                        <span class="toggle-slider"></span>
-                    </label>
+            <div class="snipc-foot">
+                <button type="button" class="btn btn-sm snipc-btn-ghost" data-reset>↺ {{t .Lang "snippets_reset_defaults"}}</button>
+                <button type="submit" class="btn btn-primary btn-sm">{{t .Lang "save"}}</button>
+            </div>
+        </form>
+    </div>
+
+    {{/* ---------- Security Headers ---------- */}}
+    <div class="snipc-card" data-snippet="security_headers">
+        <form action="/snippets/security_headers" method="POST" hx-boost="true">
+            <input type="hidden" name="_csrf" value="{{.CSRFToken}}">
+            <div class="snipc-header">
+                <div class="snipc-info">
+                    <span class="snipc-icon">🛡️</span>
+                    <span class="snipc-titles">
+                        <span class="snipc-name">{{t .Lang "snippets_security"}}</span>
+                        <span class="snipc-sub">{{t .Lang "snippets_enable_security"}}</span>
+                    </span>
+                    <span class="snipc-status {{if .Config.SecurityHeaders.Enabled}}on{{else}}off{{end}}" data-status>
+                        {{if .Config.SecurityHeaders.Enabled}}{{t .Lang "snippets_enabled"}}{{else}}{{t .Lang "snippets_disabled"}}{{end}}
+                    </span>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" name="enabled" data-card-toggle {{if .Config.SecurityHeaders.Enabled}}checked{{end}}>
+                    <span class="toggle-slider"></span>
                 </label>
-                
-                <div class="form-row mt-4">
-                    <div class="form-group">
+            </div>
+            <div class="snipc-body" data-card-body>
+                <div class="snipc-fr">
+                    <div class="snipc-fg">
                         <label for="hsts_max_age">{{t .Lang "snippets_hsts_max_age"}}</label>
-                        <input type="number" id="hsts_max_age" name="hsts_max_age" 
-                               value="{{.Config.SecurityHeaders.HSTSMaxAge}}">
+                        <input type="number" id="hsts_max_age" name="hsts_max_age" value="{{.Config.SecurityHeaders.HSTSMaxAge}}">
                     </div>
-                    
-                    <label class="toggle-label" style="flex: 1;">
-                        <span class="toggle-text">{{t .Lang "snippets_include_subdomains"}}</span>
+                    <div class="snipc-rowtog">
+                        <span class="snipc-togtext">{{t .Lang "snippets_include_subdomains"}}</span>
                         <label class="toggle-switch">
-                            <input type="checkbox" name="hsts_include_subdomains" 
-                                   {{if .Config.SecurityHeaders.HSTSIncludeSubdomains}}checked{{end}}>
+                            <input type="checkbox" name="hsts_include_subdomains" {{if .Config.SecurityHeaders.HSTSIncludeSubdomains}}checked{{end}}>
                             <span class="toggle-slider"></span>
                         </label>
-                    </label>
+                    </div>
                 </div>
-                
-                <div class="form-row">
-                    <label class="toggle-label" style="flex: 1;">
-                        <span class="toggle-text">X-Content-Type-Options: nosniff</span>
+                <div class="snipc-fr">
+                    <div class="snipc-rowtog">
+                        <span class="snipc-togtext">X-Content-Type-Options: nosniff</span>
                         <label class="toggle-switch">
-                            <input type="checkbox" name="x_content_type_options" 
-                                   {{if .Config.SecurityHeaders.XContentTypeOptions}}checked{{end}}>
+                            <input type="checkbox" name="x_content_type_options" {{if .Config.SecurityHeaders.XContentTypeOptions}}checked{{end}}>
                             <span class="toggle-slider"></span>
                         </label>
-                    </label>
-                    
-                    <label class="toggle-label" style="flex: 1;">
-                        <span class="toggle-text">{{t .Lang "snippets_hide_server"}}</span>
+                    </div>
+                    <div class="snipc-rowtog">
+                        <span class="snipc-togtext">{{t .Lang "snippets_hide_server"}}</span>
                         <label class="toggle-switch">
-                            <input type="checkbox" name="hide_server" 
-                                   {{if .Config.SecurityHeaders.HideServer}}checked{{end}}>
+                            <input type="checkbox" name="hide_server" {{if .Config.SecurityHeaders.HideServer}}checked{{end}}>
                             <span class="toggle-slider"></span>
                         </label>
-                    </label>
+                    </div>
                 </div>
-                
-                <div class="form-group">
+                <div class="snipc-fg">
                     <label for="x_frame_options">{{t .Lang "snippets_x_frame_options"}}</label>
                     <select id="x_frame_options" name="x_frame_options">
                         <option value="DENY" {{if eq .Config.SecurityHeaders.XFrameOptions "DENY"}}selected{{end}}>DENY</option>
@@ -165,99 +236,163 @@
                         <option value="" {{if eq .Config.SecurityHeaders.XFrameOptions ""}}selected{{end}}>{{t .Lang "not_set"}}</option>
                     </select>
                 </div>
-                
-                <button type="submit" class="btn btn-primary btn-sm">{{t .Lang "save"}}</button>
-            </form>
-        </div>
-    </div>
-    
-    <!-- Compression -->
-    <div class="snippet-card" x-data="{ expanded: false }">
-        <div class="snippet-card-header" @click="expanded = !expanded">
-            <div class="snippet-info">
-                <span class="snippet-icon">📦</span>
-                <span class="snippet-name">{{t .Lang "snippets_compression"}}</span>
-                <span class="snippet-status {{if .Config.Compression.Enabled}}enabled{{else}}disabled{{end}}">
-                    {{if .Config.Compression.Enabled}}{{t .Lang "snippets_enabled"}}{{else}}{{t .Lang "snippets_disabled"}}{{end}}
-                </span>
             </div>
-            <span class="expand-icon" :class="{ 'rotated': expanded }">▼</span>
-        </div>
-        
-        <div class="snippet-card-body" x-show="expanded" x-collapse>
-            <form action="/snippets/compression" method="POST" hx-boost="true">
-                <input type="hidden" name="_csrf" value="{{.CSRFToken}}">
-                <label class="toggle-label">
-                    <span class="toggle-text">{{t .Lang "snippets_enable_compression"}}</span>
-                    <label class="toggle-switch">
-                        <input type="checkbox" name="enabled" {{if .Config.Compression.Enabled}}checked{{end}}>
-                        <span class="toggle-slider"></span>
-                    </label>
+            <div class="snipc-foot">
+                <button type="button" class="btn btn-sm snipc-btn-ghost" data-reset>↺ {{t .Lang "snippets_reset_defaults"}}</button>
+                <button type="submit" class="btn btn-primary btn-sm">{{t .Lang "save"}}</button>
+            </div>
+        </form>
+    </div>
+
+    {{/* ---------- Compression ---------- */}}
+    <div class="snipc-card" data-snippet="compression">
+        <form action="/snippets/compression" method="POST" hx-boost="true">
+            <input type="hidden" name="_csrf" value="{{.CSRFToken}}">
+            <div class="snipc-header">
+                <div class="snipc-info">
+                    <span class="snipc-icon">📦</span>
+                    <span class="snipc-titles">
+                        <span class="snipc-name">{{t .Lang "snippets_compression"}}</span>
+                        <span class="snipc-sub">{{t .Lang "snippets_enable_compression"}}</span>
+                    </span>
+                    <span class="snipc-status {{if .Config.Compression.Enabled}}on{{else}}off{{end}}" data-status>
+                        {{if .Config.Compression.Enabled}}{{t .Lang "snippets_enabled"}}{{else}}{{t .Lang "snippets_disabled"}}{{end}}
+                    </span>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" name="enabled" data-card-toggle {{if .Config.Compression.Enabled}}checked{{end}}>
+                    <span class="toggle-slider"></span>
                 </label>
-                
-                <div class="form-row mt-4">
-                    <label class="toggle-label" style="flex: 1;">
-                        <span class="toggle-text">{{t .Lang "snippets_zstd"}}</span>
+            </div>
+            <div class="snipc-body" data-card-body>
+                <div class="snipc-fr">
+                    <div class="snipc-rowtog">
+                        <span class="snipc-togtext">{{t .Lang "snippets_zstd"}}</span>
                         <label class="toggle-switch">
                             <input type="checkbox" name="zstd" {{if .Config.Compression.Zstd}}checked{{end}}>
                             <span class="toggle-slider"></span>
                         </label>
-                    </label>
-                    
-                    <label class="toggle-label" style="flex: 1;">
-                        <span class="toggle-text">{{t .Lang "snippets_gzip"}}</span>
+                    </div>
+                    <div class="snipc-rowtog">
+                        <span class="snipc-togtext">{{t .Lang "snippets_gzip"}}</span>
                         <label class="toggle-switch">
                             <input type="checkbox" name="gzip" {{if .Config.Compression.Gzip}}checked{{end}}>
                             <span class="toggle-slider"></span>
                         </label>
-                    </label>
+                    </div>
                 </div>
-                
-                <button type="submit" class="btn btn-primary btn-sm">{{t .Lang "save"}}</button>
-            </form>
-        </div>
-    </div>
-    
-    <!-- Rate Limit -->
-    <div class="snippet-card" x-data="{ expanded: false }">
-        <div class="snippet-card-header" @click="expanded = !expanded">
-            <div class="snippet-info">
-                <span class="snippet-icon">⏱️</span>
-                <span class="snippet-name">{{t .Lang "snippets_rate_limit"}}</span>
-                <span class="snippet-status {{if .Config.RateLimit.Enabled}}enabled{{else}}disabled{{end}}">
-                    {{if .Config.RateLimit.Enabled}}{{t .Lang "snippets_enabled"}}{{else}}{{t .Lang "snippets_disabled"}}{{end}}
-                </span>
             </div>
-            <span class="expand-icon" :class="{ 'rotated': expanded }">▼</span>
-        </div>
-        
-        <div class="snippet-card-body" x-show="expanded" x-collapse>
-            <form action="/snippets/rate_limit" method="POST" hx-boost="true">
-                <input type="hidden" name="_csrf" value="{{.CSRFToken}}">
-                <label class="toggle-label">
-                    <span class="toggle-text">{{t .Lang "snippets_enable_rate_limit"}}</span>
-                    <label class="toggle-switch">
-                        <input type="checkbox" name="enabled" {{if .Config.RateLimit.Enabled}}checked{{end}}>
-                        <span class="toggle-slider"></span>
-                    </label>
+            <div class="snipc-foot">
+                <button type="button" class="btn btn-sm snipc-btn-ghost" data-reset>↺ {{t .Lang "snippets_reset_defaults"}}</button>
+                <button type="submit" class="btn btn-primary btn-sm">{{t .Lang "save"}}</button>
+            </div>
+        </form>
+    </div>
+
+    {{/* ---------- Rate Limit ---------- */}}
+    <div class="snipc-card" data-snippet="rate_limit">
+        <form action="/snippets/rate_limit" method="POST" hx-boost="true">
+            <input type="hidden" name="_csrf" value="{{.CSRFToken}}">
+            <div class="snipc-header">
+                <div class="snipc-info">
+                    <span class="snipc-icon">⏱️</span>
+                    <span class="snipc-titles">
+                        <span class="snipc-name">{{t .Lang "snippets_rate_limit"}}</span>
+                        <span class="snipc-sub">{{t .Lang "snippets_enable_rate_limit"}}</span>
+                    </span>
+                    <span class="snipc-status {{if .Config.RateLimit.Enabled}}on{{else}}off{{end}}" data-status>
+                        {{if .Config.RateLimit.Enabled}}{{t .Lang "snippets_enabled"}}{{else}}{{t .Lang "snippets_disabled"}}{{end}}
+                    </span>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" name="enabled" data-card-toggle {{if .Config.RateLimit.Enabled}}checked{{end}}>
+                    <span class="toggle-slider"></span>
                 </label>
-                
-                <div class="form-row mt-4">
-                    <div class="form-group">
+            </div>
+            <div class="snipc-body" data-card-body>
+                <div class="snipc-fr">
+                    <div class="snipc-fg">
                         <label for="requests">{{t .Lang "snippets_requests"}}</label>
-                        <input type="number" id="requests" name="requests" 
-                               value="{{.Config.RateLimit.Requests}}">
+                        <input type="number" id="requests" name="requests" value="{{.Config.RateLimit.Requests}}">
                     </div>
-                    
-                    <div class="form-group">
+                    <div class="snipc-fg">
                         <label for="window_secs">{{t .Lang "snippets_window"}}</label>
-                        <input type="number" id="window_secs" name="window_secs" 
-                               value="{{.Config.RateLimit.WindowSecs}}">
+                        <input type="number" id="window_secs" name="window_secs" value="{{.Config.RateLimit.WindowSecs}}">
                     </div>
                 </div>
-                
+            </div>
+            <div class="snipc-foot">
+                <button type="button" class="btn btn-sm snipc-btn-ghost" data-reset>↺ {{t .Lang "snippets_reset_defaults"}}</button>
                 <button type="submit" class="btn btn-primary btn-sm">{{t .Lang "save"}}</button>
-            </form>
-        </div>
+            </div>
+        </form>
     </div>
+
 </div>
+
+<script>
+(function () {
+    var DEFAULTS = {
+        cloudflare_dns: { enabled: true, use_env: true, api_token: "" },
+        internal_only:  { enabled: true, allowed_networks: "192.168.0.0/16\n172.16.0.0/12\n10.0.0.0/8\n" },
+        security_headers: {
+            enabled: true, hsts_max_age: 31536000, hsts_include_subdomains: true,
+            x_content_type_options: true, hide_server: true, x_frame_options: "DENY"
+        },
+        compression: { enabled: true, zstd: true, gzip: true },
+        rate_limit:  { enabled: false, requests: 100, window_secs: 60 }
+    };
+
+    var ENABLED_LABEL = {{t .Lang "snippets_enabled"}};
+    var DISABLED_LABEL = {{t .Lang "snippets_disabled"}};
+
+    function setField(card, name, value) {
+        var el = card.querySelector('[name="' + name + '"]');
+        if (!el) return;
+        if (el.type === 'checkbox') { el.checked = !!value; }
+        else { el.value = value; }
+    }
+
+    function syncCard(card) {
+        var toggle = card.querySelector('[data-card-toggle]');
+        var body = card.querySelector('[data-card-body]');
+        var status = card.querySelector('[data-status]');
+        if (!toggle || !body) return;
+        var on = toggle.checked;
+
+        body.classList.toggle('is-disabled', !on);
+        body.querySelectorAll('input, select, textarea, button').forEach(function (el) {
+            el.disabled = !on;
+        });
+        if (status) {
+            status.textContent = on ? ENABLED_LABEL : DISABLED_LABEL;
+            status.classList.toggle('on', on);
+            status.classList.toggle('off', !on);
+        }
+    }
+
+    function resetCard(card) {
+        var def = DEFAULTS[card.getAttribute('data-snippet')];
+        if (!def) return;
+        Object.keys(def).forEach(function (name) { setField(card, name, def[name]); });
+        syncCard(card);
+    }
+
+    function init() {
+        document.querySelectorAll('.snipc-card[data-snippet]').forEach(function (card) {
+            var toggle = card.querySelector('[data-card-toggle]');
+            if (toggle) toggle.addEventListener('change', function () { syncCard(card); });
+            var resetBtn = card.querySelector('[data-reset]');
+            if (resetBtn) resetBtn.addEventListener('click', function () { resetCard(card); });
+            syncCard(card);
+        });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+    document.body.addEventListener('htmx:afterSwap', init);
+})();
+</script>

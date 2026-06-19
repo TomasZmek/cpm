@@ -114,8 +114,13 @@ func (h *Handler) renderSettingsTab(c *fiber.Ctx, tab string) error {
 		// Language and theme settings
 		data["Languages"] = []map[string]string{
 			{"code": "en", "name": "English"},
-			{"code": "cs", "name": "Čeština"},
 			{"code": "ko", "name": "한국어"},
+			{"code": "ja", "name": "日本語"},
+			{"code": "zh", "name": "中文"},
+			{"code": "es", "name": "Español"},
+			{"code": "de", "name": "Deutsch"},
+			{"code": "fr", "name": "Français"},
+			{"code": "cs", "name": "Čeština"},
 		}
 		data["Themes"] = []map[string]string{
 			{"code": "classic", "name": "Classic"},
