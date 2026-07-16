@@ -206,19 +206,20 @@ func (s *WildcardService) GetMigrationInfo(domain string, sitesDir string, certs
 		Certificates:  []string{},
 	}
 
-	// Find matching site files
-	if entries, err := os.ReadDir(sitesDir); err == nil {
+	// Find matching site files in the 'standard' subdirectory
+	standardSitesDir := filepath.Join(sitesDir, "standard")
+	if entries, err := os.ReadDir(standardSitesDir); err == nil {
 		for _, entry := range entries {
 			if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".caddy") {
 				continue
 			}
-			// Skip wildcard config itself
+			// Skip wildcard config itself just in case
 			if entry.Name() == "_wildcard.caddy" {
 				continue
 			}
 			
 			// Read file and check if it contains subdomains of our domain
-			content, err := os.ReadFile(filepath.Join(sitesDir, entry.Name()))
+			content, err := os.ReadFile(filepath.Join(standardSitesDir, entry.Name()))
 			if err != nil {
 				continue
 			}
@@ -237,7 +238,7 @@ func (s *WildcardService) GetMigrationInfo(domain string, sitesDir string, certs
 	}
 
 	// Find matching certificates
-	certsDir := filepath.Join(certsDataDir, "certificates")
+	certsDir := filepath.Join(certsDataDir, "caddy", "certificates")
 	if entries, err := os.ReadDir(certsDir); err == nil {
 		for _, issuerDir := range entries {
 			if !issuerDir.IsDir() {

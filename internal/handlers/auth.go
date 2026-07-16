@@ -80,7 +80,7 @@ func (h *Handler) LoginPage(c *fiber.Ctx) error {
 		"NeedsSetup": needsSetup,
 		"Error":      c.Query("error"),
 		"Version":    h.config.Version,
-		"Lang":       "en",
+		"Lang":       getLang(c),
 		"CSRFToken":  c.Locals("csrf_token"),
 	}
 
@@ -94,10 +94,11 @@ func (h *Handler) Login(c *fiber.Ctx) error {
 
 	if !loginLimiter.isAllowed(ip) {
 		return c.Status(fiber.StatusTooManyRequests).Render("pages/login", fiber.Map{
-			"Error":      "Too many failed login attempts. Please try again in 15 minutes.",
+			"Error":      tl(c, "login_rate_limited"),
 			"NeedsSetup": !h.authService.HasUsers(),
 			"Version":    h.config.Version,
-			"Lang":       "en",
+			"Lang":       getLang(c),
+			"CSRFToken":  c.Locals("csrf_token"),
 		})
 	}
 
@@ -156,6 +157,31 @@ func (h *Handler) Logout(c *fiber.Ctx) error {
 	return c.Redirect("/login")
 }
 
+// redirectFlash sets a flash and redirects (HX-Redirect for HTMX requests).
+func redirectFlash(c *fiber.Ctx, typ, msg, to string) error {
+	setFlash(c, typ, msg)
+	if c.Get("HX-Request") == "true" {
+		c.Set("HX-Redirect", to)
+		return c.SendStatus(fiber.StatusOK)
+	}
+	return c.Redirect(to)
+}
+
+// isLastAdmin reports whether username is the only remaining admin account.
+func (h *Handler) isLastAdmin(username string) bool {
+	admins := 0
+	target := false
+	for _, u := range h.authService.GetUsers() {
+		if u.Role == models.RoleAdmin {
+			admins++
+			if u.Username == username {
+				target = true
+			}
+		}
+	}
+	return target && admins <= 1
+}
+
 // UserCreate creates a new user (settings page)
 func (h *Handler) UserCreate(c *fiber.Ctx) error {
 	username := c.FormValue("username")
@@ -188,14 +214,19 @@ func (h *Handler) UserCreate(c *fiber.Ctx) error {
 func (h *Handler) UserDelete(c *fiber.Ctx) error {
 	username := c.Params("username")
 
-	// Can't delete yourself
+	// Can't delete yourself (only matters when auth is enabled).
 	currentUser := h.getCurrentUser(c)
 	if user, ok := currentUser.(*models.User); ok && user.Username == username {
-		return c.Status(fiber.StatusBadRequest).SendString("Cannot delete your own account")
+		return redirectFlash(c, "warning", "Cannot delete your own account", "/settings/users")
+	}
+
+	// Protect the last admin only while auth is enabled (otherwise no lockout risk).
+	if h.authService.IsEnabled() && h.isLastAdmin(username) {
+		return redirectFlash(c, "warning", "Cannot delete the last administrator while authentication is enabled. Disable auth first.", "/settings/users")
 	}
 
 	if err := h.authService.DeleteUser(username); err != nil {
-		return c.Status(fiber.StatusBadRequest).SendString(err.Error())
+		return redirectFlash(c, "error", err.Error(), "/settings/users")
 	}
 
 	setFlash(c, "success", tl(c, "msg_user_deleted_name", username))
@@ -212,6 +243,10 @@ func (h *Handler) UserDelete(c *fiber.Ctx) error {
 func (h *Handler) UserUpdateRole(c *fiber.Ctx) error {
 	username := c.Params("username")
 	role := models.Role(c.FormValue("role"))
+
+	if h.authService.IsEnabled() && role != models.RoleAdmin && h.isLastAdmin(username) {
+		return redirectFlash(c, "warning", "Cannot remove the last administrator's role while authentication is enabled", "/settings/users")
+	}
 
 	if err := h.authService.UpdateRole(username, role); err != nil {
 		return c.Status(fiber.StatusBadRequest).SendString(err.Error())

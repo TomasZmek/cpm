@@ -70,12 +70,15 @@ func (h *Handler) SiteNew(c *fiber.Ctx) error {
 
 	appSettings, _ := h.settingsService.Get()
 
+	containers := h.discoverableContainers()
+
 	data := h.baseData(c, "New Proxy Rule")
 	data["IsNew"] = true
 	data["Site"] = site
 	data["DefaultIP"] = h.config.DefaultIP
 	data["AvailableSnippets"] = availableSnippets
 	data["WildcardDomains"] = wildcardDomains
+	data["Containers"] = containers
 	data["Templates"] = templates
 	data["Categories"] = categories
 	data["DiscoveryHosts"] = appSettings.DiscoveryHosts
@@ -179,12 +182,15 @@ func (h *Handler) SiteEdit(c *fiber.Ctx) error {
 
 	appSettings, _ := h.settingsService.Get()
 
+	containers := h.discoverableContainers()
+
 	data := h.baseData(c, "Edit: "+site.PrimaryDomain())
 	data["IsNew"] = false
 	data["Site"] = site
 	data["DefaultIP"] = h.config.DefaultIP
 	data["AvailableSnippets"] = availableSnippets
 	data["WildcardDomains"] = wildcardDomains
+	data["Containers"] = containers
 	data["DiscoveryHosts"] = appSettings.DiscoveryHosts
 	data["Active"] = "sites"
 
@@ -350,6 +356,48 @@ func (h *Handler) HTMXSitePreview(c *fiber.Ctx) error {
 	}
 
 	return c.SendString(site.RawContent)
+}
+
+// SitesStatus returns each site's backend status as JSON: filename -> "up"|"down"|"unknown".
+// "up"/"down" are based on whether a Docker container matching the target name is running.
+// IP targets (or names without a matching container) are reported as "unknown".
+func (h *Handler) SitesStatus(c *fiber.Ctx) error {
+	sites, _ := h.caddyService.GetAllSites()
+
+	var states map[string]string
+	if h.dockerService != nil && h.dockerService.IsAvailable() {
+		states, _ = h.dockerService.ContainerStates()
+	}
+
+	out := make(map[string]string, len(sites))
+	for _, s := range sites {
+		status := "unknown"
+		if states != nil {
+			if st, ok := states[s.TargetIP]; ok {
+				if st == "running" {
+					status = "up"
+				} else {
+					status = "down"
+				}
+			}
+		}
+		out[s.Filename] = status
+	}
+	return c.JSON(out)
+}
+
+// discoverableContainers returns running containers for the rule form's
+// service-name picker. Returns nil when Docker is unavailable so the template
+// simply omits the picker.
+func (h *Handler) discoverableContainers() []services.DiscoveredContainer {
+	if h.dockerService == nil || !h.dockerService.IsAvailable() {
+		return nil
+	}
+	containers, err := h.dockerService.ListDiscoverableContainers()
+	if err != nil {
+		return nil
+	}
+	return containers
 }
 
 // filterSites filters sites by search query and tag

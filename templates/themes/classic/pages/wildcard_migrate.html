@@ -70,10 +70,12 @@
             </div>
 
             <!-- Backup notice -->
+            {{if or .MigrationInfo.MatchingSites .MigrationInfo.Certificates}}
             <div class="alert alert-warning">
                 <strong>💾 {{t .Lang "migrate_backup_title"}}</strong><br>
                 {{t .Lang "migrate_backup_desc"}}
             </div>
+            {{end}}
 
             <!-- Actions -->
             <div class="form-actions">
@@ -81,51 +83,16 @@
                 <button type="submit" class="btn btn-primary">
                     🚀 {{t .Lang "migrate_execute"}}
                 </button>
-                {{end}}
                 <a href="/settings/wildcard" class="btn btn-secondary">
                     {{t .Lang "migrate_skip"}}
                 </a>
+                {{else}}
+                <a href="/settings/wildcard" class="btn btn-primary">
+                    ✅ 확인 (완료)
+                </a>
+                {{end}}
             </div>
         </form>
     </div>
 </div>
 
-<style>
-.migrate-list {
-    background: var(--gray-50);
-    border: 1px solid var(--gray-200);
-    border-radius: var(--radius);
-    padding: 1rem;
-    max-height: 200px;
-    overflow-y: auto;
-}
-
-.migrate-item {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem;
-    border-bottom: 1px solid var(--gray-200);
-}
-
-.migrate-item:last-child {
-    border-bottom: none;
-}
-
-.migrate-icon {
-    font-size: 1.2rem;
-}
-
-.migrate-name {
-    font-family: monospace;
-    font-size: 0.9rem;
-}
-
-.form-actions {
-    display: flex;
-    gap: 1rem;
-    margin-top: 2rem;
-    padding-top: 1rem;
-    border-top: 1px solid var(--gray-200);
-}
-</style>

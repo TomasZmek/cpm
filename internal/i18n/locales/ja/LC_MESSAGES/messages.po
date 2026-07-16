@@ -1,0 +1,107 @@
+# Japanese translations for CPM - Caddy Proxy Manager
+# SPDX-License-Identifier: MIT
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "nav_dashboard"
+msgstr "ダッシュボード"
+
+msgid "nav_sites"
+msgstr "プロキシ規則"
+
+msgid "nav_snippets"
+msgstr "スニペット"
+
+msgid "nav_certificates"
+msgstr "証明書"
+
+msgid "nav_logs"
+msgstr "ログ"
+
+msgid "nav_settings"
+msgstr "設定"
+
+msgid "save"
+msgstr "保存"
+
+msgid "cancel"
+msgstr "キャンセル"
+
+msgid "delete"
+msgstr "削除"
+
+msgid "edit"
+msgstr "編集"
+
+msgid "back"
+msgstr "戻る"
+
+msgid "create"
+msgstr "作成"
+
+msgid "dashboard_title"
+msgstr "ダッシュボード"
+
+msgid "sites_title"
+msgstr "プロキシ規則"
+
+msgid "settings_title"
+msgstr "設定"
+
+msgid "settings_general"
+msgstr "一般"
+
+msgid "settings_backup"
+msgstr "バックアップ"
+
+msgid "settings_caddy"
+msgstr "Caddy"
+
+msgid "settings_wildcard"
+msgstr "ワイルドカードSSL"
+
+msgid "settings_docker"
+msgstr "Docker"
+
+msgid "settings_users"
+msgstr "ユーザー"
+
+msgid "status_up"
+msgstr "稼働中"
+
+msgid "status_down"
+msgstr "停止"
+
+msgid "status_unknown"
+msgstr "不明"
+
+msgid "theme_system"
+msgstr "システム"
+
+msgid "theme_light"
+msgstr "ライト"
+
+msgid "theme_dark"
+msgstr "ダーク"
+
+msgid "view_card"
+msgstr "カード表示"
+
+msgid "view_list"
+msgstr "リスト表示"
+
+msgid "dashboard_public"
+msgstr "公開"
+
+msgid "dashboard_internal"
+msgstr "内部"
+
+msgid "dashboard_with_auth"
+msgstr "認証あり"
+
+msgid "dashboard_backend_status"
+msgstr "バックエンド状態"
+
