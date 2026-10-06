@@ -3,7 +3,9 @@ package handlers
 import (
 	"fmt"
 	"log"
+	"net/url"
 	"path/filepath"
+	"strings"
 
 	"github.com/TomasZmek/cpm/internal/models"
 	"github.com/TomasZmek/cpm/internal/services"
@@ -13,7 +15,7 @@ import (
 // WildcardSettings renders the wildcard settings page
 func (h *Handler) WildcardSettings(c *fiber.Ctx) error {
 	var domains []models.WildcardDomain
-	
+
 	if h.wildcardService != nil {
 		var err error
 		domains, err = h.wildcardService.GetDomains()
@@ -40,15 +42,15 @@ func (h *Handler) WildcardAdd(c *fiber.Ctx) error {
 		return c.Redirect("/settings/wildcard")
 	}
 
-	domain := c.FormValue("domain")
+	domain := strings.ToLower(strings.TrimSpace(c.FormValue("domain")))
 	provider := c.FormValue("provider")
 	useEnv := c.FormValue("use_env") == "on"
-	apiToken := c.FormValue("api_token")
+	apiToken := strings.TrimSpace(c.FormValue("api_token"))
 
 	log.Printf("WildcardAdd: domain=%s, provider=%s, useEnv=%v", domain, provider, useEnv)
 
-	if domain == "" {
-		setFlash(c, "error", "Domain is required")
+	if err := services.ValidateDomainName(domain); err != nil {
+		setFlash(c, "error", "Domain is required and must be a valid domain name")
 		return c.Redirect("/settings/wildcard")
 	}
 
@@ -57,7 +59,7 @@ func (h *Handler) WildcardAdd(c *fiber.Ctx) error {
 	for _, d := range existing {
 		if d.Domain == domain {
 			setFlash(c, "info", "Wildcard domain already exists")
-			return c.Redirect("/settings/wildcard/migrate/" + domain)
+			return c.Redirect("/settings/wildcard/migrate/" + url.PathEscape(domain))
 		}
 	}
 
@@ -82,13 +84,13 @@ func (h *Handler) WildcardAdd(c *fiber.Ctx) error {
 	}
 
 	// Redirect to migration page
-	return c.Redirect("/settings/wildcard/migrate/" + domain)
+	return c.Redirect("/settings/wildcard/migrate/" + url.PathEscape(domain))
 }
 
 // WildcardMigratePage shows the migration options for a wildcard domain
 func (h *Handler) WildcardMigratePage(c *fiber.Ctx) error {
 	domain := c.Params("domain")
-	
+
 	if h.wildcardService == nil {
 		setFlash(c, "error", "Wildcard service not available")
 		return c.Redirect("/settings/wildcard")
@@ -117,6 +119,9 @@ func (h *Handler) WildcardMigratePage(c *fiber.Ctx) error {
 // WildcardMigrateExecute performs the migration
 func (h *Handler) WildcardMigrateExecute(c *fiber.Ctx) error {
 	domain := c.Params("domain")
+	if err := services.ValidateDomainName(domain); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
 	migrateSites := c.FormValue("migrate_sites") == "on"
 	deleteCerts := c.FormValue("delete_certs") == "on"
 
@@ -127,7 +132,7 @@ func (h *Handler) WildcardMigrateExecute(c *fiber.Ctx) error {
 	if err != nil {
 		log.Printf("Error creating backup: %v", err)
 		setFlash(c, "error", "Failed to create backup before migration: "+err.Error())
-		return c.Redirect("/settings/wildcard/migrate/" + domain)
+		return c.Redirect("/settings/wildcard/migrate/" + url.PathEscape(domain))
 	}
 	log.Printf("Backup created: %s", backupName)
 

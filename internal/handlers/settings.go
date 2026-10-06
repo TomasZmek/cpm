@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"fmt"
+	"io"
 
 	"github.com/TomasZmek/cpm/internal/models"
 	"github.com/gofiber/fiber/v2"
@@ -34,6 +35,12 @@ func (h *Handler) SettingsUsers(c *fiber.Ctx) error {
 }
 
 func (h *Handler) renderSettingsTab(c *fiber.Ctx, tab string) error {
+	// Users and backup tabs expose sensitive data (user list, configuration
+	// with API tokens) and are reachable via ?tab=, so check here as well.
+	if (tab == "users" || tab == "backup") && !h.hasPermission(c, "admin") {
+		return fiber.NewError(fiber.StatusForbidden, "You do not have permission to view this page")
+	}
+
 	flashType, flashMsg := getFlash(c)
 
 	data := h.baseData(c, "Settings")
@@ -105,8 +112,8 @@ func (h *Handler) BackupRestore(c *fiber.Ctx) error {
 	}
 	defer f.Close()
 
-	data := make([]byte, file.Size)
-	if _, err := f.Read(data); err != nil {
+	data, err := io.ReadAll(f)
+	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).SendString("Failed to read file")
 	}
 
@@ -145,8 +152,8 @@ func (h *Handler) ImportRules(c *fiber.Ctx) error {
 	}
 	defer f.Close()
 
-	data := make([]byte, file.Size)
-	if _, err := f.Read(data); err != nil {
+	data, err := io.ReadAll(f)
+	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).SendString("Failed to read file")
 	}
 

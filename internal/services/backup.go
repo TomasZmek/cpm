@@ -53,6 +53,7 @@ func (b *BackupService) CreateBackup() ([]byte, string, error) {
 		"Caddyfile",
 		"snippets.caddy",
 		".snippets_config.json",
+		"wildcard.json",
 	}
 
 	// Add individual files
@@ -64,15 +65,22 @@ func (b *BackupService) CreateBackup() ([]byte, string, error) {
 		}
 	}
 
-	// Add sites directory
-	sitesDir := b.config.SitesDir
-	if _, err := os.Stat(sitesDir); err == nil {
-		entries, _ := os.ReadDir(sitesDir)
+	// Add sites directory (legacy flat files + wildcard/ and standard/ subdirectories)
+	for _, sub := range []string{"", "wildcard", "standard"} {
+		dir := filepath.Join(b.config.SitesDir, sub)
+		entries, err := os.ReadDir(dir)
+		if err != nil {
+			continue
+		}
 		for _, entry := range entries {
 			if !entry.IsDir() && strings.HasSuffix(entry.Name(), ".caddy") {
-				path := filepath.Join(sitesDir, entry.Name())
 				zipPath := "sites/" + entry.Name()
-				b.addFileToZip(zipWriter, path, zipPath)
+				if sub != "" {
+					zipPath = "sites/" + sub + "/" + entry.Name()
+				}
+				if err := b.addFileToZip(zipWriter, filepath.Join(dir, entry.Name()), zipPath); err != nil {
+					log.Printf("Skipping %s: %v", zipPath, err)
+				}
 			}
 		}
 	}
@@ -124,6 +132,17 @@ func (b *BackupService) GetBackupInfo(data []byte) (*BackupInfo, error) {
 	return info, nil
 }
 
+// maxRestoreFileSize limits the uncompressed size of a single restored file
+const maxRestoreFileSize = 10 << 20
+
+// restorableConfigFiles lists top-level config files accepted from a backup
+var restorableConfigFiles = map[string]bool{
+	"Caddyfile":             true,
+	"snippets.caddy":        true,
+	".snippets_config.json": true,
+	"wildcard.json":         true,
+}
+
 // RestoreBackup restores configuration from a ZIP backup
 func (b *BackupService) RestoreBackup(data []byte) *RestoreResult {
 	result := &RestoreResult{
@@ -150,11 +169,16 @@ func (b *BackupService) RestoreBackup(data []byte) *RestoreResult {
 			baseDir = b.config.SitesDir
 			targetPath = filepath.Join(baseDir, strings.TrimPrefix(f.Name, "sites/"))
 		case strings.HasPrefix(f.Name, "pages/"):
+			baseDir = filepath.Join(b.config.ConfigDir, "pages")
+			targetPath = filepath.Join(baseDir, strings.TrimPrefix(f.Name, "pages/"))
+		case restorableConfigFiles[f.Name]:
 			baseDir = b.config.ConfigDir
 			targetPath = filepath.Join(baseDir, f.Name)
 		default:
-			baseDir = b.config.ConfigDir
-			targetPath = filepath.Join(baseDir, f.Name)
+			// Only files that CreateBackup produces may be restored; this keeps
+			// e.g. the auth config from being overwritten via a crafted archive.
+			result.Errors = append(result.Errors, fmt.Sprintf("Skipped unexpected file in backup: %s", f.Name))
+			continue
 		}
 
 		// Guard against zip-slip / path traversal attacks.
@@ -247,6 +271,14 @@ func (b *BackupService) ImportRules(data []byte, caddyService *CaddyService, ski
 
 	for _, rule := range rules {
 		filename, _ := rule["filename"].(string)
+		filename = strings.TrimSuffix(filename, ".caddy")
+		if filename != "" {
+			if err := ValidateSiteFilename(filename); err != nil {
+				log.Printf("Import: skipping rule: %v", err)
+				skipped++
+				continue
+			}
+		}
 
 		if skipExisting && existingNames[filename] {
 			skipped++
@@ -296,11 +328,17 @@ func (b *BackupService) ImportRules(data []byte, caddyService *CaddyService, ski
 		}
 
 		// Use raw content if available
-		if raw, ok := rule["raw_content"].(string); ok && raw != "" {
+		var err error
+		if raw, ok := rule["raw_content"].(string); ok && raw != "" && filename != "" {
 			site.RawContent = raw
-			caddyService.UpdateSiteRaw(filename, raw)
+			err = caddyService.UpdateSiteRaw(filename, raw)
 		} else {
-			caddyService.CreateSite(site)
+			err = caddyService.CreateSite(site)
+		}
+		if err != nil {
+			log.Printf("Import: failed to import rule %q: %v", filename, err)
+			skipped++
+			continue
 		}
 
 		imported++
@@ -345,12 +383,20 @@ func (b *BackupService) extractFile(f *zip.File, targetPath string) error {
 	}
 	defer reader.Close()
 
-	content, err := io.ReadAll(reader)
+	// Guard against decompression bombs
+	content, err := io.ReadAll(io.LimitReader(reader, maxRestoreFileSize+1))
 	if err != nil {
 		return err
 	}
+	if len(content) > maxRestoreFileSize {
+		return fmt.Errorf("file too large")
+	}
 
-	return os.WriteFile(targetPath, content, 0644)
+	perm := os.FileMode(0644)
+	if strings.HasSuffix(targetPath, ".json") {
+		perm = 0600 // may contain DNS API tokens
+	}
+	return os.WriteFile(targetPath, content, perm)
 }
 
 // assertInsideDir returns an error if target does not resolve to a path inside base,

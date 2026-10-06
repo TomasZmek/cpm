@@ -15,11 +15,11 @@ import (
 
 // ReloadResult represents the result of a reload operation
 type ReloadResult struct {
-	Success        bool
-	Message        string
-	Error          string
-	ValidationLog  string // Output from caddy validate
-	ReloadLog      string // Output from caddy reload
+	Success       bool
+	Message       string
+	Error         string
+	ValidationLog string // Output from caddy validate
+	ReloadLog     string // Output from caddy reload
 }
 
 // CaddyService handles Caddy configuration management
@@ -113,8 +113,22 @@ func (c *CaddyService) GetAllSites() ([]*models.Site, error) {
 	return sites, nil
 }
 
+// ValidateSiteFilename ensures a site filename is a plain file name that
+// cannot escape the sites directory (no path separators, no "..").
+func ValidateSiteFilename(filename string) error {
+	name := strings.TrimSuffix(filename, ".caddy")
+	if name == "" || name == "." || name == ".." ||
+		strings.ContainsAny(name, "/\\\x00") || strings.Contains(name, "..") {
+		return fmt.Errorf("invalid site filename: %q", filename)
+	}
+	return nil
+}
+
 // GetSite returns a single site by filename
 func (c *CaddyService) GetSite(filename string) (*models.Site, error) {
+	if err := ValidateSiteFilename(filename); err != nil {
+		return nil, err
+	}
 	if !strings.HasSuffix(filename, ".caddy") {
 		filename += ".caddy"
 	}
@@ -164,6 +178,13 @@ func (c *CaddyService) CreateSite(site *models.Site) error {
 	if site.Filename == "" {
 		site.Filename = sanitizeFilename(site.PrimaryDomain())
 	}
+	site.Filename = strings.TrimSuffix(site.Filename, ".caddy")
+	if err := ValidateSiteFilename(site.Filename); err != nil {
+		return err
+	}
+	if err := site.Validate(); err != nil {
+		return err
+	}
 
 	// Determine correct directory based on site type
 	var sitesDir string
@@ -201,9 +222,16 @@ func (c *CaddyService) CreateSite(site *models.Site) error {
 
 // UpdateSite updates an existing proxy rule
 func (c *CaddyService) UpdateSite(site *models.Site) error {
+	if err := ValidateSiteFilename(site.Filename); err != nil {
+		return err
+	}
+	if err := site.Validate(); err != nil {
+		return err
+	}
+
 	// If site type changed (wildcard <-> standard), we need to move the file
 	oldFilepath := site.Filepath
-	
+
 	// Determine correct directory based on site type
 	var sitesDir string
 	if site.IsWildcard() && c.caddyfileManager != nil {
@@ -241,14 +269,36 @@ func (c *CaddyService) UpdateSite(site *models.Site) error {
 	return nil
 }
 
-// UpdateSiteRaw updates a site with raw content
+// UpdateSiteRaw updates a site with raw content. An existing site is
+// overwritten in place (whichever directory it lives in); a new one is
+// written to the directory matching its format (wildcard handle blocks vs.
+// standard site blocks).
 func (c *CaddyService) UpdateSiteRaw(filename, content string) error {
-	filepath := filepath.Join(c.config.SitesDir, filename)
-	if !strings.HasSuffix(filepath, ".caddy") {
-		filepath += ".caddy"
+	if err := ValidateSiteFilename(filename); err != nil {
+		return err
+	}
+	filename = strings.TrimSuffix(filename, ".caddy")
+
+	var targetPath string
+	if existing, err := c.GetSite(filename); err == nil {
+		targetPath = existing.Filepath
+	} else {
+		dir := c.config.SitesDir
+		if c.caddyfileManager != nil {
+			parsed := c.parser.Parse(content, filename)
+			if parsed.IsWildcard() {
+				dir = filepath.Join(c.config.SitesDir, "wildcard")
+			} else {
+				dir = filepath.Join(c.config.SitesDir, "standard")
+			}
+		}
+		if err := os.MkdirAll(dir, 0755); err != nil {
+			return fmt.Errorf("failed to create sites directory: %w", err)
+		}
+		targetPath = filepath.Join(dir, filename+".caddy")
 	}
 
-	if err := os.WriteFile(filepath, []byte(content), 0644); err != nil {
+	if err := os.WriteFile(targetPath, []byte(content), 0644); err != nil {
 		return fmt.Errorf("failed to write site file: %w", err)
 	}
 
@@ -257,6 +307,9 @@ func (c *CaddyService) UpdateSiteRaw(filename, content string) error {
 
 // DeleteSite deletes a proxy rule
 func (c *CaddyService) DeleteSite(filename string) error {
+	if err := ValidateSiteFilename(filename); err != nil {
+		return err
+	}
 	if !strings.HasSuffix(filename, ".caddy") {
 		filename += ".caddy"
 	}
@@ -545,7 +598,7 @@ func TimeAgo(t time.Time) string {
 // SaveWildcardConfig saves the wildcard configuration to a Caddy file
 func (c *CaddyService) SaveWildcardConfig(config string) error {
 	wildcardPath := filepath.Join(c.config.SitesDir, "_wildcard.caddy")
-	
+
 	// If config is empty, remove the file
 	if config == "" {
 		if _, err := os.Stat(wildcardPath); err == nil {
@@ -553,7 +606,7 @@ func (c *CaddyService) SaveWildcardConfig(config string) error {
 		}
 		return nil
 	}
-	
+
 	return os.WriteFile(wildcardPath, []byte(config), 0644)
 }
 

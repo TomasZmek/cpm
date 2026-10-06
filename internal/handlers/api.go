@@ -105,7 +105,7 @@ func (h *Handler) CaddyReload(c *fiber.Ctx) error {
 		setFlash(c, "error", "Reload failed: "+result.Error)
 	}
 
-	return c.Redirect(c.Get("Referer", "/"))
+	return c.Redirect(safeRedirectTarget(c))
 }
 
 // CaddyValidate validates Caddy configuration
@@ -142,7 +142,7 @@ func (h *Handler) CaddyValidate(c *fiber.Ctx) error {
 		setFlash(c, "error", "Validation failed: "+result.Error)
 	}
 
-	return c.Redirect(c.Get("Referer", "/"))
+	return c.Redirect(safeRedirectTarget(c))
 }
 
 // escapeHTML escapes HTML special characters

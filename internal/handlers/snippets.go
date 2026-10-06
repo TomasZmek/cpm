@@ -1,10 +1,13 @@
 package handlers
 
 import (
+	"net/netip"
+	"regexp"
 	"strconv"
 	"strings"
 
 	"github.com/TomasZmek/cpm/internal/models"
+	"github.com/TomasZmek/cpm/internal/services"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -42,12 +45,22 @@ func (h *Handler) SnippetUpdate(c *fiber.Ctx) error {
 	case "cloudflare_dns":
 		cfg.CloudflareDNS.Enabled = c.FormValue("enabled") == "on"
 		cfg.CloudflareDNS.UseEnv = c.FormValue("use_env") == "on"
-		cfg.CloudflareDNS.APIToken = c.FormValue("api_token")
+		cfg.CloudflareDNS.APIToken = strings.TrimSpace(c.FormValue("api_token"))
+		if !cfg.CloudflareDNS.UseEnv && cfg.CloudflareDNS.APIToken != "" {
+			if err := services.ValidateAPIToken(cfg.CloudflareDNS.APIToken); err != nil {
+				return c.Status(fiber.StatusBadRequest).SendString(err.Error())
+			}
+		}
 
 	case "internal_only":
 		cfg.InternalOnly.Enabled = c.FormValue("enabled") == "on"
 		networks := c.FormValue("allowed_networks")
 		cfg.InternalOnly.AllowedNetworks = parseNetworks(networks)
+		for _, n := range cfg.InternalOnly.AllowedNetworks {
+			if !isValidNetwork(n) {
+				return c.Status(fiber.StatusBadRequest).SendString("Invalid IP address or CIDR: " + n)
+			}
+		}
 
 	case "security_headers":
 		cfg.SecurityHeaders.Enabled = c.FormValue("enabled") == "on"
@@ -56,6 +69,9 @@ func (h *Handler) SnippetUpdate(c *fiber.Ctx) error {
 		cfg.SecurityHeaders.XContentTypeOptions = c.FormValue("x_content_type_options") == "on"
 		cfg.SecurityHeaders.XFrameOptions = c.FormValue("x_frame_options")
 		cfg.SecurityHeaders.ReferrerPolicy = c.FormValue("referrer_policy")
+		if !isSafeHeaderValue(cfg.SecurityHeaders.XFrameOptions) || !isSafeHeaderValue(cfg.SecurityHeaders.ReferrerPolicy) {
+			return c.Status(fiber.StatusBadRequest).SendString("Invalid header value")
+		}
 		cfg.SecurityHeaders.HideServer = c.FormValue("hide_server") == "on"
 
 	case "compression":
@@ -99,6 +115,9 @@ func (h *Handler) SnippetUpdate(c *fiber.Ctx) error {
 // HTMXSnippetForm returns a snippet form as HTML partial
 func (h *Handler) HTMXSnippetForm(c *fiber.Ctx) error {
 	snippetName := c.Params("name")
+	if !snippetFormNameRegex.MatchString(snippetName) {
+		return c.Status(fiber.StatusBadRequest).SendString("Invalid snippet name")
+	}
 
 	cfg, err := h.snippetsService.GetConfig()
 	if err != nil {
@@ -110,6 +129,8 @@ func (h *Handler) HTMXSnippetForm(c *fiber.Ctx) error {
 	})
 }
 
+var snippetFormNameRegex = regexp.MustCompile(`^[a-z_]+$`)
+
 // parseNetworks parses networks from form input
 func parseNetworks(input string) []string {
 	var networks []string
@@ -120,6 +141,25 @@ func parseNetworks(input string) []string {
 		}
 	}
 	return networks
+}
+
+// isValidNetwork reports whether v is an IP address, a CIDR range or Caddy's
+// "private_ranges" shortcut
+func isValidNetwork(v string) bool {
+	if v == "private_ranges" {
+		return true
+	}
+	if _, err := netip.ParsePrefix(v); err == nil {
+		return true
+	}
+	_, err := netip.ParseAddr(v)
+	return err == nil
+}
+
+// isSafeHeaderValue rejects values that would break out of the quoted
+// header value in the generated snippets file
+func isSafeHeaderValue(v string) bool {
+	return !strings.ContainsAny(v, "\"\\{}\r\n")
 }
 
 // formInt parses form value as int with default

@@ -1,6 +1,7 @@
 package services
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -8,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/moby/moby/api/pkg/stdcopy"
 	"github.com/moby/moby/client"
 )
 
@@ -151,7 +153,7 @@ func (d *DockerService) ExecCommandWithOutput(cmd ...string) (string, error) {
 
 	// Read output
 	output, _ := io.ReadAll(resp.Reader)
-	outputStr := cleanDockerOutput(string(output))
+	outputStr := demuxDockerStream(output)
 
 	// Check exit code
 	inspect, err := d.client.ExecInspect(ctx, execID.ID, client.ExecInspectOptions{})
@@ -166,18 +168,19 @@ func (d *DockerService) ExecCommandWithOutput(cmd ...string) (string, error) {
 	return outputStr, nil
 }
 
-// cleanDockerOutput removes Docker log header bytes from output
-func cleanDockerOutput(output string) string {
-	var lines []string
-	for _, line := range strings.Split(output, "\n") {
-		// Docker logs have 8-byte header, skip it
-		if len(line) > 8 {
-			lines = append(lines, line[8:])
-		} else if len(line) > 0 {
-			lines = append(lines, line)
+// demuxDockerStream decodes Docker's multiplexed stdout/stderr stream.
+// Each frame carries an 8-byte header that is not tied to line boundaries,
+// so it must be parsed per frame rather than stripped per line. Containers
+// started with a TTY produce a raw stream, which is returned unchanged.
+func demuxDockerStream(data []byte) string {
+	if len(data) >= 8 && (data[0] == 0 || data[0] == 1 || data[0] == 2) &&
+		data[1] == 0 && data[2] == 0 && data[3] == 0 {
+		var buf bytes.Buffer
+		if _, err := stdcopy.StdCopy(&buf, &buf, bytes.NewReader(data)); err == nil {
+			return buf.String()
 		}
 	}
-	return strings.Join(lines, "\n")
+	return string(data)
 }
 
 // GetLogs retrieves container logs
@@ -212,14 +215,10 @@ func (d *DockerService) GetLogs(lines int) ([]string, error) {
 		return nil, fmt.Errorf("failed to read logs: %w", err)
 	}
 
-	// Split into lines and clean up Docker log format
-	rawLines := strings.Split(string(content), "\n")
+	// Decode Docker log stream and split into lines
 	var cleanLines []string
-	for _, line := range rawLines {
-		// Docker logs have 8-byte header, skip it
-		if len(line) > 8 {
-			cleanLines = append(cleanLines, line[8:])
-		} else if len(line) > 0 {
+	for _, line := range strings.Split(demuxDockerStream(content), "\n") {
+		if line = strings.TrimRight(line, "\r"); line != "" {
 			cleanLines = append(cleanLines, line)
 		}
 	}

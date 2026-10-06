@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"net/url"
 	"sync"
 	"time"
 
@@ -63,7 +64,6 @@ func (l *rateLimiter) reset(ip string) {
 	delete(l.entries, ip)
 }
 
-
 // LoginPage renders the login page
 func (h *Handler) LoginPage(c *fiber.Ctx) error {
 	// If already logged in, redirect to dashboard
@@ -98,6 +98,7 @@ func (h *Handler) Login(c *fiber.Ctx) error {
 			"NeedsSetup": !h.authService.HasUsers(),
 			"Version":    h.config.Version,
 			"Lang":       "en",
+			"CSRFToken":  c.Locals("csrf_token"),
 		})
 	}
 
@@ -106,15 +107,10 @@ func (h *Handler) Login(c *fiber.Ctx) error {
 
 	// Check if this is first setup (creating admin)
 	if !h.authService.HasUsers() {
-		// Create first admin user
-		if err := h.authService.CreateUser(username, password, models.RoleAdmin); err != nil {
+		// Create first admin user and enable authentication
+		if err := h.authService.CreateInitialAdmin(username, password); err != nil {
 			loginLimiter.recordFailure(ip)
-			return c.Redirect("/login?error=Failed+to+create+user")
-		}
-
-		// Enable authentication
-		if err := h.authService.Enable(); err != nil {
-			return c.Redirect("/login?error=Failed+to+enable+auth")
+			return c.Redirect("/login?error=" + url.QueryEscape("Failed to create user: "+err.Error()))
 		}
 	}
 
@@ -132,8 +128,9 @@ func (h *Handler) Login(c *fiber.Ctx) error {
 		Name:     utils.SessionCookieName,
 		Value:    token,
 		HTTPOnly: true,
+		Secure:   c.Secure(),
 		SameSite: "Lax",
-		MaxAge:   86400 * 7, // 7 days
+		MaxAge:   int(h.authService.SessionTimeout().Seconds()),
 	})
 
 	return c.Redirect("/")
@@ -148,9 +145,10 @@ func (h *Handler) Logout(c *fiber.Ctx) error {
 
 	// Clear cookie
 	c.Cookie(&fiber.Cookie{
-		Name:   utils.SessionCookieName,
-		Value:  "",
-		MaxAge: -1,
+		Name:     utils.SessionCookieName,
+		Value:    "",
+		MaxAge:   -1,
+		HTTPOnly: true,
 	})
 
 	return c.Redirect("/login")
@@ -161,14 +159,6 @@ func (h *Handler) UserCreate(c *fiber.Ctx) error {
 	username := c.FormValue("username")
 	password := c.FormValue("password")
 	role := models.Role(c.FormValue("role"))
-
-	if username == "" || password == "" {
-		return c.Status(fiber.StatusBadRequest).SendString("Username and password are required")
-	}
-
-	if len(password) < 6 {
-		return c.Status(fiber.StatusBadRequest).SendString("Password must be at least 6 characters")
-	}
 
 	if err := h.authService.CreateUser(username, password, role); err != nil {
 		return c.Status(fiber.StatusBadRequest).SendString(err.Error())
@@ -230,10 +220,6 @@ func (h *Handler) UserUpdateRole(c *fiber.Ctx) error {
 func (h *Handler) UserUpdatePassword(c *fiber.Ctx) error {
 	username := c.Params("username")
 	password := c.FormValue("password")
-
-	if len(password) < 6 {
-		return c.Status(fiber.StatusBadRequest).SendString("Password must be at least 6 characters")
-	}
 
 	if err := h.authService.UpdatePassword(username, password); err != nil {
 		return c.Status(fiber.StatusBadRequest).SendString(err.Error())

@@ -99,7 +99,7 @@ func main() {
 	app.Use(compress.New())
 
 	// CSRF protection — accepts token from form field "_csrf" or header "X-CSRF-Token".
-	// API routes (/api/*) are excluded as they use token-based auth.
+	// Applies to API routes as well, since they are authenticated by the session cookie.
 	app.Use(csrf.New(csrf.Config{
 		Expiration:     24 * time.Hour,
 		CookieName:     "cpm_csrf",
@@ -115,10 +115,15 @@ func main() {
 			}
 			return "", csrf.ErrTokenNotFound
 		},
-		Next: func(c *fiber.Ctx) bool {
-			return strings.HasPrefix(c.Path(), "/api/")
-		},
 	}))
+
+	// Basic hardening headers for the management UI itself
+	app.Use(func(c *fiber.Ctx) error {
+		c.Set("X-Frame-Options", "DENY")
+		c.Set("X-Content-Type-Options", "nosniff")
+		c.Set("Referrer-Policy", "same-origin")
+		return c.Next()
+	})
 
 	// Static files
 	app.Static("/static", "./web/static")
@@ -180,18 +185,25 @@ func setupRoutes(app *fiber.App, h *handlers.Handler, authService *services.Auth
 	// Protected routes
 	protected := app.Group("", middleware.Auth(authService))
 
+	// Permission levels (see models.User.HasPermission):
+	//   view  - every authenticated user (read-only pages)
+	//   edit  - Editor and Admin (proxy rules, snippets, certificates, reload)
+	//   admin - Admin only (users, auth, backups, import/export, wildcard SSL)
+	edit := middleware.RequirePermission(authService, "edit")
+	admin := middleware.RequirePermission(authService, "admin")
+
 	// Dashboard
 	protected.Get("/", h.Dashboard)
 
 	// Sites
 	protected.Get("/sites", h.SitesList)
-	protected.Get("/sites/new", h.SiteNew)
-	protected.Post("/sites", h.SiteCreate)
+	protected.Get("/sites/new", edit, h.SiteNew)
+	protected.Post("/sites", edit, h.SiteCreate)
 	protected.Get("/sites/:id", h.SiteDetail)
-	protected.Get("/sites/:id/edit", h.SiteEdit)
-	protected.Post("/sites/:id", h.SiteUpdate)
-	protected.Post("/sites/:id/delete", h.SiteDelete)
-	protected.Post("/sites/:id/duplicate", h.SiteDuplicate)
+	protected.Get("/sites/:id/edit", edit, h.SiteEdit)
+	protected.Post("/sites/:id", edit, h.SiteUpdate)
+	protected.Post("/sites/:id/delete", edit, h.SiteDelete)
+	protected.Post("/sites/:id/duplicate", edit, h.SiteDuplicate)
 
 	// HTMX partials for sites
 	protected.Get("/htmx/sites/list", h.HTMXSitesList)
@@ -200,13 +212,13 @@ func setupRoutes(app *fiber.App, h *handlers.Handler, authService *services.Auth
 
 	// Snippets
 	protected.Get("/snippets", h.SnippetsList)
-	protected.Post("/snippets/:name", h.SnippetUpdate)
-	protected.Get("/htmx/snippets/:name/form", h.HTMXSnippetForm)
+	protected.Post("/snippets/:name", edit, h.SnippetUpdate)
+	protected.Get("/htmx/snippets/:name/form", edit, h.HTMXSnippetForm)
 
 	// Certificates
 	protected.Get("/certificates", h.CertificatesList)
-	protected.Post("/certificates/:domain/delete", h.CertificateDelete)
-	protected.Post("/certificates/:domain/renew", h.CertificateRenew)
+	protected.Post("/certificates/:domain/delete", edit, h.CertificateDelete)
+	protected.Post("/certificates/:domain/renew", edit, h.CertificateRenew)
 	protected.Get("/htmx/certificates/list", h.HTMXCertificatesList)
 
 	// Logs
@@ -216,35 +228,35 @@ func setupRoutes(app *fiber.App, h *handlers.Handler, authService *services.Auth
 	// Settings
 	protected.Get("/settings", h.SettingsPage)
 	protected.Get("/settings/general", h.SettingsGeneral)
-	protected.Get("/settings/backup", h.SettingsBackup)
+	protected.Get("/settings/backup", admin, h.SettingsBackup)
 	protected.Get("/settings/caddy", h.SettingsCaddy)
-	protected.Get("/settings/users", h.SettingsUsers)
-	protected.Post("/settings/backup/create", h.BackupCreate)
-	protected.Post("/settings/backup/restore", h.BackupRestore)
-	protected.Post("/settings/import", h.ImportRules)
-	protected.Get("/settings/export", h.ExportRules)
-	protected.Post("/settings/users", h.UserCreate)
-	protected.Post("/settings/users/:username/delete", h.UserDelete)
-	protected.Post("/settings/users/:username/role", h.UserUpdateRole)
-	protected.Post("/settings/users/:username/password", h.UserUpdatePassword)
-	protected.Post("/settings/auth/toggle", h.ToggleAuth)
+	protected.Get("/settings/users", admin, h.SettingsUsers)
+	protected.Post("/settings/backup/create", admin, h.BackupCreate)
+	protected.Post("/settings/backup/restore", admin, h.BackupRestore)
+	protected.Post("/settings/import", admin, h.ImportRules)
+	protected.Get("/settings/export", admin, h.ExportRules)
+	protected.Post("/settings/users", admin, h.UserCreate)
+	protected.Post("/settings/users/:username/delete", admin, h.UserDelete)
+	protected.Post("/settings/users/:username/role", admin, h.UserUpdateRole)
+	protected.Post("/settings/users/:username/password", admin, h.UserUpdatePassword)
+	protected.Post("/settings/auth/toggle", admin, h.ToggleAuth)
 
 	// Wildcard SSL
-	protected.Get("/settings/wildcard", h.WildcardSettings)
-	protected.Post("/settings/wildcard", h.WildcardAdd)
-	protected.Get("/settings/wildcard/migrate/:domain", h.WildcardMigratePage)
-	protected.Post("/settings/wildcard/migrate/:domain", h.WildcardMigrateExecute)
-	protected.Post("/settings/wildcard/:domain/delete", h.WildcardDelete)
+	protected.Get("/settings/wildcard", admin, h.WildcardSettings)
+	protected.Post("/settings/wildcard", admin, h.WildcardAdd)
+	protected.Get("/settings/wildcard/migrate/:domain", admin, h.WildcardMigratePage)
+	protected.Post("/settings/wildcard/migrate/:domain", admin, h.WildcardMigrateExecute)
+	protected.Post("/settings/wildcard/:domain/delete", admin, h.WildcardDelete)
 
 	// Caddy actions
-	protected.Post("/caddy/reload", h.CaddyReload)
-	protected.Post("/caddy/validate", h.CaddyValidate)
+	protected.Post("/caddy/reload", edit, h.CaddyReload)
+	protected.Post("/caddy/validate", edit, h.CaddyValidate)
 
-	// API v1
-	api := app.Group("/api/v1")
+	// API v1 — uses the same session authentication as the UI
+	api := app.Group("/api/v1", middleware.Auth(authService))
 	api.Get("/sites", h.APISites)
 	api.Get("/status", h.APIStatus)
-	api.Post("/reload", h.APIReload)
+	api.Post("/reload", edit, h.APIReload)
 }
 
 func printBanner() {

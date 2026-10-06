@@ -2,13 +2,37 @@ package services
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/TomasZmek/cpm/internal/models"
 )
+
+var (
+	domainNameRegex = regexp.MustCompile(`^(?i)([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z][a-z0-9-]{0,62}$`)
+	apiTokenRegex   = regexp.MustCompile(`^[A-Za-z0-9_.\-]+$`)
+)
+
+// ValidateDomainName checks that domain is a plain DNS name (no wildcard,
+// scheme, port or characters that could break the generated Caddyfile).
+func ValidateDomainName(domain string) error {
+	if len(domain) > 253 || !domainNameRegex.MatchString(domain) {
+		return fmt.Errorf("invalid domain name: %q", domain)
+	}
+	return nil
+}
+
+// ValidateAPIToken checks that a DNS provider API token contains only safe characters
+func ValidateAPIToken(token string) error {
+	if !apiTokenRegex.MatchString(token) {
+		return fmt.Errorf("invalid API token format")
+	}
+	return nil
+}
 
 // WildcardService manages wildcard SSL certificate configurations
 type WildcardService struct {
@@ -63,19 +87,35 @@ func (s *WildcardService) SaveConfig(config *models.WildcardConfig) error {
 		return err
 	}
 
-	if err := os.WriteFile(s.configPath, data, 0644); err != nil {
+	// 0600: the file contains DNS provider API tokens
+	if err := os.WriteFile(s.configPath, data, 0600); err != nil {
 		log.Printf("Error writing wildcard config: %v", err)
 		return err
 	}
-	
+
 	log.Printf("Wildcard config saved to %s", s.configPath)
 	return nil
 }
 
 // AddDomain adds a new wildcard domain
 func (s *WildcardService) AddDomain(domain models.WildcardDomain) error {
+	if err := ValidateDomainName(domain.Domain); err != nil {
+		return err
+	}
+	if domain.Provider == "" {
+		domain.Provider = "cloudflare"
+	}
+	if domain.Provider != "cloudflare" {
+		return fmt.Errorf("unsupported DNS provider: %q", domain.Provider)
+	}
+	if !domain.UseEnv {
+		if err := ValidateAPIToken(domain.APIToken); err != nil {
+			return err
+		}
+	}
+
 	log.Printf("AddDomain: %s (provider: %s)", domain.Domain, domain.Provider)
-	
+
 	config, err := s.GetConfig()
 	if err != nil {
 		log.Printf("Error getting config in AddDomain: %v", err)
@@ -165,18 +205,18 @@ func (s *WildcardService) GenerateCaddyConfig() (string, error) {
 
 		// Generate snippet for wildcard TLS
 		snippetName := "wildcard-tls-" + strings.ReplaceAll(domain.Domain, ".", "-")
-		
+
 		result += "# Wildcard TLS snippet for *." + domain.Domain + "\n"
 		result += "(" + snippetName + ") {\n"
 		result += "    tls {\n"
-		
+
 		switch domain.Provider {
 		case "cloudflare":
 			result += "        dns cloudflare " + tokenSource + "\n"
 		default:
 			result += "        dns cloudflare " + tokenSource + "\n"
 		}
-		
+
 		result += "    }\n"
 		result += "}\n\n"
 	}
@@ -191,17 +231,17 @@ func GetSnippetName(domain string) string {
 
 // MigrationInfo contains info about sites/certs that can be migrated
 type MigrationInfo struct {
-	Domain       string
-	SnippetName  string
-	MatchingSites []string  // Site filenames that match *.domain
-	Certificates  []string  // Certificate domains that match *.domain
+	Domain        string
+	SnippetName   string
+	MatchingSites []string // Site filenames that match *.domain
+	Certificates  []string // Certificate domains that match *.domain
 }
 
 // GetMigrationInfo returns info about what can be migrated for a wildcard domain
 func (s *WildcardService) GetMigrationInfo(domain string, sitesDir string, certsDataDir string) (*MigrationInfo, error) {
 	info := &MigrationInfo{
-		Domain:       domain,
-		SnippetName:  GetSnippetName(domain),
+		Domain:        domain,
+		SnippetName:   GetSnippetName(domain),
 		MatchingSites: []string{},
 		Certificates:  []string{},
 	}
@@ -216,13 +256,13 @@ func (s *WildcardService) GetMigrationInfo(domain string, sitesDir string, certs
 			if entry.Name() == "_wildcard.caddy" {
 				continue
 			}
-			
+
 			// Read file and check if it contains subdomains of our domain
 			content, err := os.ReadFile(filepath.Join(sitesDir, entry.Name()))
 			if err != nil {
 				continue
 			}
-			
+
 			// Check if any token in the file is a subdomain of the target domain.
 			// Using per-token suffix matching avoids false positives from
 			// bare strings.Contains (e.g. ".example.com" matching "notexample.com").
@@ -281,17 +321,17 @@ func (s *WildcardService) MigrateSiteConfig(sitePath string, snippetName string)
 	var newLines []string
 	inTlsBlock := false
 	braceCount := 0
-	
+
 	for _, line := range lines {
 		trimmed := strings.TrimSpace(line)
-		
+
 		// Detect start of tls block
 		if strings.HasPrefix(trimmed, "tls") && strings.Contains(line, "{") {
 			inTlsBlock = true
 			braceCount = 1
 			continue
 		}
-		
+
 		if inTlsBlock {
 			braceCount += strings.Count(line, "{") - strings.Count(line, "}")
 			if braceCount <= 0 {
@@ -299,13 +339,13 @@ func (s *WildcardService) MigrateSiteConfig(sitePath string, snippetName string)
 			}
 			continue
 		}
-		
+
 		newLines = append(newLines, line)
 	}
-	
+
 	modified = strings.Join(newLines, "\n")
 
-	// Add import after first { 
+	// Add import after first {
 	// Find the first site block opening
 	firstBrace := strings.Index(modified, "{")
 	if firstBrace != -1 {

@@ -12,6 +12,11 @@ import (
 // LogsPage renders the logs viewer page
 func (h *Handler) LogsPage(c *fiber.Ctx) error {
 	lines := c.QueryInt("lines", 100)
+	if lines < 1 {
+		lines = 100
+	} else if lines > 5000 {
+		lines = 5000
+	}
 
 	logs, err := h.dockerService.GetLogs(lines)
 	if err != nil {
@@ -41,7 +46,9 @@ func (h *Handler) HTMXLogsStream(c *fiber.Ctx) error {
 			logs, err := h.dockerService.GetLogs(50)
 			if err != nil {
 				fmt.Fprintf(w, "data: Error: %s\n\n", err.Error())
-				w.Flush()
+				if w.Flush() != nil {
+					return // client disconnected
+				}
 				time.Sleep(5 * time.Second)
 				continue
 			}
@@ -59,7 +66,9 @@ func (h *Handler) HTMXLogsStream(c *fiber.Ctx) error {
 				fmt.Fprintf(w, "data: %s\n\n", escaped)
 			}
 
-			w.Flush()
+			if w.Flush() != nil {
+				return // client disconnected
+			}
 			time.Sleep(2 * time.Second)
 		}
 	})

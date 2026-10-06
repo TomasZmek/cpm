@@ -130,7 +130,8 @@ func (s *SnippetsService) SaveConfig(cfg *models.SnippetConfig) error {
 		return fmt.Errorf("failed to marshal config: %w", err)
 	}
 
-	if err := os.WriteFile(s.configPath, content, 0644); err != nil {
+	// 0600: the file may contain the Cloudflare API token
+	if err := os.WriteFile(s.configPath, content, 0600); err != nil {
 		return fmt.Errorf("failed to write config: %w", err)
 	}
 

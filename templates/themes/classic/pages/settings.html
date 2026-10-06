@@ -389,7 +389,7 @@ subdomain.example.com {
                     
                     <div class="form-group">
                         <label for="new-password">{{t .Lang "password"}}</label>
-                        <input type="password" id="new-password" name="password" required minlength="6">
+                        <input type="password" id="new-password" name="password" required minlength="8">
                     </div>
                     
                     <div class="form-group">
@@ -424,16 +424,29 @@ function changeTheme(theme) {
 
 function showPasswordModal(username) {
     const newPassword = prompt(`Enter new password for ${username}:`);
-    if (newPassword && newPassword.length >= 6) {
+    if (newPassword === null) {
+        return;
+    }
+    if (newPassword.length < 8) {
+        alert('Password must be at least 8 characters');
+        return;
+    }
+    {
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
-        fetch(`/settings/users/${username}/password`, {
+        fetch(`/settings/users/${encodeURIComponent(username)}/password`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
                 'X-CSRF-Token': csrfToken
             },
             body: `password=${encodeURIComponent(newPassword)}`
-        }).then(() => window.location.reload());
+        }).then(async (resp) => {
+            if (!resp.ok) {
+                alert(await resp.text());
+                return;
+            }
+            window.location.reload();
+        });
     }
 }
 </script>

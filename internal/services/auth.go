@@ -8,10 +8,12 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sync"
 	"time"
 
 	"github.com/TomasZmek/cpm/internal/models"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // AuthConfig holds authentication configuration
@@ -69,6 +71,9 @@ func (a *AuthService) loadConfig() {
 	if err := json.Unmarshal(content, a.config); err != nil {
 		log.Printf("Warning: Could not parse auth config: %v", err)
 	}
+	if a.config.SessionTimeoutHours <= 0 {
+		a.config.SessionTimeoutHours = 24
+	}
 }
 
 // saveConfig saves configuration to file
@@ -119,7 +124,9 @@ func (a *AuthService) Disable() error {
 func (a *AuthService) GetUsers() []*models.User {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
-	return a.config.Users
+	users := make([]*models.User, len(a.config.Users))
+	copy(users, a.config.Users)
+	return users
 }
 
 // GetUser returns a user by username
@@ -135,8 +142,55 @@ func (a *AuthService) GetUser(username string) *models.User {
 	return nil
 }
 
+// MinPasswordLength is the minimum accepted password length
+const MinPasswordLength = 8
+
+var usernameRegex = regexp.MustCompile(`^[A-Za-z0-9._-]{1,64}$`)
+
+// dummyHash is compared against when a username does not exist, so that
+// login timing does not reveal whether a user exists.
+var dummyHash, _ = bcrypt.GenerateFromPassword([]byte("cpm-dummy-password"), 12)
+
+// ValidateCredentials checks username format and password strength
+func ValidateCredentials(username, password string) error {
+	if !usernameRegex.MatchString(username) {
+		return fmt.Errorf("username may contain only letters, digits, '.', '_' and '-' (max 64 characters)")
+	}
+	if len(password) < MinPasswordLength {
+		return fmt.Errorf("password must be at least %d characters", MinPasswordLength)
+	}
+	return nil
+}
+
+// countAdmins returns the number of admin users. Caller must hold the lock.
+func (a *AuthService) countAdmins() int {
+	n := 0
+	for _, user := range a.config.Users {
+		if user.Role == models.RoleAdmin {
+			n++
+		}
+	}
+	return n
+}
+
+// invalidateUserSessions removes all sessions of a user. Caller must hold the write lock.
+func (a *AuthService) invalidateUserSessions(username string) {
+	for token, session := range a.sessions {
+		if session.Username == username {
+			delete(a.sessions, token)
+		}
+	}
+}
+
 // CreateUser creates a new user
 func (a *AuthService) CreateUser(username, password string, role models.Role) error {
+	if err := ValidateCredentials(username, password); err != nil {
+		return err
+	}
+	if !role.IsValid() {
+		return fmt.Errorf("invalid role: %s", role)
+	}
+
 	a.mu.Lock()
 	defer a.mu.Unlock()
 
@@ -156,6 +210,30 @@ func (a *AuthService) CreateUser(username, password string, role models.Role) er
 	return a.saveConfig()
 }
 
+// CreateInitialAdmin creates the first admin user and enables authentication.
+// It fails if any user already exists, so it cannot be raced or replayed.
+func (a *AuthService) CreateInitialAdmin(username, password string) error {
+	if err := ValidateCredentials(username, password); err != nil {
+		return err
+	}
+
+	a.mu.Lock()
+	defer a.mu.Unlock()
+
+	if len(a.config.Users) > 0 {
+		return fmt.Errorf("initial setup already completed")
+	}
+
+	user, err := models.NewUser(username, password, models.RoleAdmin)
+	if err != nil {
+		return fmt.Errorf("failed to create user: %w", err)
+	}
+
+	a.config.Users = append(a.config.Users, user)
+	a.config.Enabled = true
+	return a.saveConfig()
+}
+
 // DeleteUser deletes a user
 func (a *AuthService) DeleteUser(username string) error {
 	a.mu.Lock()
@@ -163,7 +241,11 @@ func (a *AuthService) DeleteUser(username string) error {
 
 	for i, user := range a.config.Users {
 		if user.Username == username {
+			if user.Role == models.RoleAdmin && a.countAdmins() <= 1 {
+				return fmt.Errorf("cannot delete the last admin user")
+			}
 			a.config.Users = append(a.config.Users[:i], a.config.Users[i+1:]...)
+			a.invalidateUserSessions(username)
 			return a.saveConfig()
 		}
 	}
@@ -171,8 +253,12 @@ func (a *AuthService) DeleteUser(username string) error {
 	return fmt.Errorf("user not found: %s", username)
 }
 
-// UpdatePassword updates a user's password
+// UpdatePassword updates a user's password and logs out all of the user's sessions
 func (a *AuthService) UpdatePassword(username, newPassword string) error {
+	if len(newPassword) < MinPasswordLength {
+		return fmt.Errorf("password must be at least %d characters", MinPasswordLength)
+	}
+
 	a.mu.Lock()
 	defer a.mu.Unlock()
 
@@ -181,6 +267,7 @@ func (a *AuthService) UpdatePassword(username, newPassword string) error {
 			if err := user.SetPassword(newPassword); err != nil {
 				return err
 			}
+			a.invalidateUserSessions(username)
 			return a.saveConfig()
 		}
 	}
@@ -190,11 +277,18 @@ func (a *AuthService) UpdatePassword(username, newPassword string) error {
 
 // UpdateRole updates a user's role
 func (a *AuthService) UpdateRole(username string, role models.Role) error {
+	if !role.IsValid() {
+		return fmt.Errorf("invalid role: %s", role)
+	}
+
 	a.mu.Lock()
 	defer a.mu.Unlock()
 
 	for _, user := range a.config.Users {
 		if user.Username == username {
+			if user.Role == models.RoleAdmin && role != models.RoleAdmin && a.countAdmins() <= 1 {
+				return fmt.Errorf("cannot demote the last admin user")
+			}
 			user.Role = role
 			return a.saveConfig()
 		}
@@ -211,7 +305,7 @@ func (a *AuthService) Authenticate(username, password string) (string, error) {
 	for _, user := range a.config.Users {
 		if user.Username == username {
 			if !user.CheckPassword(password) {
-				return "", fmt.Errorf("invalid password")
+				return "", fmt.Errorf("invalid credentials")
 			}
 
 			// Update last login
@@ -229,7 +323,16 @@ func (a *AuthService) Authenticate(username, password string) (string, error) {
 		}
 	}
 
-	return "", fmt.Errorf("user not found: %s", username)
+	// Spend comparable time for unknown users to avoid username enumeration
+	bcrypt.CompareHashAndPassword(dummyHash, []byte(password))
+	return "", fmt.Errorf("invalid credentials")
+}
+
+// SessionTimeout returns the configured session lifetime
+func (a *AuthService) SessionTimeout() time.Duration {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	return time.Duration(a.config.SessionTimeoutHours) * time.Hour
 }
 
 // ValidateSession validates a session token

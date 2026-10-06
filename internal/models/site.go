@@ -2,6 +2,7 @@ package models
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
 
@@ -31,6 +32,85 @@ type Site struct {
 	RawContent         string    `json:"raw_content"`
 	ModifiedAt         time.Time `json:"modified_at"`
 }
+
+// unsafeTokenChars are characters that would let a form value break out of
+// its position in the generated Caddyfile (new tokens, blocks, comments).
+const unsafeTokenChars = " \t\r\n\v\f{}\"'`#;\\"
+
+// isSafeToken reports whether v can be written as a single Caddyfile token
+func isSafeToken(v string) bool {
+	if v == "" || strings.ContainsAny(v, unsafeTokenChars) {
+		return false
+	}
+	for _, r := range v {
+		if r < 0x20 || r == 0x7f {
+			return false
+		}
+	}
+	return true
+}
+
+// isSafeLine reports whether v contains no line breaks or control characters
+func isSafeLine(v string) bool {
+	for _, r := range v {
+		if r < 0x20 || r == 0x7f {
+			return false
+		}
+	}
+	return true
+}
+
+// Validate checks that user-supplied fields cannot inject arbitrary
+// directives into the generated Caddyfile. ExtraConfig is intentionally
+// free-form and therefore not checked here.
+func (s *Site) Validate() error {
+	if len(s.Domains) == 0 {
+		return fmt.Errorf("at least one domain is required")
+	}
+	for _, d := range s.Domains {
+		if !isSafeToken(d) || strings.Contains(d, ",") {
+			return fmt.Errorf("invalid domain: %q", d)
+		}
+	}
+	if !isSafeToken(s.TargetIP) {
+		return fmt.Errorf("invalid target IP/host: %q", s.TargetIP)
+	}
+	if !isSafeToken(s.TargetPort) {
+		return fmt.Errorf("invalid target port: %q", s.TargetPort)
+	}
+	if s.HealthCheckPath != "" && (!isSafeToken(s.HealthCheckPath) || !strings.HasPrefix(s.HealthCheckPath, "/")) {
+		return fmt.Errorf("invalid health check path: %q", s.HealthCheckPath)
+	}
+	if s.TLSMode != "" && !isSafeToken(s.TLSMode) {
+		return fmt.Errorf("invalid TLS mode: %q", s.TLSMode)
+	}
+	if s.LBPolicy != "" && !isSafeToken(s.LBPolicy) {
+		return fmt.Errorf("invalid load balancing policy: %q", s.LBPolicy)
+	}
+	for _, b := range s.AdditionalBackends {
+		if b = strings.TrimSpace(b); b != "" && !isSafeToken(b) {
+			return fmt.Errorf("invalid backend: %q", b)
+		}
+	}
+	for _, sn := range s.Snippets {
+		if sn != "" && !snippetNameRegex.MatchString(sn) {
+			return fmt.Errorf("invalid snippet name: %q", sn)
+		}
+	}
+	for _, t := range s.Tags {
+		if !isSafeLine(t) {
+			return fmt.Errorf("invalid tag: %q", t)
+		}
+	}
+	for _, u := range s.BasicAuthUsers {
+		if !isSafeLine(u) || strings.ContainsAny(u, "{}#") {
+			return fmt.Errorf("invalid basic auth entry")
+		}
+	}
+	return nil
+}
+
+var snippetNameRegex = regexp.MustCompile(`^[A-Za-z0-9_.-]+$`)
 
 // PrimaryDomain returns the first domain
 func (s *Site) PrimaryDomain() string {
@@ -121,27 +201,27 @@ func (s *Site) ToCaddyfile() string {
 // This format is used inside a *.domain.com { } block
 func (s *Site) ToCaddyfileWildcard() string {
 	var lines []string
-	
+
 	// Metadata as comments
 	if len(s.Tags) > 0 {
 		lines = append(lines, fmt.Sprintf("# @tags: %s", strings.Join(s.Tags, ", ")))
 	}
 	lines = append(lines, fmt.Sprintf("# @tls: %s", s.TLSMode))
-	
+
 	// Matcher for this specific host
 	matcherName := s.MatcherName()
 	lines = append(lines, fmt.Sprintf("@%s host %s", matcherName, strings.Join(s.Domains, " ")))
-	
+
 	// Handle block
 	lines = append(lines, fmt.Sprintf("handle @%s {", matcherName))
-	
+
 	// Import snippets (except cloudflare_dns which is handled at wildcard block level via TLS snippet)
 	for _, snippet := range s.Snippets {
 		if snippet != "" && snippet != "cloudflare_dns" {
 			lines = append(lines, fmt.Sprintf("    import %s", snippet))
 		}
 	}
-	
+
 	// Basic Auth
 	if s.BasicAuthEnabled && len(s.BasicAuthUsers) > 0 {
 		lines = append(lines, "    basic_auth {")
@@ -150,19 +230,19 @@ func (s *Site) ToCaddyfileWildcard() string {
 		}
 		lines = append(lines, "    }")
 	}
-	
+
 	// Extra config
 	if extra := strings.TrimSpace(s.ExtraConfig); extra != "" {
 		for _, line := range strings.Split(extra, "\n") {
 			lines = append(lines, fmt.Sprintf("    %s", strings.TrimSpace(line)))
 		}
 	}
-	
+
 	// Reverse proxy (inline, not nested)
 	lines = append(lines, s.generateReverseProxyWildcard()...)
-	
+
 	lines = append(lines, "}")
-	
+
 	return strings.Join(lines, "\n") + "\n"
 }
 
@@ -334,4 +414,3 @@ func (s *Site) generateReverseProxyWildcard() []string {
 
 	return lines
 }
-

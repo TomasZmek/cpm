@@ -1,3 +1,36 @@
+# CPM - Unreleased - Security hardening & bug fixes
+
+## 🔒 Security Fixes
+
+- **Unauthenticated API** (cmd/cpm/main.go) — `/api/v1/*` now requires a session (previously anyone could list all rules and trigger a reload); CSRF protection now applies to the API too
+- **Role enforcement** (internal/middleware/auth.go, cmd/cpm/main.go) — `RequirePermission` is implemented and applied to routes: Viewer is read-only, Editor manages rules/snippets/certificates/reload, Admin manages users, auth, backups, import/export and wildcard SSL
+- **Path traversal in rules import** (internal/services/backup.go, caddy.go) — site filenames are validated (`ValidateSiteFilename`) before any file is read, written or deleted
+- **Backup restore hardening** (internal/services/backup.go) — only files that a backup produces may be restored (no more overwriting `.auth_config.json`), `pages/../` traversal fixed, 10 MB per-file limit against zip bombs
+- **Caddyfile injection** (internal/models/site.go, services/wildcard.go, handlers/snippets.go) — site fields, wildcard domains, DNS API tokens, allowed networks and security header values are validated so they cannot inject directives
+- **XSS in HTMX error responses** (internal/handlers/handlers.go) — error messages are HTML-escaped
+- **Open redirect** (internal/handlers/api.go) — reload/validate redirect only back to a same-host path
+- **Initial admin setup** (internal/services/auth.go) — atomic `CreateInitialAdmin`, username/password validation (min. 8 characters)
+- **User management** — role values validated, last admin cannot be deleted or demoted, password change/user deletion invalidates sessions, constant-time-ish login for unknown users
+- **Cookies & files** — session cookie gets `Secure` when served over HTTPS and its lifetime matches the server session; `wildcard.json` and `.snippets_config.json` (API tokens) written with `0600`
+- **Security headers** — UI sends `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: same-origin`
+
+## 🐛 Bug Fixes
+
+- Only the first checked snippet was saved when creating/editing a rule
+- Backups did not include `sites/wildcard/`, `sites/standard/` and `wildcard.json`
+- Raw edit wrote the file to `sites/` instead of the rule's actual directory (duplicate, change not applied)
+- Uploaded backup/import files could be read only partially (`io.ReadAll`)
+- Docker exec/log output corrupted by stripping 8 bytes per line; now properly demultiplexed with `stdcopy`
+- Log viewer `lines` parameter capped (1–5000); log SSE stream stops when the client disconnects
+- 429 login page was missing the CSRF token
+- Tags and snippets are trimmed; validation errors return 400 instead of 500
+
+## ✅ Tests
+
+- Added tests for site validation, filename/domain validation, backup restore/import traversal, backup contents, auth (last admin, sessions), Docker stream demux and safe redirects
+
+---
+
 # CPM v3.1.3 - Security patch
 
 ## 🔒 Security Fixes
