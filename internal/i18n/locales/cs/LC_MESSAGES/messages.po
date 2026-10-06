@@ -1,0 +1,1033 @@
+# Czech translations for CPM - Caddy Proxy Manager
+# SPDX-License-Identifier: MIT
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
+
+# General
+msgid "app_name"
+msgstr "CPM - Caddy Proxy Manager"
+
+msgid "app_version"
+msgstr "Verze"
+
+msgid "save"
+msgstr "Uložit"
+
+msgid "cancel"
+msgstr "Zrušit"
+
+msgid "delete"
+msgstr "Smazat"
+
+msgid "edit"
+msgstr "Upravit"
+
+msgid "create"
+msgstr "Vytvořit"
+
+msgid "back"
+msgstr "Zpět"
+
+msgid "back_to_dashboard"
+msgstr "Zpět na Dashboard"
+
+msgid "search"
+msgstr "Hledat"
+
+msgid "filter"
+msgstr "Filtr"
+
+msgid "loading"
+msgstr "Načítání..."
+
+msgid "success"
+msgstr "Úspěch"
+
+msgid "error"
+msgstr "Chyba"
+
+msgid "warning"
+msgstr "Varování"
+
+msgid "confirm"
+msgstr "Potvrdit"
+
+msgid "yes"
+msgstr "Ano"
+
+msgid "no"
+msgstr "Ne"
+
+msgid "actions"
+msgstr "Akce"
+
+msgid "settings"
+msgstr "Nastavení"
+
+msgid "logout"
+msgstr "Odhlásit"
+
+msgid "status"
+msgstr "Stav"
+
+msgid "domain"
+msgstr "Doména"
+
+msgid "modified"
+msgstr "Upraveno"
+
+msgid "more"
+msgstr "další"
+
+msgid "rules"
+msgstr "pravidel"
+
+msgid "days"
+msgstr "dní"
+
+msgid "today"
+msgstr "Dnes"
+
+msgid "never"
+msgstr "Nikdy"
+
+msgid "not_set"
+msgstr "Nenastaveno"
+
+msgid "about"
+msgstr "O aplikaci"
+
+msgid "build_date"
+msgstr "Datum buildu"
+
+msgid "about_description"
+msgstr "Webové rozhraní pro správu Caddy reverse proxy."
+
+msgid "valid_from"
+msgstr "Platný od"
+
+msgid "auto_scroll"
+msgstr "Automaticky scrollovat"
+
+msgid "username"
+msgstr "Uživatelské jméno"
+
+msgid "password"
+msgstr "Heslo"
+
+msgid "role"
+msgstr "Role"
+
+msgid "created"
+msgstr "Vytvořeno"
+
+msgid "last_login"
+msgstr "Poslední přihlášení"
+
+# Navigation
+msgid "nav_dashboard"
+msgstr "Dashboard"
+
+msgid "nav_sites"
+msgstr "Proxy pravidla"
+
+msgid "nav_snippets"
+msgstr "Snippety"
+
+msgid "nav_certificates"
+msgstr "Certifikáty"
+
+msgid "nav_logs"
+msgstr "Logy"
+
+msgid "nav_settings"
+msgstr "Nastavení"
+
+# Dashboard
+msgid "dashboard_title"
+msgstr "Dashboard"
+
+msgid "dashboard_rules"
+msgstr "Pravidel"
+
+msgid "dashboard_certificates"
+msgstr "Certifikátů"
+
+msgid "dashboard_snippets"
+msgstr "Snippetů"
+
+msgid "dashboard_caddy_status"
+msgstr "Stav Caddy"
+
+msgid "dashboard_running"
+msgstr "Běží"
+
+msgid "dashboard_stopped"
+msgstr "Zastaveno"
+
+msgid "dashboard_recent_changes"
+msgstr "Poslední změny"
+
+msgid "dashboard_no_changes"
+msgstr "Žádné nedávné změny"
+
+msgid "dashboard_alerts"
+msgstr "Upozornění"
+
+msgid "dashboard_no_alerts"
+msgstr "Vše v pořádku"
+
+msgid "dashboard_quick_actions"
+msgstr "Rychlé akce"
+
+msgid "dashboard_reload"
+msgstr "Reload Caddy"
+
+msgid "dashboard_validate"
+msgstr "Validovat config"
+
+msgid "dashboard_new_rule"
+msgstr "Nové pravidlo"
+
+msgid "dashboard_backup"
+msgstr "Záloha"
+
+# Sites
+msgid "sites_title"
+msgstr "Proxy pravidla"
+
+msgid "sites_new"
+msgstr "Nové pravidlo"
+
+msgid "sites_edit"
+msgstr "Upravit pravidlo"
+
+msgid "sites_delete"
+msgstr "Smazat pravidlo"
+
+msgid "sites_duplicate"
+msgstr "Duplikovat pravidlo"
+
+msgid "sites_empty"
+msgstr "Žádná pravidla nenalezena"
+
+msgid "sites_empty_title"
+msgstr "Žádná proxy pravidla"
+
+msgid "sites_empty_desc"
+msgstr "Vytvořte první proxy pravidlo."
+
+msgid "sites_create"
+msgstr "Vytvořit pravidlo"
+
+msgid "sites_search"
+msgstr "Hledat podle domény, IP nebo portu..."
+
+msgid "sites_filter_tag"
+msgstr "Filtrovat podle štítku"
+
+msgid "sites_all_tags"
+msgstr "Všechny štítky"
+
+msgid "sites_domain"
+msgstr "Doména(y)"
+
+msgid "sites_target"
+msgstr "Cíl"
+
+msgid "sites_port"
+msgstr "Port"
+
+msgid "sites_ip"
+msgstr "IP adresa"
+
+msgid "sites_https_backend"
+msgstr "HTTPS backend"
+
+msgid "sites_internal"
+msgstr "Pouze interní"
+
+msgid "sites_websocket"
+msgstr "WebSocket podpora"
+
+msgid "sites_health_check"
+msgstr "Health check cesta"
+
+msgid "sites_timeout"
+msgstr "Timeout (sekundy)"
+
+msgid "sites_snippets"
+msgstr "Snippety"
+
+msgid "sites_tags"
+msgstr "Štítky"
+
+msgid "sites_extra_config"
+msgstr "Extra konfigurace"
+
+msgid "sites_raw_edit"
+msgstr "Raw editace"
+
+msgid "sites_form_edit"
+msgstr "Formulář"
+
+msgid "sites_preview"
+msgstr "Náhled"
+
+msgid "sites_confirm_delete"
+msgstr "Opravdu chcete smazat toto pravidlo pro"
+
+msgid "sites_created"
+msgstr "Pravidlo úspěšně vytvořeno"
+
+msgid "sites_updated"
+msgstr "Pravidlo úspěšně aktualizováno"
+
+msgid "sites_deleted"
+msgstr "Pravidlo úspěšně smazáno"
+
+msgid "sites_duplicated"
+msgstr "Pravidlo úspěšně zduplikováno"
+
+msgid "sites_from_template"
+msgstr "Ze šablony"
+
+msgid "sites_from_scratch"
+msgstr "Od začátku"
+
+msgid "sites_select_template"
+msgstr "Vybrat šablonu"
+
+msgid "sites_template_category"
+msgstr "Kategorie"
+
+msgid "domain_config"
+msgstr "Konfigurace domény"
+
+msgid "backend_target"
+msgstr "Backend cíl"
+
+msgid "domains_hint"
+msgstr "Oddělte více domén čárkou nebo mezerou"
+
+msgid "tags_hint"
+msgstr "Organizujte pravidla pomocí štítků oddělených čárkou"
+
+msgid "advanced_options"
+msgstr "Pokročilé možnosti"
+
+msgid "extra_config_placeholder"
+msgstr "Dodatečné Caddy direktivy..."
+
+# Snippets
+msgid "snippets_title"
+msgstr "Správce snippetů"
+
+msgid "snippets_description"
+msgstr "Konfigurace znovupoužitelných Caddy snippetů, které lze importovat do proxy pravidel."
+
+msgid "snippets_cloudflare"
+msgstr "Cloudflare DNS"
+
+msgid "snippets_internal"
+msgstr "Pouze interní"
+
+msgid "snippets_security"
+msgstr "Bezpečnostní hlavičky"
+
+msgid "snippets_compression"
+msgstr "Komprese"
+
+msgid "snippets_rate_limit"
+msgstr "Rate limit"
+
+msgid "snippets_basic_auth"
+msgstr "Basic autentizace"
+
+msgid "snippets_enabled"
+msgstr "Zapnuto"
+
+msgid "snippets_disabled"
+msgstr "Vypnuto"
+
+msgid "snippets_enable_cloudflare"
+msgstr "Povolit Cloudflare DNS Challenge"
+
+msgid "snippets_enable_internal"
+msgstr "Povolit omezení na interní síť"
+
+msgid "snippets_enable_security"
+msgstr "Povolit bezpečnostní hlavičky"
+
+msgid "snippets_enable_compression"
+msgstr "Povolit kompresi"
+
+msgid "snippets_enable_rate_limit"
+msgstr "Povolit rate limiting"
+
+msgid "snippets_use_env"
+msgstr "Použít proměnnou prostředí CF_API_TOKEN"
+
+msgid "snippets_api_token"
+msgstr "API token (pokud nepoužíváte env)"
+
+msgid "snippets_api_token_placeholder"
+msgstr "Zadejte Cloudflare API token"
+
+msgid "snippets_allowed_networks"
+msgstr "Povolené sítě (CIDR)"
+
+msgid "snippets_networks_help"
+msgstr "Jedna síť na řádek v CIDR notaci"
+
+msgid "snippets_hsts_max_age"
+msgstr "HSTS Max Age (sekundy)"
+
+msgid "snippets_include_subdomains"
+msgstr "Zahrnout subdomény"
+
+msgid "snippets_x_frame_options"
+msgstr "X-Frame-Options"
+
+msgid "snippets_referrer_policy"
+msgstr "Referrer Policy"
+
+msgid "snippets_hide_server"
+msgstr "Skrýt Server hlavičku"
+
+msgid "snippets_zstd"
+msgstr "Zstd"
+
+msgid "snippets_gzip"
+msgstr "Gzip"
+
+msgid "snippets_requests"
+msgstr "Požadavků"
+
+msgid "snippets_window"
+msgstr "Okno (sekundy)"
+
+msgid "snippets_users"
+msgstr "Uživatelé"
+
+msgid "snippets_add_user"
+msgstr "Přidat uživatele"
+
+msgid "snippets_username"
+msgstr "Uživatelské jméno"
+
+msgid "snippets_password"
+msgstr "Heslo"
+
+# Certificates
+msgid "certs_title"
+msgstr "SSL certifikáty"
+
+msgid "certs_count"
+msgstr "certifikátů"
+
+msgid "certs_domain"
+msgstr "Doména"
+
+msgid "certs_issuer"
+msgstr "Vydavatel"
+
+msgid "certs_expires"
+msgstr "Vyprší"
+
+msgid "certs_status"
+msgstr "Stav"
+
+msgid "certs_days_left"
+msgstr "Zbývá dní"
+
+msgid "certs_valid"
+msgstr "Platný"
+
+msgid "certs_expiring"
+msgstr "Brzy vyprší (30d)"
+
+msgid "certs_critical"
+msgstr "Kritické (7d)"
+
+msgid "certs_expired"
+msgstr "Vypršel"
+
+msgid "certs_delete"
+msgstr "Vynutit obnovu"
+
+msgid "certs_force_renew"
+msgstr "Vynutit obnovu"
+
+msgid "certs_renew"
+msgstr "Obnovit"
+
+msgid "certs_confirm_renew"
+msgstr "Smazat certifikát a vynutit obnovu pro"
+
+msgid "certs_confirm_delete"
+msgstr "Smazat certifikát pro"
+
+msgid "certs_empty"
+msgstr "Žádné certifikáty nenalezeny"
+
+msgid "certs_empty_title"
+msgstr "Žádné certifikáty"
+
+msgid "certs_empty_desc"
+msgstr "Certifikáty se zde zobrazí poté, co je Caddy získá."
+
+msgid "certs_about_title"
+msgstr "O správě certifikátů"
+
+msgid "certs_about_desc"
+msgstr "Caddy automaticky obnovuje certifikáty před vypršením."
+
+msgid "certs_renew_desc"
+msgstr "Smaže certifikát a restartuje Caddy pro automatickou obnovu (pro aktivní domény)"
+
+msgid "certs_delete_desc"
+msgstr "Pouze smaže certifikát bez obnovy (pro nepoužívané domény)"
+
+# Logs
+msgid "logs_title"
+msgstr "Caddy logy"
+
+msgid "logs_lines"
+msgstr "Řádků"
+
+msgid "logs_refresh"
+msgstr "Obnovit"
+
+msgid "logs_search"
+msgstr "Hledat v logách..."
+
+msgid "logs_stream"
+msgstr "Živě"
+
+msgid "logs_stop"
+msgstr "Zastavit"
+
+msgid "logs_empty"
+msgstr "Žádné logy k dispozici"
+
+# Settings
+msgid "settings_title"
+msgstr "Nastavení"
+
+msgid "settings_general"
+msgstr "Obecné"
+
+msgid "settings_backup"
+msgstr "Zálohy"
+
+msgid "settings_caddy"
+msgstr "Caddy"
+
+msgid "settings_users"
+msgstr "Uživatelé"
+
+msgid "settings_wildcard"
+msgstr "Wildcard SSL"
+
+msgid "settings_language"
+msgstr "Jazyk"
+
+msgid "settings_theme"
+msgstr "Téma"
+
+msgid "backup_restore"
+msgstr "Záloha a obnova"
+
+msgid "backup_description"
+msgstr "Vytvořte nebo obnovte kompletní zálohu konfigurace Caddy."
+
+msgid "backup_create"
+msgstr "Vytvořit zálohu"
+
+msgid "backup_create_desc"
+msgstr "Stáhněte ZIP soubor se všemi konfiguračními soubory."
+
+msgid "backup_download"
+msgstr "Stáhnout zálohu"
+
+msgid "backup_restore_title"
+msgstr "Obnovit zálohu"
+
+msgid "backup_restore_desc"
+msgstr "Nahrajte ZIP soubor se zálohou pro obnovu konfigurace."
+
+msgid "backup_upload"
+msgstr "Obnovit zálohu"
+
+msgid "import_export"
+msgstr "Import / Export pravidel"
+
+msgid "import_export_desc"
+msgstr "Exportujte pravidla jako JSON nebo importujte z jiné CPM instance."
+
+msgid "export_rules"
+msgstr "Exportovat pravidla"
+
+msgid "export_rules_desc"
+msgstr "Stáhněte všechna proxy pravidla jako JSON soubor."
+
+msgid "export_json"
+msgstr "Exportovat JSON"
+
+msgid "import_rules"
+msgstr "Importovat pravidla"
+
+msgid "import_rules_desc"
+msgstr "Importujte pravidla z JSON souboru."
+
+msgid "import_upload"
+msgstr "Importovat pravidla"
+
+msgid "skip_existing"
+msgstr "Přeskočit existující pravidla"
+
+msgid "fallback_rule"
+msgstr "Fallback pravidlo"
+
+msgid "fallback_description"
+msgstr "Výchozí pravidlo pro neznámé domény (wildcard)."
+
+msgid "fallback_not_found"
+msgstr "Fallback pravidlo nenalezeno."
+
+msgid "error_pages"
+msgstr "Chybové stránky"
+
+msgid "error_pages_description"
+msgstr "Vlastní HTML stránky pro chybové odpovědi."
+
+msgid "user_management"
+msgstr "Správa uživatelů"
+
+msgid "enable_auth"
+msgstr "Povolit autentizaci"
+
+msgid "auth_disabled_warning"
+msgstr "Autentizace je vypnuta. Kdokoliv má přístup k aplikaci."
+
+msgid "no_users_warning"
+msgstr "Zatím nebyli vytvořeni žádní uživatelé. Vytvořte alespoň jednoho uživatele pro povolení autentizace."
+
+msgid "existing_users"
+msgstr "Existující uživatelé"
+
+msgid "add_user"
+msgstr "Přidat nového uživatele"
+
+msgid "create_user"
+msgstr "Vytvořit uživatele"
+
+msgid "confirm_delete_user"
+msgstr "Smazat uživatele"
+
+msgid "settings_backup_create"
+msgstr "Vytvořit zálohu"
+
+msgid "settings_backup_restore"
+msgstr "Obnovit zálohu"
+
+msgid "settings_import"
+msgstr "Import pravidel"
+
+msgid "settings_export"
+msgstr "Export pravidel"
+
+msgid "settings_fallback"
+msgstr "Fallback pravidlo"
+
+msgid "settings_error_pages"
+msgstr "Chybové stránky"
+
+msgid "settings_auth_enabled"
+msgstr "Autentizace zapnuta"
+
+msgid "settings_auth_disabled"
+msgstr "Autentizace vypnuta"
+
+msgid "settings_add_user"
+msgstr "Přidat uživatele"
+
+msgid "settings_role"
+msgstr "Role"
+
+msgid "settings_role_admin"
+msgstr "Administrátor"
+
+msgid "settings_role_editor"
+msgstr "Editor"
+
+msgid "settings_role_viewer"
+msgstr "Čtenář"
+
+# Login
+msgid "login_title"
+msgstr "Přihlášení"
+
+msgid "login_username"
+msgstr "Uživatelské jméno"
+
+msgid "login_password"
+msgstr "Heslo"
+
+msgid "login_submit"
+msgstr "Přihlásit"
+
+msgid "login_setup"
+msgstr "Vytvořit administrátorský účet"
+
+msgid "login_error"
+msgstr "Neplatné přihlašovací údaje"
+
+# Flash messages (existing)
+msgid "msg_reload_success"
+msgstr "Konfigurace úspěšně načtena"
+
+msgid "msg_reload_error"
+msgstr "Nepodařilo se načíst konfiguraci"
+
+msgid "msg_validate_success"
+msgstr "Konfigurace je platná"
+
+msgid "msg_validate_error"
+msgstr "Validace konfigurace selhala"
+
+msgid "msg_backup_created"
+msgstr "Záloha úspěšně vytvořena"
+
+msgid "msg_backup_restored"
+msgstr "Záloha úspěšně obnovena"
+
+msgid "msg_import_success"
+msgstr "Pravidla úspěšně importována"
+
+msgid "msg_user_created"
+msgstr "Uživatel úspěšně vytvořen"
+
+msgid "msg_user_deleted"
+msgstr "Uživatel úspěšně smazán"
+
+# Flash messages (handler-level, added in i18n refactor)
+msgid "msg_user_created_name"
+msgstr "Uživatel '{0}' byl úspěšně vytvořen"
+
+msgid "msg_user_deleted_name"
+msgstr "Uživatel '{0}' byl úspěšně smazán"
+
+msgid "msg_role_updated"
+msgstr "Role úspěšně aktualizována"
+
+msgid "msg_password_updated"
+msgstr "Heslo úspěšně aktualizováno"
+
+msgid "msg_auth_enabled"
+msgstr "Autentizace povolena"
+
+msgid "msg_auth_disabled"
+msgstr "Autentizace zakázána"
+
+msgid "msg_cert_deleted"
+msgstr "Certifikát pro '{0}' byl smazán."
+
+msgid "msg_cert_reload_failed"
+msgstr "Certifikát smazán, ale reload selhal"
+
+msgid "msg_cert_renewed"
+msgstr "Certifikát pro '{0}' smazán. Bude spuštěna obnova."
+
+msgid "msg_snippet_updated"
+msgstr "Snippet '{0}' byl úspěšně aktualizován"
+
+msgid "msg_snippet_reload_failed"
+msgstr "Snippet aktualizován, ale reload selhal"
+
+msgid "msg_rule_created_name"
+msgstr "Pravidlo '{0}' bylo úspěšně vytvořeno"
+
+msgid "msg_rule_create_reload_failed"
+msgstr "Pravidlo vytvořeno, ale reload selhal"
+
+msgid "msg_rule_updated_name"
+msgstr "Pravidlo '{0}' bylo úspěšně aktualizováno"
+
+msgid "msg_rule_update_reload_failed"
+msgstr "Pravidlo aktualizováno, ale reload selhal"
+
+msgid "msg_rule_deleted_name"
+msgstr "Pravidlo '{0}' bylo úspěšně smazáno"
+
+msgid "msg_rule_delete_reload_failed"
+msgstr "Pravidlo smazáno, ale reload selhal"
+
+msgid "msg_rule_dup_reload_failed"
+msgstr "Pravidlo zduplikováno, ale reload selhal"
+
+msgid "msg_wildcard_unavailable"
+msgstr "Wildcard služba není dostupná"
+
+msgid "msg_wildcard_domain_required"
+msgstr "Doména je povinná"
+
+msgid "msg_wildcard_exists"
+msgstr "Wildcard doména již existuje"
+
+msgid "msg_wildcard_add_failed"
+msgstr "Nepodařilo se přidat wildcard doménu"
+
+msgid "msg_wildcard_config_failed"
+msgstr "Doména přidána, ale aktualizace Caddy konfigurace selhala"
+
+msgid "msg_wildcard_info_failed"
+msgstr "Nepodařilo se získat informace o migraci"
+
+msgid "msg_wildcard_migrate_backup_failed"
+msgstr "Nepodařilo se vytvořit zálohu před migrací"
+
+msgid "msg_wildcard_migrate_errors"
+msgstr "Migrace dokončena s chybami. Zkontrolujte logy."
+
+msgid "msg_wildcard_delete_failed"
+msgstr "Nepodařilo se smazat wildcard doménu"
+
+msgid "msg_wildcard_config_update_failed"
+msgstr "Doména odstraněna, ale aktualizace Caddy konfigurace selhala"
+
+msgid "msg_wildcard_reload_failed_delete"
+msgstr "Doména odstraněna, ale Caddy reload selhal"
+
+msgid "msg_backup_reloaded"
+msgstr "Záloha obnovena a Caddy reloadován"
+
+msgid "msg_backup_restore_reload_failed"
+msgstr "Záloha obnovena, ale reload selhal"
+
+msgid "msg_reload_failed"
+msgstr "Reload selhal"
+
+msgid "msg_validate_failed"
+msgstr "Validace selhala"
+
+msgid "msg_import_result"
+msgstr "Importováno {0} pravidel"
+
+msgid "msg_import_result_with_skip"
+msgstr "Importováno {0} pravidel, přeskočeno {1} existujících"
+
+# Wildcard SSL
+msgid "wildcard_title"
+msgstr "Wildcard SSL certifikáty"
+
+msgid "wildcard_description"
+msgstr "Konfigurace wildcard SSL certifikátů pro vaše domény. Wildcard certifikáty pokrývají všechny subdomény (*.example.com)."
+
+msgid "wildcard_info_title"
+msgstr "Vyžadováno DNS ověření"
+
+msgid "wildcard_info_desc"
+msgstr "Wildcard certifikáty vyžadují DNS challenge ověření. Potřebujete API přístup k vašemu DNS providerovi (např. Cloudflare API token)."
+
+msgid "wildcard_existing"
+msgstr "Nakonfigurované wildcard domény"
+
+msgid "wildcard_add"
+msgstr "Přidat wildcard doménu"
+
+msgid "wildcard_domain"
+msgstr "Doména"
+
+msgid "wildcard_domain_help"
+msgstr "Zadejte základní doménu (bez *. prefixu)"
+
+msgid "wildcard_provider"
+msgstr "DNS provider"
+
+msgid "wildcard_use_env"
+msgstr "Použít proměnnou prostředí CF_API_TOKEN"
+
+msgid "wildcard_env_help"
+msgstr "Doporučeno: Nastavte CF_API_TOKEN v Docker prostředí"
+
+msgid "wildcard_api_token"
+msgstr "API token"
+
+msgid "wildcard_api_token_placeholder"
+msgstr "Zadejte váš Cloudflare API token"
+
+msgid "wildcard_api_token_help"
+msgstr "Token potřebuje oprávnění Zone:DNS:Edit"
+
+msgid "wildcard_add_btn"
+msgstr "Přidat wildcard doménu"
+
+msgid "wildcard_confirm_delete"
+msgstr "Odstranit wildcard konfiguraci pro"
+
+msgid "wildcard_created"
+msgstr "Wildcard doména úspěšně přidána"
+
+msgid "wildcard_deleted"
+msgstr "Wildcard doména úspěšně odstraněna"
+
+msgid "wildcard_usage_title"
+msgstr "Jak použít wildcard TLS"
+
+msgid "wildcard_usage_desc"
+msgstr "Přidejte import direktivu do konfigurace vašich sites pro použití wildcard TLS certifikátu:"
+
+msgid "wildcard_snippets_hint"
+msgstr "cloudflare_dns je řešeno automaticky na úrovni wildcard"
+
+msgid "wildcard_tls_active"
+msgstr "Wildcard TLS aktivní - DNS challenge je řešeno automaticky"
+
+# Migration
+msgid "migrate_title"
+msgstr "Migrace na Wildcard SSL"
+
+msgid "migrate_info_title"
+msgstr "Automatická migrace"
+
+msgid "migrate_info_desc"
+msgstr "CPM aktualizuje vaše site konfigurace pro použití wildcard certifikátu a volitelně smaže staré jednotlivé certifikáty."
+
+msgid "migrate_sites_title"
+msgstr "Konfigurace sites"
+
+msgid "migrate_sites_desc"
+msgstr "Tyto site konfigurace odpovídají vaší wildcard doméně a budou aktualizovány:"
+
+msgid "migrate_sites_checkbox"
+msgstr "Migrovat site konfigurace na wildcard TLS"
+
+msgid "migrate_no_sites"
+msgstr "Nenalezeny žádné odpovídající site konfigurace."
+
+msgid "migrate_certs_title"
+msgstr "Jednotlivé certifikáty"
+
+msgid "migrate_certs_desc"
+msgstr "Tyto certifikáty mohou být smazány (místo nich se použije wildcard):"
+
+msgid "migrate_certs_checkbox"
+msgstr "Smazat jednotlivé certifikáty"
+
+msgid "migrate_no_certs"
+msgstr "Nenalezeny žádné jednotlivé certifikáty."
+
+msgid "migrate_backup_title"
+msgstr "Záloha bude vytvořena"
+
+msgid "migrate_backup_desc"
+msgstr "Před provedením jakýchkoliv změn bude automaticky vytvořena záloha."
+
+msgid "migrate_execute"
+msgstr "Provést migraci"
+
+msgid "migrate_skip"
+msgstr "Přeskočit, nastavit ručně"
+
+msgid "migrate_btn"
+msgstr "Migrovat"
+
+msgid "files"
+msgstr "souborů"
+
+msgid "certificates"
+msgstr "certifikátů"
+
+# TLS Certificate
+msgid "tls_certificate"
+msgstr "TLS Certifikát"
+
+msgid "tls_mode"
+msgstr "Režim certifikátu"
+
+msgid "tls_auto"
+msgstr "Automatický (nový certifikát)"
+
+msgid "tls_use_wildcard"
+msgstr "Použít wildcard"
+
+msgid "tls_hint"
+msgstr "Wildcard certifikáty jsou sdílené pro všechny subdomény - více soukromí a efektivnější"
+
+# Docker Auto-Discovery (v3.2.0)
+msgid "settings_docker"
+msgstr "Docker"
+
+msgid "settings_docker_title"
+msgstr "Docker Auto-Discovery"
+
+msgid "discovery_title"
+msgstr "Docker Auto-Discovery"
+
+msgid "discovery_hosts_label"
+msgstr "Discovery Hosts"
+
+msgid "discovery_hosts_description"
+msgstr "Docker hosté ke skenování běžících kontejnerů."
+
+msgid "discovery_host_ip"
+msgstr "IP Adresa"
+
+msgid "discovery_host_label"
+msgstr "Popis (volitelný)"
+
+msgid "discovery_host_add"
+msgstr "Přidat host"
+
+msgid "discovery_hosts_saved"
+msgstr "Discovery hosts uloženy"
+
+msgid "discovery_no_hosts"
+msgstr "Žádné hosty nenakonfigurovány."
+
+msgid "discovery_no_hosts_desc"
+msgstr "Přidejte alespoň jeden Docker host v Nastavení → Docker."
+
+msgid "discovery_container"
+msgstr "Kontejner"
+
+msgid "discovery_host_column"
+msgstr "Host"
+
+msgid "discovery_not_paired"
+msgstr "Nespárováno"
+
+msgid "discovery_create_rule"
+msgstr "Vytvořit pravidlo"
+
+msgid "discovery_empty"
+msgstr "Žádné běžící kontejnery nenalezeny (s výjimkou Caddy a CPM)."
+
+msgid "discovery_docker_error"
+msgstr "Chyba Dockeru:"
+
+msgid "discovery_local_docker"
+msgstr "Lokální Docker host"
+
+msgid "discovery_detect_ip"
+msgstr "Zjistit lokální IP"
+
+msgid "discovery_use_ip"
+msgstr "Použít tuto IP"
+
+msgid "discovery_no_local_host"
+msgstr "Žádný lokální Docker host není nastaven."
+
+msgid "discovery_no_local_host_desc"
+msgstr "Označte jeden host jako \"Lokální Docker\" v"
+
+msgid "sites_quick_host"
+msgstr "Rychlý výběr hostu"
+
+msgid "sites_select_host"
+msgstr "Vyberte Docker host…"

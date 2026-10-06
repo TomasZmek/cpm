@@ -31,6 +31,47 @@
 
 ---
 
+# CPM v3.3.1 - Security Patch
+
+## 🔒 Security Fixes
+- **Go 1.26.4** — fixes CVE-2026-42504 (High), CVE-2026-27145 (Medium), CVE-2026-42507 (Medium)
+
+---
+
+# CPM v3.3.0 - i18n Refactor & Korean Language
+
+## 🌐 i18n System Refactor
+- **PO/MO format** — translations migrated from monolithic Go maps to standard gettext PO files
+- **Per-language files** — locales/en, locales/cs, locales/ko (easy to add new languages)
+- **Korean language** — 한국어 added as third supported language
+- **Plural support infrastructure** — ngettext/TN() ready for future use
+- **Flash messages translated** — 35 UI messages now translated in all languages
+- **Login page translated** — previously hardcoded English strings now localized
+
+## 🙏 Credits
+Korean translation by [@redstar-programmer](https://github.com/redstar-programmer)
+
+---
+
+# CPM v3.2.0 - Docker Auto-Discovery
+
+## ✨ New Features
+
+### Docker Auto-Discovery
+- **Auto-Discovery** — automatic detection of running Docker containers on the host
+- **Multi-host support** — configure multiple Docker hosts (Settings → Docker)
+- **Local host flag** — mark one host as "Local Docker" for discovery; auto-detect its IP with one click
+- **Smart pairing** — existing proxy rules are automatically matched to running containers (by IP + port)
+- **One-click rule creation** — create proxy rules pre-filled with container name, IP and port
+- **Quick host selector** — new/edit site form includes a host dropdown to fill target IP instantly
+
+## 🐛 Bug Fixes
+
+- **Duplicate containers** — Docker API returns one entry per network interface; deduplication added
+- **Pairing detection** — pairing now checks both private port and host-mapped (public) port
+
+---
+
 # CPM v3.1.3 - Security patch
 
 ## 🔒 Security Fixes

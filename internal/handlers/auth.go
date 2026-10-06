@@ -164,7 +164,7 @@ func (h *Handler) UserCreate(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).SendString(err.Error())
 	}
 
-	setFlash(c, "success", "User '"+username+"' created successfully")
+	setFlash(c, "success", tl(c, "msg_user_created_name", username))
 
 	if c.Get("HX-Request") == "true" {
 		c.Set("HX-Redirect", "/settings/users")
@@ -188,7 +188,7 @@ func (h *Handler) UserDelete(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).SendString(err.Error())
 	}
 
-	setFlash(c, "success", "User '"+username+"' deleted successfully")
+	setFlash(c, "success", tl(c, "msg_user_deleted_name", username))
 
 	if c.Get("HX-Request") == "true" {
 		c.Set("HX-Redirect", "/settings/users")
@@ -207,7 +207,7 @@ func (h *Handler) UserUpdateRole(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).SendString(err.Error())
 	}
 
-	setFlash(c, "success", "Role updated successfully")
+	setFlash(c, "success", tl(c, "msg_role_updated"))
 
 	if c.Get("HX-Request") == "true" {
 		return c.SendString("OK")
@@ -225,7 +225,7 @@ func (h *Handler) UserUpdatePassword(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).SendString(err.Error())
 	}
 
-	setFlash(c, "success", "Password updated successfully")
+	setFlash(c, "success", tl(c, "msg_password_updated"))
 
 	if c.Get("HX-Request") == "true" {
 		return c.SendString("OK")
@@ -254,9 +254,9 @@ func (h *Handler) ToggleAuth(c *fiber.Ctx) error {
 	}
 
 	if enabled {
-		setFlash(c, "success", "Authentication enabled")
+		setFlash(c, "success", tl(c, "msg_auth_enabled"))
 	} else {
-		setFlash(c, "success", "Authentication disabled")
+		setFlash(c, "success", tl(c, "msg_auth_disabled"))
 	}
 
 	if c.Get("HX-Request") == "true" {

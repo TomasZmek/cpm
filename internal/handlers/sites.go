@@ -57,14 +57,28 @@ func (h *Handler) SiteNew(c *fiber.Ctx) error {
 		wildcardDomains, _ = h.wildcardService.GetDomains()
 	}
 
+	site := &models.Site{TLSMode: "auto"}
+	if qIP := c.Query("ip"); qIP != "" {
+		site.TargetIP = qIP
+	}
+	if qPort := c.Query("port"); qPort != "" {
+		site.TargetPort = qPort
+	}
+	if qName := c.Query("name"); qName != "" {
+		site.Domains = []string{qName}
+	}
+
+	appSettings, _ := h.settingsService.Get()
+
 	data := h.baseData(c, "New Proxy Rule")
 	data["IsNew"] = true
-	data["Site"] = &models.Site{TLSMode: "auto"}
+	data["Site"] = site
 	data["DefaultIP"] = h.config.DefaultIP
 	data["AvailableSnippets"] = availableSnippets
 	data["WildcardDomains"] = wildcardDomains
 	data["Templates"] = templates
 	data["Categories"] = categories
+	data["DiscoveryHosts"] = appSettings.DiscoveryHosts
 	data["Active"] = "sites"
 
 	return c.Render("pages/site_form", data, "layouts/base")
@@ -112,10 +126,9 @@ func (h *Handler) SiteCreate(c *fiber.Ctx) error {
 	// Reload Caddy
 	result := h.caddyService.ReloadWithValidation()
 	if !result.Success {
-		// Site was created but reload failed
-		setFlash(c, "warning", "Rule created but reload failed: "+result.Error)
+		setFlash(c, "warning", tl(c, "msg_rule_create_reload_failed")+": "+result.Error)
 	} else {
-		setFlash(c, "success", "Rule '"+site.PrimaryDomain()+"' created successfully")
+		setFlash(c, "success", tl(c, "msg_rule_created_name", site.PrimaryDomain()))
 	}
 
 	// HTMX redirect
@@ -160,12 +173,15 @@ func (h *Handler) SiteEdit(c *fiber.Ctx) error {
 		wildcardDomains, _ = h.wildcardService.GetDomains()
 	}
 
+	appSettings, _ := h.settingsService.Get()
+
 	data := h.baseData(c, "Edit: "+site.PrimaryDomain())
 	data["IsNew"] = false
 	data["Site"] = site
 	data["DefaultIP"] = h.config.DefaultIP
 	data["AvailableSnippets"] = availableSnippets
 	data["WildcardDomains"] = wildcardDomains
+	data["DiscoveryHosts"] = appSettings.DiscoveryHosts
 	data["Active"] = "sites"
 
 	return c.Render("pages/site_form", data, "layouts/base")
@@ -215,9 +231,9 @@ func (h *Handler) SiteUpdate(c *fiber.Ctx) error {
 	// Reload Caddy
 	result := h.caddyService.ReloadWithValidation()
 	if !result.Success {
-		setFlash(c, "warning", "Rule updated but reload failed: "+result.Error)
+		setFlash(c, "warning", tl(c, "msg_rule_update_reload_failed")+": "+result.Error)
 	} else {
-		setFlash(c, "success", "Rule '"+site.PrimaryDomain()+"' updated successfully")
+		setFlash(c, "success", tl(c, "msg_rule_updated_name", site.PrimaryDomain()))
 	}
 
 	if c.Get("HX-Request") == "true" {
@@ -244,9 +260,9 @@ func (h *Handler) SiteDelete(c *fiber.Ctx) error {
 	// Reload Caddy
 	result := h.caddyService.ReloadWithValidation()
 	if !result.Success {
-		setFlash(c, "warning", "Rule deleted but reload failed: "+result.Error)
+		setFlash(c, "warning", tl(c, "msg_rule_delete_reload_failed")+": "+result.Error)
 	} else {
-		setFlash(c, "success", "Rule '"+site.PrimaryDomain()+"' deleted successfully")
+		setFlash(c, "success", tl(c, "msg_rule_deleted_name", site.PrimaryDomain()))
 	}
 
 	if c.Get("HX-Request") == "true" {
@@ -274,9 +290,9 @@ func (h *Handler) SiteDuplicate(c *fiber.Ctx) error {
 	// Reload Caddy
 	result := h.caddyService.ReloadWithValidation()
 	if !result.Success {
-		setFlash(c, "warning", "Rule duplicated but reload failed: "+result.Error)
+		setFlash(c, "warning", tl(c, "msg_rule_dup_reload_failed")+": "+result.Error)
 	} else {
-		setFlash(c, "success", "Rule '"+newSite.PrimaryDomain()+"' created successfully")
+		setFlash(c, "success", tl(c, "msg_rule_created_name", newSite.PrimaryDomain()))
 	}
 
 	if c.Get("HX-Request") == "true" {

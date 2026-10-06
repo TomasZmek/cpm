@@ -23,8 +23,8 @@ import (
 )
 
 const (
-	Version   = "3.1.3"
-	BuildDate = "2026-05-30"
+	Version   = "3.3.1"
+	BuildDate = "2026-06-17"
 )
 
 func main() {
@@ -50,6 +50,7 @@ func main() {
 	authService := services.NewAuthService(cfg.ConfigDir)
 	backupService := services.NewBackupService(cfg)
 	wildcardService := services.NewWildcardService(cfg.ConfigDir)
+	settingsService := services.NewSettingsService(cfg.ConfigDir)
 
 	// Link wildcard service to snippets service for combined config generation
 	snippetsService.SetWildcardService(wildcardService)
@@ -66,6 +67,7 @@ func main() {
 	// Initialize template engine
 	engine := html.New("./templates/themes/classic", ".html")
 	engine.AddFunc("t", i18n.T)
+	engine.AddFunc("tn", i18n.TN)
 	engine.AddFunc("timeAgo", services.TimeAgo)
 	engine.AddFunc("contains", func(slice []string, item string) bool {
 		for _, s := range slice {
@@ -146,6 +148,7 @@ func main() {
 		backupService,
 		dockerService,
 		wildcardService,
+		settingsService,
 	)
 
 	// Setup routes
@@ -240,6 +243,13 @@ func setupRoutes(app *fiber.App, h *handlers.Handler, authService *services.Auth
 	protected.Post("/settings/users/:username/role", admin, h.UserUpdateRole)
 	protected.Post("/settings/users/:username/password", admin, h.UserUpdatePassword)
 	protected.Post("/settings/auth/toggle", admin, h.ToggleAuth)
+
+	// Docker Auto-Discovery
+	protected.Get("/discovery", h.DiscoveryPage)
+	protected.Post("/discovery/create", edit, h.DiscoveryCreate)
+	protected.Get("/settings/docker", admin, h.SettingsDocker)
+	protected.Post("/settings/discovery-hosts", admin, h.SettingsDiscoveryHostsSave)
+	protected.Get("/settings/discovery-detect", admin, h.SettingsDiscoveryDetect)
 
 	// Wildcard SSL
 	protected.Get("/settings/wildcard", admin, h.WildcardSettings)

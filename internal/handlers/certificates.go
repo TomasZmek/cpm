@@ -32,7 +32,7 @@ func (h *Handler) CertificateDelete(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
 	}
 
-	setFlash(c, "success", "Certificate for '"+domain+"' deleted.")
+	setFlash(c, "success", tl(c, "msg_cert_deleted", domain))
 
 	if c.Get("HX-Request") == "true" {
 		c.Set("HX-Redirect", "/certificates")
@@ -50,12 +50,11 @@ func (h *Handler) CertificateRenew(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
 	}
 
-	// Reload Caddy to trigger renewal
 	result := h.caddyService.Reload()
 	if !result.Success {
-		setFlash(c, "warning", "Certificate deleted but reload failed: "+result.Error)
+		setFlash(c, "warning", tl(c, "msg_cert_reload_failed")+": "+result.Error)
 	} else {
-		setFlash(c, "success", "Certificate for '"+domain+"' deleted. Renewal will be triggered.")
+		setFlash(c, "success", tl(c, "msg_cert_renewed", domain))
 	}
 
 	if c.Get("HX-Request") == "true" {

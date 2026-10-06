@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/TomasZmek/cpm/internal/config"
+	"github.com/TomasZmek/cpm/internal/i18n"
 	"github.com/TomasZmek/cpm/internal/models"
 	"github.com/TomasZmek/cpm/internal/services"
 	"github.com/gofiber/fiber/v2"
@@ -20,6 +21,7 @@ type Handler struct {
 	backupService   *services.BackupService
 	dockerService   *services.DockerService
 	wildcardService *services.WildcardService
+	settingsService *services.SettingsService
 }
 
 // New creates a new Handler instance
@@ -32,6 +34,7 @@ func New(
 	backupService *services.BackupService,
 	dockerService *services.DockerService,
 	wildcardService *services.WildcardService,
+	settingsService *services.SettingsService,
 ) *Handler {
 	return &Handler{
 		config:          cfg,
@@ -42,6 +45,7 @@ func New(
 		backupService:   backupService,
 		dockerService:   dockerService,
 		wildcardService: wildcardService,
+		settingsService: settingsService,
 	}
 }
 
@@ -147,6 +151,19 @@ func (h *Handler) baseData(c *fiber.Ctx, title string) fiber.Map {
 		"User":      c.Locals("user"),
 		"CSRFToken": c.Locals("csrf_token"),
 	}
+}
+
+// getLang extracts the current language code from the request context.
+func getLang(c *fiber.Ctx) string {
+	if lang, ok := c.Locals("lang").(string); ok && lang != "" {
+		return lang
+	}
+	return "en"
+}
+
+// tl is a shorthand for i18n.T using the request's language.
+func tl(c *fiber.Ctx, key string, args ...interface{}) string {
+	return i18n.T(getLang(c), key, args...)
 }
 
 // Flash messages helper

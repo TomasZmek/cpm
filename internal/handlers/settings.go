@@ -1,12 +1,77 @@
 package handlers
 
 import (
-	"fmt"
 	"io"
+	"strings"
 
 	"github.com/TomasZmek/cpm/internal/models"
+	"github.com/TomasZmek/cpm/internal/services"
 	"github.com/gofiber/fiber/v2"
 )
+
+// SettingsDocker renders the Docker Auto-Discovery settings tab.
+func (h *Handler) SettingsDocker(c *fiber.Ctx) error {
+	return h.renderSettingsTab(c, "docker")
+}
+
+// SettingsDiscoveryDetect detects the local machine's IP and returns it as JSON.
+func (h *Handler) SettingsDiscoveryDetect(c *fiber.Ctx) error {
+	ip, err := services.DetectLocalIP()
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+	return c.JSON(fiber.Map{"ip": ip})
+}
+
+// SettingsDiscoveryHostsSave saves the list of Docker discovery hosts.
+func (h *Handler) SettingsDiscoveryHostsSave(c *fiber.Ctx) error {
+	// Collect parallel arrays ip[] and label[] from the form.
+	var ips, labels []string
+	c.Context().PostArgs().VisitAll(func(key, value []byte) {
+		switch string(key) {
+		case "ip[]":
+			ips = append(ips, strings.TrimSpace(string(value)))
+		case "label[]":
+			labels = append(labels, strings.TrimSpace(string(value)))
+		}
+	})
+
+	// The hidden field local_docker_ip identifies which host is the local Docker host.
+	localDockerIP := strings.TrimSpace(c.FormValue("local_docker_ip"))
+
+	// Build hosts list, skipping entries with empty IP.
+	var hosts []models.DiscoveryHost
+	for i, ip := range ips {
+		if ip == "" {
+			continue
+		}
+		label := ""
+		if i < len(labels) {
+			label = labels[i]
+		}
+		hosts = append(hosts, models.DiscoveryHost{
+			IP:            ip,
+			Label:         label,
+			IsLocalDocker: ip == localDockerIP,
+		})
+	}
+
+	settings, err := h.settingsService.Get()
+	if err != nil {
+		setFlash(c, "error", "Failed to load settings: "+err.Error())
+		return c.Redirect("/settings/docker")
+	}
+
+	settings.DiscoveryHosts = hosts
+
+	if err := h.settingsService.Save(settings); err != nil {
+		setFlash(c, "error", "Failed to save settings: "+err.Error())
+		return c.Redirect("/settings/docker")
+	}
+
+	setFlash(c, "success", "Discovery hosts saved")
+	return c.Redirect("/settings/docker")
+}
 
 // SettingsPage renders the settings page
 func (h *Handler) SettingsPage(c *fiber.Ctx) error {
@@ -37,7 +102,7 @@ func (h *Handler) SettingsUsers(c *fiber.Ctx) error {
 func (h *Handler) renderSettingsTab(c *fiber.Ctx, tab string) error {
 	// Users and backup tabs expose sensitive data (user list, configuration
 	// with API tokens) and are reachable via ?tab=, so check here as well.
-	if (tab == "users" || tab == "backup") && !h.hasPermission(c, "admin") {
+	if (tab == "users" || tab == "backup" || tab == "docker") && !h.hasPermission(c, "admin") {
 		return fiber.NewError(fiber.StatusForbidden, "You do not have permission to view this page")
 	}
 
@@ -57,6 +122,7 @@ func (h *Handler) renderSettingsTab(c *fiber.Ctx, tab string) error {
 		data["Languages"] = []map[string]string{
 			{"code": "en", "name": "English"},
 			{"code": "cs", "name": "Čeština"},
+			{"code": "ko", "name": "한국어"},
 		}
 		data["Themes"] = []map[string]string{
 			{"code": "classic", "name": "Classic"},
@@ -82,6 +148,16 @@ func (h *Handler) renderSettingsTab(c *fiber.Ctx, tab string) error {
 		data["Users"] = h.authService.GetUsers()
 		data["AuthEnabled"] = h.authService.IsEnabled()
 		data["Roles"] = models.AllRoles()
+
+	case "docker":
+		appSettings, _ := h.settingsService.Get()
+		data["DiscoveryHosts"] = appSettings.DiscoveryHosts
+		for _, dh := range appSettings.DiscoveryHosts {
+			if dh.IsLocalDocker {
+				data["LocalDockerIP"] = dh.IP
+				break
+			}
+		}
 	}
 
 	return c.Render("pages/settings", data, "layouts/base")
@@ -125,9 +201,9 @@ func (h *Handler) BackupRestore(c *fiber.Ctx) error {
 		// Reload Caddy
 		reloadResult := h.caddyService.Reload()
 		if reloadResult.Success {
-			setFlash(c, "success", "Backup restored and Caddy reloaded")
+			setFlash(c, "success", tl(c, "msg_backup_reloaded"))
 		} else {
-			setFlash(c, "warning", "Backup restored but reload failed: "+reloadResult.Error)
+			setFlash(c, "warning", tl(c, "msg_backup_restore_reload_failed")+": "+reloadResult.Error)
 		}
 	}
 
@@ -169,7 +245,11 @@ func (h *Handler) ImportRules(c *fiber.Ctx) error {
 		h.caddyService.ReloadWithValidation()
 	}
 
-	setFlash(c, "success", formatImportResult(imported, skipped))
+	if skipped > 0 {
+		setFlash(c, "success", tl(c, "msg_import_result_with_skip", imported, skipped))
+	} else {
+		setFlash(c, "success", tl(c, "msg_import_result", imported))
+	}
 
 	if c.Get("HX-Request") == "true" {
 		c.Set("HX-Redirect", "/settings?tab=backup")
@@ -194,11 +274,4 @@ func (h *Handler) ExportRules(c *fiber.Ctx) error {
 	c.Set("Content-Disposition", "attachment; filename=cpm_rules_export.json")
 	c.Set("Content-Type", "application/json")
 	return c.Send(data)
-}
-
-func formatImportResult(imported, skipped int) string {
-	if skipped > 0 {
-		return fmt.Sprintf("Imported %d rules, skipped %d existing", imported, skipped)
-	}
-	return fmt.Sprintf("Imported %d rules", imported)
 }
