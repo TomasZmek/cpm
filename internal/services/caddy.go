@@ -499,11 +499,58 @@ func (c *CaddyService) GetFallback() (string, error) {
 	return string(content), nil
 }
 
-// SaveFallback saves the fallback rule
-func (c *CaddyService) SaveFallback(content string) error {
-	filepath := filepath.Join(c.config.SitesDir, "fallback.caddy")
-	return os.WriteFile(filepath, []byte(content), 0644)
+// SaveFallback saves the fallback rule and makes sure the main Caddyfile
+// imports it. The returned function restores the previous state (used when
+// the new configuration fails validation).
+func (c *CaddyService) SaveFallback(content string) (rollback func() error, err error) {
+	fallbackPath := filepath.Join(c.config.SitesDir, "fallback.caddy")
+	mainPath := filepath.Join(c.config.ConfigDir, "Caddyfile")
+
+	oldFallback, fbErr := os.ReadFile(fallbackPath)
+	oldMain, mainErr := os.ReadFile(mainPath)
+
+	rollback = func() error {
+		if fbErr == nil {
+			if err := os.WriteFile(fallbackPath, oldFallback, 0644); err != nil {
+				return err
+			}
+		} else {
+			os.Remove(fallbackPath)
+		}
+		if mainErr == nil {
+			return os.WriteFile(mainPath, oldMain, 0644)
+		}
+		return nil
+	}
+
+	if err := os.MkdirAll(c.config.SitesDir, 0755); err != nil {
+		return nil, err
+	}
+	if err := os.WriteFile(fallbackPath, []byte(content), 0644); err != nil {
+		return nil, err
+	}
+
+	// Without this import the fallback has no effect (#32)
+	if mainErr == nil {
+		updated := ensureImportLine(string(oldMain), FallbackImport, "FALLBACK")
+		if updated != string(oldMain) {
+			if err := os.WriteFile(mainPath, []byte(updated), 0644); err != nil {
+				_ = rollback()
+				return nil, err
+			}
+		}
+	} else if c.caddyfileManager != nil {
+		if err := c.caddyfileManager.SaveCaddyfile(); err != nil {
+			_ = rollback()
+			return nil, err
+		}
+	}
+	return rollback, nil
 }
+
+// AllowedErrorPages are the status codes the generated configuration serves
+// custom pages for (see CaddyfileManager.generateWildcardBlock).
+var AllowedErrorPages = map[int]bool{403: true, 404: true}
 
 // FallbackExists checks if fallback.caddy exists
 func (c *CaddyService) FallbackExists() bool {
@@ -524,6 +571,9 @@ func (c *CaddyService) GetErrorPage(code int) (string, error) {
 
 // SaveErrorPage saves an error page
 func (c *CaddyService) SaveErrorPage(code int, content string) error {
+	if !AllowedErrorPages[code] {
+		return fmt.Errorf("unsupported error page: %d", code)
+	}
 	dir := filepath.Join(c.config.ConfigDir, "pages")
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		return err

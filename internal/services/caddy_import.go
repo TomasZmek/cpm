@@ -237,12 +237,18 @@ func (c *CaddyService) copyCustomSnippets(source, snippetsPath, existingSnippets
 // ensureStandardSitesImport appends the sites/standard import to a main
 // Caddyfile that does not have it yet.
 func ensureStandardSitesImport(content string) string {
+	return ensureImportLine(content, standardSitesImport, "STANDARD SITES (managed by CPM)")
+}
+
+// ensureImportLine appends an import directive (with a section comment) to
+// Caddyfile content unless an identical, uncommented line already exists.
+func ensureImportLine(content, directive, section string) string {
 	for _, line := range strings.Split(content, "\n") {
-		if strings.TrimSpace(line) == standardSitesImport {
+		if strings.TrimSpace(line) == directive {
 			return content
 		}
 	}
-	return strings.TrimRight(content, "\n") + "\n\n# === STANDARD SITES (managed by CPM) ===\n" + standardSitesImport + "\n"
+	return strings.TrimRight(content, "\n") + "\n\n# === " + section + " ===\n" + directive + "\n"
 }
 
 // rollbackFiles returns a function that removes the given files.

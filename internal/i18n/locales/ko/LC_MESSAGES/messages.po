@@ -1318,3 +1318,6 @@ msgstr "백업이 caddy-config/backups/{0}에 저장되었습니다."
 
 msgid "msg_import_skipped"
 msgstr "{0}개 건너뜀: {1}"
+
+msgid "msg_fallback_rolled_back"
+msgstr "Caddy가 구성을 거부하여 대체 규칙 변경이 되돌려졌습니다"

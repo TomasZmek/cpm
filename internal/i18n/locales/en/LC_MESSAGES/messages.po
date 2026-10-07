@@ -1316,3 +1316,6 @@ msgstr "Backup saved as caddy-config/backups/{0}."
 
 msgid "msg_import_skipped"
 msgstr "Skipped {0}: {1}"
+
+msgid "msg_fallback_rolled_back"
+msgstr "The fallback change was rolled back because Caddy rejected the configuration"

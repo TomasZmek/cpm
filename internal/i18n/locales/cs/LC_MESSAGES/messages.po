@@ -1274,3 +1274,6 @@ msgstr "Záloha uložena do caddy-config/backups/{0}."
 
 msgid "msg_import_skipped"
 msgstr "Přeskočeno {0}: {1}"
+
+msgid "msg_fallback_rolled_back"
+msgstr "Změna fallbacku byla vrácena, protože Caddy konfiguraci odmítl"
