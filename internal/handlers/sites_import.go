@@ -1,10 +1,11 @@
 package handlers
 
 import (
-	"fmt"
+	"path/filepath"
 	"strings"
 
 	"github.com/TomasZmek/cpm/internal/models"
+	"github.com/TomasZmek/cpm/internal/services"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -61,59 +62,50 @@ func (h *Handler) SitesImportPreview(c *fiber.Ctx) error {
 	})
 }
 
-// SitesImport parses the site blocks in the main Caddyfile and saves each one as
-// sites/standard/{domain}.caddy, then validates and reloads Caddy.
+// SitesImport saves the site blocks of the main Caddyfile (or an uploaded
+// Caddyfile) as sites/standard/{domain}.caddy, then validates and reloads
+// Caddy. A backup is stored first, and all file changes are rolled back if the
+// resulting configuration does not validate (#30, #31).
 func (h *Handler) SitesImport(c *fiber.Ctx) error {
+	backupPath, err := h.backupService.SaveBackupToDisk()
+	if err != nil {
+		return redirectFlash(c, "error", tl(c, "msg_import_backup_failed")+": "+err.Error(), "/sites")
+	}
+
 	content := c.FormValue("content")
-	var imported, failed []string
-	var err error
+	var res *services.ImportResult
 	if content != "" {
-		imported, failed, err = h.caddyService.ImportContent(content)
+		res, err = h.caddyService.ImportContent(content)
 	} else {
-		imported, failed, err = h.caddyService.ImportFromMainCaddyfile()
+		res, err = h.caddyService.ImportFromMainCaddyfile()
 	}
 	if err != nil {
-		setFlash(c, "error", "Import failed: "+err.Error())
-		if c.Get("HX-Request") == "true" {
-			c.Set("HX-Redirect", "/sites")
-			return c.SendStatus(fiber.StatusOK)
-		}
-		return c.Redirect("/sites")
+		return redirectFlash(c, "error", tl(c, "msg_import_failed")+": "+err.Error(), "/sites")
 	}
 
-	if len(imported) == 0 && len(failed) == 0 {
-		setFlash(c, "info", "No site blocks found in the main Caddyfile to import.")
-		if c.Get("HX-Request") == "true" {
-			c.Set("HX-Redirect", "/sites")
-			return c.SendStatus(fiber.StatusOK)
-		}
-		return c.Redirect("/sites")
+	if len(res.Imported) == 0 && len(res.Failed) == 0 {
+		return redirectFlash(c, "info", tl(c, "msg_import_none"), "/sites")
 	}
 
-	// Reload Caddy only if at least one site was imported.
-	if len(imported) > 0 {
+	if len(res.Imported) > 0 {
 		result := h.caddyService.ReloadWithValidation()
+		if !result.Success && result.DockerUnreachable {
+			// Nothing was validated; keep the import (consistent with other
+			// saves) and tell the user to reload once Docker is reachable.
+			return redirectFlash(c, "warning", tl(c, "msg_import_done", len(res.Imported))+" "+result.Error, "/sites")
+		}
 		if !result.Success {
-			setFlash(c, "warning", fmt.Sprintf("Imported %d rule(s) but reload failed: %s", len(imported), result.Error))
-			if c.Get("HX-Request") == "true" {
-				c.Set("HX-Redirect", "/sites")
-				return c.SendStatus(fiber.StatusOK)
+			if rbErr := res.Rollback(); rbErr != nil {
+				return redirectFlash(c, "error", tl(c, "msg_import_rollback_failed", filepath.Base(backupPath))+": "+rbErr.Error(), "/sites")
 			}
-			return c.Redirect("/sites")
+			return redirectFlash(c, "warning", tl(c, "msg_import_rolled_back")+": "+result.Error, "/sites")
 		}
 	}
 
-	msg := fmt.Sprintf("Imported %d rule(s).", len(imported))
-	if len(failed) > 0 {
-		msg += fmt.Sprintf(" Skipped %d: %s", len(failed), strings.Join(failed, ", "))
-		setFlash(c, "warning", msg)
-	} else {
-		setFlash(c, "success", msg)
+	msg := tl(c, "msg_import_done", len(res.Imported)) + " " + tl(c, "msg_import_backup_saved", filepath.Base(backupPath))
+	if len(res.Failed) > 0 {
+		msg += " " + tl(c, "msg_import_skipped", len(res.Failed), strings.Join(res.Failed, ", "))
+		return redirectFlash(c, "warning", msg, "/sites")
 	}
-
-	if c.Get("HX-Request") == "true" {
-		c.Set("HX-Redirect", "/sites")
-		return c.SendStatus(fiber.StatusOK)
-	}
-	return c.Redirect("/sites")
+	return redirectFlash(c, "success", msg, "/sites")
 }

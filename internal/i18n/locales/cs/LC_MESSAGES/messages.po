@@ -1250,3 +1250,27 @@ msgstr "Štítky"
 
 msgid "target"
 msgstr "Cíl"
+
+msgid "msg_import_backup_failed"
+msgstr "Import zrušen: nepodařilo se vytvořit zálohu"
+
+msgid "msg_import_failed"
+msgstr "Import selhal"
+
+msgid "msg_import_none"
+msgstr "Nebyly nalezeny žádné bloky webů k importu."
+
+msgid "msg_import_rolled_back"
+msgstr "Import byl vrácen, protože výsledná konfigurace není platná"
+
+msgid "msg_import_rollback_failed"
+msgstr "Import selhal a nepodařilo se ho plně vrátit. Obnovte caddy-config/backups/{0} v Nastavení → Záloha"
+
+msgid "msg_import_done"
+msgstr "Importováno pravidel: {0}."
+
+msgid "msg_import_backup_saved"
+msgstr "Záloha uložena do caddy-config/backups/{0}."
+
+msgid "msg_import_skipped"
+msgstr "Přeskočeno {0}: {1}"

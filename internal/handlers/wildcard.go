@@ -143,7 +143,7 @@ func (h *Handler) WildcardMigrateExecute(c *fiber.Ctx) error {
 	log.Printf("WildcardMigrateExecute: domain=%s, migrateSites=%v, deleteCerts=%v", domain, migrateSites, deleteCerts)
 
 	// 1. Create backup first
-	_, backupName, err := h.backupService.CreateBackup()
+	backupName, err := h.backupService.SaveBackupToDisk()
 	if err != nil {
 		log.Printf("Error creating backup: %v", err)
 		setFlash(c, "error", tl(c, "msg_wildcard_migrate_backup_failed")+": "+err.Error())

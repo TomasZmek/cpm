@@ -1294,3 +1294,27 @@ msgstr "초기화 이전 로그를 숨기는 중"
 
 msgid "discovery_status_help"
 msgstr "이 컨테이너가 이미 프록시 규칙에 연결되어 있는지 여부"
+
+msgid "msg_import_backup_failed"
+msgstr "가져오기 취소됨: 백업을 만들 수 없습니다"
+
+msgid "msg_import_failed"
+msgstr "가져오기 실패"
+
+msgid "msg_import_none"
+msgstr "가져올 사이트 블록이 없습니다."
+
+msgid "msg_import_rolled_back"
+msgstr "결과 구성이 유효하지 않아 가져오기가 되돌려졌습니다"
+
+msgid "msg_import_rollback_failed"
+msgstr "가져오기에 실패했으며 완전히 되돌리지 못했습니다. 설정 → 백업에서 caddy-config/backups/{0}을(를) 복원하세요"
+
+msgid "msg_import_done"
+msgstr "규칙 {0}개를 가져왔습니다."
+
+msgid "msg_import_backup_saved"
+msgstr "백업이 caddy-config/backups/{0}에 저장되었습니다."
+
+msgid "msg_import_skipped"
+msgstr "{0}개 건너뜀: {1}"

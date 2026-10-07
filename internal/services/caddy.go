@@ -20,6 +20,9 @@ type ReloadResult struct {
 	Error         string
 	ValidationLog string // Output from caddy validate
 	ReloadLog     string // Output from caddy reload
+	// DockerUnreachable is set when Caddy could not be contacted at all, i.e.
+	// the configuration was neither validated nor rejected.
+	DockerUnreachable bool
 }
 
 // CaddyService handles Caddy configuration management
@@ -434,7 +437,7 @@ func (c *CaddyService) ReloadForce() *ReloadResult {
 	output, err := c.dockerService.ReloadCaddyForceWithOutput()
 	if err != nil {
 		if isDockerUnreachable(err) {
-			return &ReloadResult{Success: false, Error: "Docker unreachable — the change was saved, but Caddy could not be reloaded. Reload again once Docker is back.", ReloadLog: output}
+			return &ReloadResult{Success: false, DockerUnreachable: true, Error: "Docker unreachable — the change was saved, but Caddy could not be reloaded. Reload again once Docker is back.", ReloadLog: output}
 		}
 		return &ReloadResult{Success: false, Error: caddyErrorLine(output), ReloadLog: output}
 	}
@@ -447,7 +450,7 @@ func (c *CaddyService) ReloadWithValidation() *ReloadResult {
 	validateOutput, validateErr := c.dockerService.ValidateConfigWithOutput()
 	if validateErr != nil {
 		if isDockerUnreachable(validateErr) {
-			return &ReloadResult{Success: false, Error: "Docker unreachable — the change was saved, but Caddy could not be reloaded. Reload again once Docker is back.", ValidationLog: validateOutput}
+			return &ReloadResult{Success: false, DockerUnreachable: true, Error: "Docker unreachable — the change was saved, but Caddy could not be reloaded. Reload again once Docker is back.", ValidationLog: validateOutput}
 		}
 		detail := caddyErrorLine(validateOutput)
 		if detail == "" {
@@ -464,7 +467,7 @@ func (c *CaddyService) ReloadWithValidation() *ReloadResult {
 	reloadOutput, reloadErr := c.dockerService.ReloadCaddyWithOutput()
 	if reloadErr != nil {
 		if isDockerUnreachable(reloadErr) {
-			return &ReloadResult{Success: false, Error: "Docker unreachable — the change was saved, but Caddy could not be reloaded. Reload again once Docker is back.", ValidationLog: validateOutput, ReloadLog: reloadOutput}
+			return &ReloadResult{Success: false, DockerUnreachable: true, Error: "Docker unreachable — the change was saved, but Caddy could not be reloaded. Reload again once Docker is back.", ValidationLog: validateOutput, ReloadLog: reloadOutput}
 		}
 		detail := caddyErrorLine(reloadOutput)
 		if detail == "" {

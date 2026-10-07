@@ -1292,3 +1292,27 @@ msgstr "Hiding logs before the clear point"
 
 msgid "discovery_status_help"
 msgstr "Whether this container is already linked to a proxy rule"
+
+msgid "msg_import_backup_failed"
+msgstr "Import cancelled: could not create a backup"
+
+msgid "msg_import_failed"
+msgstr "Import failed"
+
+msgid "msg_import_none"
+msgstr "No site blocks found to import."
+
+msgid "msg_import_rolled_back"
+msgstr "Import was rolled back because the resulting configuration is invalid"
+
+msgid "msg_import_rollback_failed"
+msgstr "Import failed and could not be fully rolled back. Restore caddy-config/backups/{0} via Settings → Backup"
+
+msgid "msg_import_done"
+msgstr "Imported {0} rule(s)."
+
+msgid "msg_import_backup_saved"
+msgstr "Backup saved as caddy-config/backups/{0}."
+
+msgid "msg_import_skipped"
+msgstr "Skipped {0}: {1}"
