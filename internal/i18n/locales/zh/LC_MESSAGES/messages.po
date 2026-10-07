@@ -1,0 +1,107 @@
+# Chinese (Simplified) translations for CPM - Caddy Proxy Manager
+# SPDX-License-Identifier: MIT
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "nav_dashboard"
+msgstr "仪表板"
+
+msgid "nav_sites"
+msgstr "代理规则"
+
+msgid "nav_snippets"
+msgstr "代码片段"
+
+msgid "nav_certificates"
+msgstr "证书"
+
+msgid "nav_logs"
+msgstr "日志"
+
+msgid "nav_settings"
+msgstr "设置"
+
+msgid "save"
+msgstr "保存"
+
+msgid "cancel"
+msgstr "取消"
+
+msgid "delete"
+msgstr "删除"
+
+msgid "edit"
+msgstr "编辑"
+
+msgid "back"
+msgstr "返回"
+
+msgid "create"
+msgstr "创建"
+
+msgid "dashboard_title"
+msgstr "仪表板"
+
+msgid "sites_title"
+msgstr "代理规则"
+
+msgid "settings_title"
+msgstr "设置"
+
+msgid "settings_general"
+msgstr "常规"
+
+msgid "settings_backup"
+msgstr "备份"
+
+msgid "settings_caddy"
+msgstr "Caddy"
+
+msgid "settings_wildcard"
+msgstr "通配符SSL"
+
+msgid "settings_docker"
+msgstr "Docker"
+
+msgid "settings_users"
+msgstr "用户"
+
+msgid "status_up"
+msgstr "运行中"
+
+msgid "status_down"
+msgstr "已停止"
+
+msgid "status_unknown"
+msgstr "未知"
+
+msgid "theme_system"
+msgstr "系统"
+
+msgid "theme_light"
+msgstr "浅色"
+
+msgid "theme_dark"
+msgstr "深色"
+
+msgid "view_card"
+msgstr "卡片视图"
+
+msgid "view_list"
+msgstr "列表视图"
+
+msgid "dashboard_public"
+msgstr "公开"
+
+msgid "dashboard_internal"
+msgstr "内部"
+
+msgid "dashboard_with_auth"
+msgstr "已认证"
+
+msgid "dashboard_backend_status"
+msgstr "后端状态"
+

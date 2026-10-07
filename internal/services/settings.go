@@ -130,3 +130,51 @@ func (s *SettingsService) Save(settings *models.AppSettings) error {
 	log.Printf("App settings saved to %s", s.path)
 	return nil
 }
+
+
+// EnsureLocalDockerHost auto-registers the local machine as a Docker discovery
+// host when (a) a local Docker daemon is reachable and (b) no host is already
+// flagged as the local Docker host. It returns true if settings were changed.
+//
+// This lets discovery and the rule form work out-of-the-box without the user
+// having to open Settings > Docker and add the local host manually.
+func (s *SettingsService) EnsureLocalDockerHost(docker *DockerService) (bool, error) {
+	if docker == nil || !docker.Ping() {
+		return false, nil
+	}
+
+	settings, err := s.Get()
+	if err != nil {
+		return false, err
+	}
+
+	// Already have a local Docker host configured.
+	for _, h := range settings.DiscoveryHosts {
+		if h.IsLocalDocker {
+			return false, nil
+		}
+	}
+
+	ip, err := DetectLocalIP()
+	if err != nil {
+		return false, err
+	}
+
+	// If the detected IP is already in the list, just promote it to local.
+	for i := range settings.DiscoveryHosts {
+		if settings.DiscoveryHosts[i].IP == ip {
+			settings.DiscoveryHosts[i].IsLocalDocker = true
+			if settings.DiscoveryHosts[i].Label == "" {
+				settings.DiscoveryHosts[i].Label = "Local Docker"
+			}
+			return true, s.Save(settings)
+		}
+	}
+
+	settings.DiscoveryHosts = append(settings.DiscoveryHosts, models.DiscoveryHost{
+		IP:            ip,
+		Label:         "Local Docker",
+		IsLocalDocker: true,
+	})
+	return true, s.Save(settings)
+}

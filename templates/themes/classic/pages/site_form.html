@@ -13,7 +13,7 @@
         <div class="form-section-title">🌐 {{t .Lang "domain_config"}}</div>
         
         <div class="form-group">
-            <label for="domains">{{t .Lang "sites_domain"}} *</label>
+            <label for="domains">{{t .Lang "sites_domain"}} * <span class="help" tabindex="0" data-tip="{{t .Lang "help_domains"}}">?</span></label>
             <input type="text" 
                    id="domains" 
                    name="domains" 
@@ -28,45 +28,82 @@
         <div class="form-section-title">🎯 {{t .Lang "backend_target"}}</div>
 
         {{if .DiscoveryHosts}}
-        <div class="form-group">
-            <label for="host-quick-select">🐳 {{t .Lang "sites_quick_host"}}</label>
+        <div class="form-group" id="host-quick-group">
+            <label for="host-quick-select">🖥️ {{t .Lang "sites_quick_host"}} <span class="help" tabindex="0" data-tip="{{t .Lang "help_quick_host"}}">?</span></label>
             <select id="host-quick-select" onchange="selectDiscoveryHost(this.value)">
+                {{if ne (len .DiscoveryHosts) 1}}
                 <option value="">{{t .Lang "sites_select_host"}}</option>
+                {{end}}
                 {{range .DiscoveryHosts}}
-                <option value="{{.IP}}">{{if .Label}}{{.Label}} ({{.IP}}){{else}}{{.IP}}{{end}}</option>
+                <option value="{{.IP}}" {{if eq (len $.DiscoveryHosts) 1}}selected{{end}}>{{if .Label}}{{.Label}} ({{.IP}}){{else}}{{.IP}}{{end}}</option>
+                {{end}}
+            </select>
+        </div>
+        {{end}}
+
+        <div class="form-group">
+            <label>{{t .Lang "target_type"}} <span class="help" tabindex="0" data-tip="{{t .Lang "help_target_type"}}">?</span></label>
+            <div class="segmented" id="target-type">
+                <label class="segmented-option">
+                    <input type="radio" name="target_type" value="ip">
+                    <span>🌐 {{t .Lang "target_type_ip"}}</span>
+                </label>
+                <label class="segmented-option">
+                    <input type="radio" name="target_type" value="service" checked>
+                    <span>🐳 {{t .Lang "target_type_service"}}</span>
+                </label>
+            </div>
+        </div>
+
+        {{if .Containers}}
+        <div class="form-group" id="container-picker-group">
+            <label for="container-quick-select">🐳 {{t .Lang "sites_container_select"}} <span class="help" tabindex="0" data-tip="{{t .Lang "help_container_picker"}}">?</span></label>
+            <select id="container-quick-select" onchange="selectContainer(this)">
+                <option value="">{{t .Lang "sites_container_select_ph"}}</option>
+                {{range .Containers}}
+                {{$name := .Name}}
+                {{$ip := .IP}}
+                {{if .Ports}}
+                {{range .Ports}}
+                <option value="{{$name}}|{{.PrivatePort}}">{{$name}}{{if $ip}} ({{$ip}}){{end}} : {{.PrivatePort}}{{if .PublicPort}} (&rarr; {{.PublicPort}}){{end}}</option>
+                {{end}}
+                {{else}}
+                <option value="{{$name}}|">{{$name}}{{if $ip}} ({{$ip}}){{end}}</option>
+                {{end}}
                 {{end}}
             </select>
         </div>
         {{end}}
 
         <div class="form-row">
-            <div class="form-group">
-                <label for="target_ip">{{t .Lang "sites_ip"}} *</label>
+            <div class="form-group flex-2">
+                <label for="target_ip"><span id="target-ip-label">{{t .Lang "sites_ip"}}</span> * <span class="help" tabindex="0" data-tip="{{t .Lang "help_target_host"}}">?</span></label>
                 <input type="text"
                        id="target_ip"
                        name="target_ip"
-                       value="{{if .Site.TargetIP}}{{.Site.TargetIP}}{{else}}{{.DefaultIP}}{{end}}"
+                       value="{{if .Site.TargetIP}}{{.Site.TargetIP}}{{end}}"
                        placeholder="192.168.1.100"
                        required>
+                <div class="form-hint" id="target-ip-hint">{{t .Lang "help_target_host"}}</div>
             </div>
-            
-            <div class="form-group">
-                <label for="target_port">{{t .Lang "sites_port"}} *</label>
-                <input type="text" 
-                       id="target_port" 
-                       name="target_port" 
+
+            <div class="form-group flex-1">
+                <label for="target_port">{{t .Lang "sites_port"}} * <span class="help" tabindex="0" data-tip="{{t .Lang "help_target_port"}}">?</span></label>
+                <input type="text"
+                       id="target_port"
+                       name="target_port"
                        value="{{.Site.TargetPort}}"
                        placeholder="8080"
                        required>
             </div>
         </div>
-        
+
         <div class="form-group">
             <label class="toggle-label">
-                <span class="toggle-text">🔒 {{t .Lang "sites_https_backend"}}</span>
+                <span class="toggle-text">🔒 {{t .Lang "sites_https_backend"}} <span class="help" tabindex="0" data-tip="{{t .Lang "help_https_backend"}}">?</span></span>
                 <label class="toggle-switch">
-                    <input type="checkbox" 
-                           name="is_https_backend" 
+                    <input type="checkbox"
+                           name="is_https_backend"
                            {{if .Site.IsHTTPSBackend}}checked{{end}}>
                     <span class="toggle-slider"></span>
                 </label>
@@ -78,7 +115,7 @@
         <div class="form-section-title">🔐 {{t .Lang "tls_certificate"}}</div>
         
         <div class="form-group">
-            <label for="tls_mode">{{t .Lang "tls_mode"}}</label>
+            <label for="tls_mode">{{t .Lang "tls_mode"}} <span class="help" tabindex="0" data-tip="{{t .Lang "help_tls_mode"}}">?</span></label>
             <select id="tls_mode" name="tls_mode" class="form-control">
                 {{if .WildcardDomains}}
                 {{range .WildcardDomains}}
@@ -96,7 +133,7 @@
     </div>
     
     <div class="form-section">
-        <div class="form-section-title">⚙️ {{t .Lang "sites_snippets"}}</div>
+        <div class="form-section-title">⚙️ {{t .Lang "sites_snippets"}} <span class="help" tabindex="0" data-tip="{{t .Lang "help_snippets"}}">?</span></div>
         
         <div class="snippet-options" id="snippet-options">
             {{range .AvailableSnippets}}
@@ -123,7 +160,7 @@
     </div>
     
     <div class="form-section">
-        <div class="form-section-title">🏷️ {{t .Lang "sites_tags"}}</div>
+        <div class="form-section-title">🏷️ {{t .Lang "sites_tags"}} <span class="help" tabindex="0" data-tip="{{t .Lang "help_tags"}}">?</span></div>
         
         <div class="form-group">
             <input type="text" 
@@ -140,7 +177,7 @@
         <div class="details-content">
             <div class="form-group">
                 <label class="toggle-label">
-                    <span class="toggle-text">🔌 {{t .Lang "sites_websocket"}}</span>
+                    <span class="toggle-text">🔌 {{t .Lang "sites_websocket"}} <span class="help" tabindex="0" data-tip="{{t .Lang "help_websocket"}}">?</span></span>
                     <label class="toggle-switch">
                         <input type="checkbox" 
                                name="enable_websocket" 
@@ -151,7 +188,7 @@
             </div>
             
             <div class="form-group">
-                <label for="health_check_path">{{t .Lang "sites_health_check"}}</label>
+                <label for="health_check_path">{{t .Lang "sites_health_check"}} <span class="help" tabindex="0" data-tip="{{t .Lang "help_health"}}">?</span></label>
                 <input type="text" 
                        id="health_check_path" 
                        name="health_check_path" 
@@ -160,7 +197,7 @@
             </div>
             
             <div class="form-group">
-                <label for="extra_config">{{t .Lang "sites_extra_config"}}</label>
+                <label for="extra_config">{{t .Lang "sites_extra_config"}} <span class="help" tabindex="0" data-tip="{{t .Lang "help_extra"}}">?</span></label>
                 <textarea id="extra_config" 
                           name="extra_config" 
                           rows="4"
@@ -262,9 +299,60 @@ document.addEventListener('DOMContentLoaded', function() {
     {{end}}
 });
 
+// --- Target type (IP address vs Docker service name) ---------------------
+function cpmApplyTargetType() {
+    var checked = document.querySelector('input[name="target_type"]:checked');
+    var val = checked ? checked.value : 'ip';
+    var label = document.getElementById('target-ip-label');
+    var input = document.getElementById('target_ip');
+    var hint = document.getElementById('target-ip-hint');
+    if (val === 'service') {
+        if (label) label.textContent = '{{t .Lang "sites_service_name"}}';
+        if (input) input.placeholder = 'jellyfin';
+        if (hint) hint.textContent = '{{t .Lang "help_target_service"}}';
+    } else {
+        if (label) label.textContent = '{{t .Lang "sites_ip"}}';
+        if (input) input.placeholder = '192.168.1.100';
+        if (hint) hint.textContent = '{{t .Lang "help_target_host"}}';
+    }
+}
+
+function selectContainer(sel) {
+    var v = sel.value;
+    if (!v) return;
+    var parts = v.split('|');
+    var name = parts[0];
+    var port = parts[1] || '';
+    var input = document.getElementById('target_ip');
+    if (input) input.value = name;
+    if (port) {
+        var p = document.getElementById('target_port');
+        if (p) p.value = port;
+    }
+    var svc = document.querySelector('input[name="target_type"][value="service"]');
+    if (svc) { svc.checked = true; cpmApplyTargetType(); }
+}
+
 function selectDiscoveryHost(ip) {
     if (ip) {
         document.getElementById('target_ip').value = ip;
+        var ipRadio = document.querySelector('input[name="target_type"][value="ip"]');
+        if (ipRadio) { ipRadio.checked = true; cpmApplyTargetType(); }
     }
 }
+
+document.addEventListener('DOMContentLoaded', function () {
+    var radios = document.querySelectorAll('input[name="target_type"]');
+    radios.forEach(function (r) { r.addEventListener('change', cpmApplyTargetType); });
+
+    // If an existing target is not an IPv4 literal, assume it is a service name.
+    var input = document.getElementById('target_ip');
+    var v = input ? (input.value || '').trim() : '';
+    var isIp = /^\d{1,3}(\.\d{1,3}){3}$/.test(v);
+    if (v && !isIp) {
+        var svc = document.querySelector('input[name="target_type"][value="service"]');
+        if (svc) svc.checked = true;
+    }
+    cpmApplyTargetType();
+});
 </script>

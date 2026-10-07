@@ -1,10 +1,26 @@
-<h1>{{t .Lang "dashboard_title"}}</h1>
+<div class="page-header">
+    <div class="page-header-title">
+        <h1>📊 {{t .Lang "dashboard_title"}}</h1>
+    </div>
+</div>
 
 <!-- Stats Grid -->
 <div class="stats-grid mb-4">
     <div class="stat-card">
         <div class="stat-value">{{.Stats.total}}</div>
         <div class="stat-label">{{t .Lang "dashboard_rules"}}</div>
+    </div>
+    <div class="stat-card stat-success">
+        <div class="stat-value">{{.Stats.public}}</div>
+        <div class="stat-label">{{t .Lang "dashboard_public"}}</div>
+    </div>
+    <div class="stat-card stat-warning">
+        <div class="stat-value">{{.Stats.internal}}</div>
+        <div class="stat-label">{{t .Lang "dashboard_internal"}}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value">{{.Stats.with_auth}}</div>
+        <div class="stat-label">{{t .Lang "dashboard_with_auth"}}</div>
     </div>
     <div class="stat-card">
         <div class="stat-value">{{.CertStats.total}}</div>
@@ -14,65 +30,102 @@
         <div class="stat-value">{{.Stats.snippets}}</div>
         <div class="stat-label">{{t .Lang "dashboard_snippets"}}</div>
     </div>
-    <div class="stat-card">
-        <div class="stat-value">
-            {{if eq .CaddyStatus "running"}}
-                <span class="text-success">✓</span>
-            {{else}}
-                <span class="text-error">✗</span>
-            {{end}}
-        </div>
-        <div class="stat-label">{{t .Lang "dashboard_caddy_status"}}</div>
-    </div>
 </div>
 
 <div class="grid grid-2">
+    <!-- Backend status -->
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">🐳 {{t .Lang "dashboard_backend_status"}}</h2>
+        </div>
+        <div class="card-body">
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label"><span class="status-dot up"></span> {{t .Lang "status_up"}}</span>
+                    <span class="info-value text-success">{{.BackendUp}}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label"><span class="status-dot down"></span> {{t .Lang "status_down"}}</span>
+                    <span class="info-value text-danger">{{.BackendDown}}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label"><span class="status-dot unknown"></span> {{t .Lang "status_unknown"}}</span>
+                    <span class="info-value text-muted">{{.BackendUnknown}}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">🔧 {{t .Lang "dashboard_caddy_status"}}</span>
+                    <span class="info-value">
+                        {{if eq .CaddyStatus "running"}}<span class="text-success">● {{t .Lang "status_up"}}</span>{{else}}<span class="text-danger">● {{.CaddyStatus}}</span>{{end}}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Alerts -->
     <div class="card">
         <div class="card-header">
-            <h2 class="card-title">{{t .Lang "dashboard_alerts"}}</h2>
+            <h2 class="card-title">🔔 {{t .Lang "dashboard_alerts"}}</h2>
         </div>
-        {{if .Alerts}}
-        <div class="alerts">
-            {{range .Alerts}}
-            <div class="alert alert-{{.Type}}">
-                <span>{{.Icon}}</span>
-                <strong>{{.Title}}</strong>
-                <span>{{.Message}}</span>
+        <div class="card-body">
+            {{if .Alerts}}
+            <div class="alerts">
+                {{range .Alerts}}
+                <div class="alert alert-{{.Type}}">
+                    <span>{{.Icon}}</span>
+                    <strong>{{.Title}}</strong>
+                    <span>{{.Message}}</span>
+                </div>
+                {{end}}
             </div>
+            {{else}}
+            <p class="text-muted">{{t .Lang "dashboard_no_alerts"}}</p>
             {{end}}
         </div>
-        {{else}}
-        <p class="text-muted">{{t .Lang "dashboard_no_alerts"}}</p>
-        {{end}}
     </div>
-    
+</div>
+
+<div class="grid grid-2 mt-4">
     <!-- Quick Actions -->
     <div class="card">
         <div class="card-header">
-            <h2 class="card-title">{{t .Lang "dashboard_quick_actions"}}</h2>
+            <h2 class="card-title">⚡ {{t .Lang "dashboard_quick_actions"}}</h2>
         </div>
-        <div class="flex flex-col gap-2">
-            <a href="/sites/new" class="btn btn-primary">
-                ➕ {{t .Lang "dashboard_new_rule"}}
-            </a>
-            <button 
-                class="btn btn-secondary"
-                hx-post="/caddy/reload"
-                hx-swap="outerHTML"
-            >
-                🔄 {{t .Lang "dashboard_reload"}}
-            </button>
-            <button 
-                class="btn btn-secondary"
-                hx-post="/caddy/validate"
-                hx-swap="outerHTML"
-            >
-                ✓ {{t .Lang "dashboard_validate"}}
-            </button>
-            <a href="/settings?tab=backup" class="btn btn-secondary">
-                💾 {{t .Lang "dashboard_backup"}}
-            </a>
+        <div class="card-body">
+            <div class="flex flex-col gap-2">
+                <a href="/sites/new" class="btn btn-primary">➕ {{t .Lang "dashboard_new_rule"}}</a>
+                <button class="btn btn-secondary" hx-post="/caddy/reload" hx-swap="none">🔄 {{t .Lang "dashboard_reload"}}</button>
+                <button class="btn btn-secondary" hx-post="/caddy/validate" hx-swap="none">✓ {{t .Lang "dashboard_validate"}}</button>
+                <a href="/settings/backup" class="btn btn-secondary">💾 {{t .Lang "dashboard_backup"}}</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Certificates summary -->
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">📜 {{t .Lang "dashboard_certificates"}}</h2>
+        </div>
+        <div class="card-body">
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">{{t .Lang "dashboard_certificates"}}</span>
+                    <span class="info-value">{{.CertStats.total}}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">{{t .Lang "certs_valid"}}</span>
+                    <span class="info-value text-success">{{.CertStats.valid}}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">{{t .Lang "certs_expiring"}}</span>
+                    <span class="info-value text-warning">{{.CertStats.expiring}}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">{{t .Lang "certs_expired"}}</span>
+                    <span class="info-value text-danger">{{.CertStats.expired}}</span>
+                </div>
+            </div>
+            <a href="/certificates" class="btn btn-secondary btn-sm mt-3">{{t .Lang "nav_certificates"}} →</a>
         </div>
     </div>
 </div>
@@ -80,7 +133,7 @@
 <!-- Recent Changes -->
 <div class="card mt-4">
     <div class="card-header">
-        <h2 class="card-title">{{t .Lang "dashboard_recent_changes"}}</h2>
+        <h2 class="card-title">🕑 {{t .Lang "dashboard_recent_changes"}}</h2>
     </div>
     {{if .RecentChanges}}
     <table class="table">
@@ -94,16 +147,14 @@
         <tbody>
             {{range .RecentChanges}}
             <tr>
-                <td>
-                    <a href="/sites/{{.Filename}}/edit">{{.PrimaryDomain}}</a>
-                </td>
-                <td class="text-muted">{{.TargetURL}}</td>
+                <td><a href="/sites/{{.Filename}}/edit">{{.PrimaryDomain}}</a></td>
+                <td class="text-muted"><code>{{.TargetURL}}</code></td>
                 <td class="text-muted">{{timeAgo .ModifiedAt}}</td>
             </tr>
             {{end}}
         </tbody>
     </table>
     {{else}}
-    <p class="text-muted">{{t .Lang "dashboard_no_changes"}}</p>
+    <div class="card-body"><p class="text-muted">{{t .Lang "dashboard_no_changes"}}</p></div>
     {{end}}
 </div>

@@ -1027,7 +1027,217 @@ msgid "discovery_no_local_host_desc"
 msgstr "Označte jeden host jako \"Lokální Docker\" v"
 
 msgid "sites_quick_host"
-msgstr "Rychlý výběr hostu"
+msgstr "Hostitel (Docker)"
 
 msgid "sites_select_host"
 msgstr "Vyberte Docker host…"
+
+msgid "sites_import"
+msgstr "Importovat"
+
+msgid "sites_import_title"
+msgstr "Import z hlavního Caddyfile"
+
+msgid "sites_import_desc"
+msgstr "Tyto bloky webů byly nalezeny přímo v hlavním Caddyfile. Budou uloženy jako samostatné soubory do sites/standard/."
+
+msgid "sites_import_loading"
+msgstr "Analýza hlavního Caddyfile…"
+
+msgid "sites_import_none"
+msgstr "V hlavním Caddyfile nebyly nalezeny žádné importovatelné bloky."
+
+msgid "sites_import_execute"
+msgstr "Importovat tato pravidla"
+
+msgid "target_type"
+msgstr "Typ cíle"
+
+msgid "target_type_ip"
+msgstr "IP adresa"
+
+msgid "target_type_service"
+msgstr "Název služby"
+
+msgid "sites_service_name"
+msgstr "Název služby (kontejner)"
+
+msgid "sites_container_select"
+msgstr "Vybrat běžící kontejner"
+
+msgid "sites_container_select_ph"
+msgstr "Vyberte kontejner…"
+
+msgid "help_domains"
+msgstr "Domény, na které toto pravidlo odpovídá. Více oddělte čárkou nebo mezerou (např. example.com, www.example.com)."
+
+msgid "help_target_type"
+msgstr "Zvolte způsob spojení s backendem: pevná IP adresa, nebo název Docker služby/kontejneru. Název služby přežije změnu IP kontejneru, ale cíl musí sdílet Docker síť s Caddy."
+
+msgid "help_target_host"
+msgstr "IP adresa backendu, např. 192.168.1.100."
+
+msgid "help_target_service"
+msgstr "Název Docker kontejneru/služby, např. jellyfin. Caddy jej přeloží ve sdílené Docker síti, takže funguje i při změně interní IP kontejneru."
+
+msgid "help_target_port"
+msgstr "Port, na kterém backend naslouchá, např. 8096. U názvu služby použijte interní port kontejneru."
+
+msgid "help_quick_host"
+msgstr "Rychle vyplní IP z nakonfigurovaného Docker hostitele."
+
+msgid "help_container_picker"
+msgstr "Vyplní název služby a interní port z kontejneru běžícího na lokálním Docker hostiteli."
+
+msgid "help_https_backend"
+msgstr "Zapněte, pokud backend sám používá HTTPS. U self-signed backendů se přeskakuje ověření certifikátu."
+
+msgid "help_tls_mode"
+msgstr "Jak se získá veřejný certifikát. Auto používá Let's Encrypt; wildcard znovu využije existující certifikát *.domain."
+
+msgid "help_snippets"
+msgstr "Znovupoužitelné bloky konfigurace pro tento web (bezpečnostní hlavičky, komprese, řízení přístupu atd.)."
+
+msgid "help_tags"
+msgstr "Volné štítky pro seskupování a filtrování pravidel. Oddělené čárkou."
+
+msgid "help_websocket"
+msgstr "Přidá hlavičky upgrade potřebné pro průchod WebSocket spojení přes proxy."
+
+msgid "help_health"
+msgstr "Cesta, kterou Caddy pravidelně volá pro kontrolu stavu backendu, např. /health. Prázdné = vypnuto."
+
+msgid "help_extra"
+msgstr "Surové direktivy Caddyfile vložené doslovně do bloku tohoto webu. Pro pokročilé použití."
+
+msgid "help_docker_discovery"
+msgstr "Docker hostitelé, které CPM prohledává pro automatické návrhy cílů reverzní proxy. Jeden hostitel lze označit jako lokální Docker."
+
+msgid "discovery_auto_local_note"
+msgstr "Pokud je dostupný lokální Docker démon, CPM při startu automaticky zaregistruje tento stroj jako lokální Docker hostitele — bez ručního zadávání."
+
+msgid "theme_system"
+msgstr "Systém"
+
+msgid "theme_light"
+msgstr "Světlý"
+
+msgid "theme_dark"
+msgstr "Tmavý"
+
+msgid "sites_import_path_label"
+msgstr "Cesta k Caddyfile (prázdné = výchozí)"
+
+msgid "sites_import_preview_btn"
+msgstr "Náhled"
+
+msgid "sites_import_path_hint"
+msgstr "Zadejte úplnou cestu pro import konkrétního Caddyfile, nebo nechte prázdné pro výchozí hlavní Caddyfile."
+
+msgid "sites_import_path_ph"
+msgstr "Úplná cesta k Caddyfile (prázdné = výchozí)"
+
+msgid "sites_import_file_btn"
+msgstr "Vybrat soubor"
+
+msgid "status_up"
+msgstr "Backend běží"
+
+msgid "status_down"
+msgstr "Backend zastaven"
+
+msgid "status_unknown"
+msgstr "Stav neznámý"
+
+msgid "view_card"
+msgstr "Karty"
+
+msgid "view_list"
+msgstr "Seznam"
+
+msgid "dashboard_public"
+msgstr "Veřejné"
+
+msgid "dashboard_internal"
+msgstr "Interní"
+
+msgid "dashboard_with_auth"
+msgstr "S ověřením"
+
+msgid "dashboard_backend_status"
+msgstr "Stav backendu"
+
+msgid "users_first_admin_hint"
+msgstr "Zatím žádní uživatelé. Nejprve níže vytvořte správce, poté lze zapnout ověřování."
+
+msgid "users_create_first_admin"
+msgstr "Vytvořit prvního správce"
+
+msgid "msg_fallback_saved"
+msgstr "Záložní pravidlo uloženo"
+
+msgid "msg_fallback_created"
+msgstr "fallback.caddy vytvořen"
+
+msgid "msg_error_page_saved"
+msgstr "Chybová stránka uložena"
+
+msgid "certs_bulk_renew"
+msgstr "Hromadná obnova"
+
+msgid "certs_renew_all"
+msgstr "Všechny"
+
+msgid "certs_renew_expiring"
+msgstr "Vypršující / rizikové"
+
+msgid "certs_renew_expired"
+msgstr "Pouze vypršené"
+
+msgid "certs_bulk_renew_confirm"
+msgstr "Obnovit vybrané certifikáty? Caddy je znovu vydá."
+
+msgid "msg_certs_bulk_none"
+msgstr "Žádné certifikáty neodpovídají vybranému rozsahu"
+
+msgid "msg_certs_bulk_done"
+msgstr "{0} certifikátů zařazeno k obnově"
+
+msgid "msg_certs_bulk_reload_failed"
+msgstr "Obnoveno, ale reload selhal"
+
+msgid "certs_bulk_reloading"
+msgstr "Načítání Caddy…"
+
+msgid "certs_bulk_waiting"
+msgstr "Čekání na opětovné vydání certifikátů…"
+
+msgid "back_to_list"
+msgstr "Zpět na seznam"
+
+msgid "confirm_delete"
+msgstr "Smazat toto pravidlo?"
+
+msgid "domains"
+msgstr "Domény"
+
+msgid "options"
+msgstr "Možnosti"
+
+msgid "raw_config"
+msgstr "Surová konfigurace"
+
+msgid "run_in_background"
+msgstr "Spustit na pozadí"
+
+msgid "site_info"
+msgstr "Informace o pravidle"
+
+msgid "snippets"
+msgstr "Snippety"
+
+msgid "tags"
+msgstr "Štítky"
+
+msgid "target"
+msgstr "Cíl"

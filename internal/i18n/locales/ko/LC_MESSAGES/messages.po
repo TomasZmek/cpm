@@ -1002,7 +1002,7 @@ msgid "discovery_host_column"
 msgstr "호스트"
 
 msgid "discovery_not_paired"
-msgstr "연결되지 않음"
+msgstr "규칙 없음"
 
 msgid "discovery_create_rule"
 msgstr "규칙 생성"
@@ -1029,7 +1029,259 @@ msgid "discovery_no_local_host_desc"
 msgstr "다음에서 하나의 호스트를 \"로컬 도커\"로 표시하세요:"
 
 msgid "sites_quick_host"
-msgstr "빠른 호스트 선택"
+msgstr "호스트 선택 (Docker)"
 
 msgid "sites_select_host"
 msgstr "도커 호스트 선택…"
+
+msgid "sites_import"
+msgstr "가져오기"
+
+msgid "sites_import_title"
+msgstr "메인 Caddyfile에서 가져오기"
+
+msgid "sites_import_desc"
+msgstr "메인 Caddyfile에 직접 작성된 사이트 블록입니다. sites/standard/ 아래에 개별 파일로 저장됩니다."
+
+msgid "sites_import_loading"
+msgstr "메인 Caddyfile 분석 중…"
+
+msgid "sites_import_none"
+msgstr "메인 Caddyfile에서 가져올 사이트 블록을 찾지 못했습니다."
+
+msgid "sites_import_execute"
+msgstr "이 규칙 가져오기"
+
+msgid "target_type"
+msgstr "대상 유형"
+
+msgid "target_type_ip"
+msgstr "IP 주소"
+
+msgid "target_type_service"
+msgstr "서비스명"
+
+msgid "sites_service_name"
+msgstr "서비스명 (컨테이너)"
+
+msgid "sites_container_select"
+msgstr "대상 컨테이너 선택"
+
+msgid "sites_container_select_ph"
+msgstr "컨테이너 선택…"
+
+msgid "help_domains"
+msgstr "이 규칙이 응답할 도메인입니다. 여러 개는 쉼표나 공백으로 구분하세요 (예: example.com, www.example.com)."
+
+msgid "help_target_type"
+msgstr "백엔드 연결 방식을 고릅니다. 고정 IP 또는 Docker 서비스/컨테이너명. 서비스명은 컨테이너 IP가 바뀌어도 유지되지만, 대상이 Caddy와 같은 Docker 네트워크에 있어야 합니다."
+
+msgid "help_target_host"
+msgstr "백엔드의 IP 주소입니다. 예: 192.168.1.100"
+
+msgid "help_target_service"
+msgstr "Docker 컨테이너/서비스명입니다. 예: jellyfin. Caddy가 같은 Docker 네트워크에서 이름을 해석하므로 컨테이너 내부 IP가 바뀌어도 계속 동작합니다."
+
+msgid "help_target_port"
+msgstr "백엔드가 수신하는 포트입니다. 예: 8096. 서비스명을 쓰는 경우 컨테이너 내부 포트를 입력하세요."
+
+msgid "help_quick_host"
+msgstr "등록된 Docker 호스트에서 IP를 빠르게 채웁니다."
+
+msgid "help_container_picker"
+msgstr "로컬 Docker 호스트에서 실행 중인 컨테이너의 서비스명과 내부 포트를 자동으로 채웁니다."
+
+msgid "help_https_backend"
+msgstr "백엔드 자체가 HTTPS로 통신하면 켜세요. 자체 서명 인증서는 검증을 건너뜁니다."
+
+msgid "help_tls_mode"
+msgstr "공개 인증서 발급 방식입니다. 자동은 Let's Encrypt를 사용하고, 와일드카드는 기존 *.domain 인증서를 재사용합니다."
+
+msgid "help_snippets"
+msgstr "이 사이트에 적용할 재사용 설정 블록입니다 (보안 헤더, 압축, 접근 제어 등)."
+
+msgid "help_tags"
+msgstr "규칙을 묶고 필터링하기 위한 자유 라벨입니다. 쉼표로 구분하세요."
+
+msgid "help_websocket"
+msgstr "WebSocket 연결이 프록시를 통과하도록 업그레이드 헤더를 추가합니다."
+
+msgid "help_health"
+msgstr "Caddy가 백엔드 상태를 확인하기 위해 주기적으로 요청하는 경로입니다. 예: /health. 비워두면 비활성화됩니다."
+
+msgid "help_extra"
+msgstr "이 사이트 블록 안에 그대로 삽입되는 원본 Caddyfile 지시어입니다. 고급 사용자용."
+
+msgid "help_docker_discovery"
+msgstr "CPM이 리버스 프록시 대상을 자동 제안하기 위해 스캔하는 Docker 호스트입니다. 한 호스트를 로컬 Docker 호스트로 지정할 수 있습니다."
+
+msgid "discovery_auto_local_note"
+msgstr "로컬 Docker 데몬이 감지되면 CPM이 시작 시 이 컴퓨터를 로컬 Docker 호스트로 자동 등록합니다 — 수동 입력이 필요 없습니다."
+
+msgid "theme_system"
+msgstr "시스템"
+
+msgid "theme_light"
+msgstr "화이트"
+
+msgid "theme_dark"
+msgstr "다크"
+
+msgid "sites_import_path_label"
+msgstr "Caddyfile 경로 (비우면 기본 경로)"
+
+msgid "sites_import_preview_btn"
+msgstr "미리보기"
+
+msgid "sites_import_path_hint"
+msgstr "특정 Caddyfile을 가져오려면 전체 경로를 입력하세요. 비우면 설정된 메인 Caddyfile을 사용합니다."
+
+msgid "sites_import_path_ph"
+msgstr "Caddyfile 전체 경로 (비우면 기본값)"
+
+msgid "sites_import_file_btn"
+msgstr "파일 선택"
+
+msgid "status_up"
+msgstr "백엔드 실행 중"
+
+msgid "status_down"
+msgstr "백엔드 중지됨"
+
+msgid "status_unknown"
+msgstr "상태 알 수 없음"
+
+msgid "view_card"
+msgstr "카드 보기"
+
+msgid "view_list"
+msgstr "목록 보기"
+
+msgid "dashboard_public"
+msgstr "공개"
+
+msgid "dashboard_internal"
+msgstr "내부"
+
+msgid "dashboard_with_auth"
+msgstr "인증 적용"
+
+msgid "dashboard_backend_status"
+msgstr "백엔드 상태"
+
+msgid "users_first_admin_hint"
+msgstr "아직 사용자가 없습니다. 아래에서 관리자 계정을 먼저 만들면 인증을 켤 수 있습니다."
+
+msgid "users_create_first_admin"
+msgstr "첫 관리자 만들기"
+
+msgid "msg_fallback_saved"
+msgstr "대체 규칙이 저장되었습니다"
+
+msgid "msg_fallback_created"
+msgstr "fallback.caddy 생성됨"
+
+msgid "msg_error_page_saved"
+msgstr "에러 페이지가 저장되었습니다"
+
+msgid "certs_bulk_renew"
+msgstr "일괄 갱신"
+
+msgid "certs_renew_all"
+msgstr "전체"
+
+msgid "certs_renew_expiring"
+msgstr "만료 임박·위험"
+
+msgid "certs_renew_expired"
+msgstr "만료된 항목만"
+
+msgid "certs_bulk_renew_confirm"
+msgstr "선택한 인증서를 갱신할까요? Caddy가 재발급합니다."
+
+msgid "msg_certs_bulk_none"
+msgstr "선택한 범위에 해당하는 인증서가 없습니다"
+
+msgid "msg_certs_bulk_done"
+msgstr "{0}개 인증서를 갱신 대기열에 넣었습니다"
+
+msgid "msg_certs_bulk_reload_failed"
+msgstr "갱신했으나 재로드 실패"
+
+msgid "certs_bulk_reloading"
+msgstr "Caddy 재로드 중…"
+
+msgid "certs_bulk_waiting"
+msgstr "Caddy가 인증서를 재발급하는 중…"
+
+msgid "back_to_list"
+msgstr "목록으로"
+
+msgid "confirm_delete"
+msgstr "이 규칙을 삭제할까요?"
+
+msgid "domains"
+msgstr "도메인"
+
+msgid "options"
+msgstr "옵션"
+
+msgid "raw_config"
+msgstr "원본 설정"
+
+msgid "run_in_background"
+msgstr "백그라운드 실행"
+
+msgid "site_info"
+msgstr "규칙 정보"
+
+msgid "snippets"
+msgstr "스니펫"
+
+msgid "tags"
+msgstr "태그"
+
+msgid "target"
+msgstr "대상"
+
+msgid "snippets_reset_defaults"
+msgstr "기본값"
+
+msgid "snippets_settings"
+msgstr "설정"
+
+msgid "login_setup_title"
+msgstr "최초 설정"
+
+msgid "login_setup_desc"
+msgstr "시작하려면 관리자 계정을 생성하세요."
+
+msgid "login_rate_limited"
+msgstr "로그인 시도가 너무 많습니다. 15분 후 다시 시도해 주세요."
+
+msgid "logs_level_all"
+msgstr "전체"
+
+msgid "logs_level_info"
+msgstr "정보"
+
+msgid "logs_level_warn"
+msgstr "경고"
+
+msgid "logs_level_error"
+msgstr "오류"
+
+msgid "logs_wrap"
+msgstr "줄바꿈"
+
+msgid "logs_clear"
+msgstr "초기화"
+
+msgid "logs_show_all"
+msgstr "전체 보기"
+
+msgid "logs_cleared_note"
+msgstr "초기화 이전 로그를 숨기는 중"
+
+msgid "discovery_status_help"
+msgstr "이 컨테이너가 이미 프록시 규칙에 연결되어 있는지 여부"

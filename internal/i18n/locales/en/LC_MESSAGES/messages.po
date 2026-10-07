@@ -1000,7 +1000,7 @@ msgid "discovery_host_column"
 msgstr "Host"
 
 msgid "discovery_not_paired"
-msgstr "Not paired"
+msgstr "No rule yet"
 
 msgid "discovery_create_rule"
 msgstr "Create rule"
@@ -1027,7 +1027,259 @@ msgid "discovery_no_local_host_desc"
 msgstr "Mark one host as \"Local Docker\" in"
 
 msgid "sites_quick_host"
-msgstr "Quick Host Select"
+msgstr "Host (Docker)"
 
 msgid "sites_select_host"
 msgstr "Select Docker host…"
+
+msgid "sites_import"
+msgstr "Import"
+
+msgid "sites_import_title"
+msgstr "Import from main Caddyfile"
+
+msgid "sites_import_desc"
+msgstr "These site blocks were found written directly in the main Caddyfile. They will be saved as individual files under sites/standard/."
+
+msgid "sites_import_loading"
+msgstr "Parsing main Caddyfile…"
+
+msgid "sites_import_none"
+msgstr "No importable site blocks were found in the main Caddyfile."
+
+msgid "sites_import_execute"
+msgstr "Import these rules"
+
+msgid "target_type"
+msgstr "Target type"
+
+msgid "target_type_ip"
+msgstr "IP address"
+
+msgid "target_type_service"
+msgstr "Service name"
+
+msgid "sites_service_name"
+msgstr "Service name (container)"
+
+msgid "sites_container_select"
+msgstr "Pick a running container"
+
+msgid "sites_container_select_ph"
+msgstr "Select a container…"
+
+msgid "help_domains"
+msgstr "Domains this rule answers for. Separate multiple with a comma or space (e.g. example.com, www.example.com)."
+
+msgid "help_target_type"
+msgstr "Choose how to reach the backend: a fixed IP address, or a Docker service/container name. Service names survive container IP changes but require the target to share a Docker network with Caddy."
+
+msgid "help_target_host"
+msgstr "IP address of the backend, e.g. 192.168.1.100."
+
+msgid "help_target_service"
+msgstr "Docker container/service name, e.g. jellyfin. Caddy resolves it on the shared Docker network, so it keeps working even if the container's internal IP changes."
+
+msgid "help_target_port"
+msgstr "Port the backend listens on, e.g. 8096. For a service name, use the container's internal port."
+
+msgid "help_quick_host"
+msgstr "Quickly fill the IP from a configured Docker host."
+
+msgid "help_container_picker"
+msgstr "Fills the service name and internal port from a container running on the local Docker host."
+
+msgid "help_https_backend"
+msgstr "Enable if the backend itself speaks HTTPS. Certificate verification is skipped for self-signed backends."
+
+msgid "help_tls_mode"
+msgstr "How the public certificate is obtained. Auto uses Let's Encrypt; wildcard reuses an existing *.domain certificate."
+
+msgid "help_snippets"
+msgstr "Reusable config blocks applied to this site (security headers, compression, access control, etc.)."
+
+msgid "help_tags"
+msgstr "Free-form labels for grouping and filtering rules. Comma-separated."
+
+msgid "help_websocket"
+msgstr "Adds the upgrade headers needed for WebSocket connections to pass through the proxy."
+
+msgid "help_health"
+msgstr "Path Caddy periodically requests to check backend health, e.g. /health. Leave empty to disable."
+
+msgid "help_extra"
+msgstr "Raw Caddyfile directives inserted verbatim inside this site block. For advanced use."
+
+msgid "help_docker_discovery"
+msgstr "Docker hosts CPM scans to auto-suggest reverse-proxy targets. One host can be marked as the local Docker host."
+
+msgid "discovery_auto_local_note"
+msgstr "When a local Docker daemon is reachable, CPM auto-registers this machine as the local Docker host on startup — no manual entry needed."
+
+msgid "theme_system"
+msgstr "System"
+
+msgid "theme_light"
+msgstr "Light"
+
+msgid "theme_dark"
+msgstr "Dark"
+
+msgid "sites_import_path_label"
+msgstr "Caddyfile path (leave blank for the default)"
+
+msgid "sites_import_preview_btn"
+msgstr "Preview"
+
+msgid "sites_import_path_hint"
+msgstr "Enter a full path to import a specific Caddyfile, or leave blank to use the configured main Caddyfile."
+
+msgid "sites_import_path_ph"
+msgstr "Full path to a Caddyfile (blank = default)"
+
+msgid "sites_import_file_btn"
+msgstr "Choose file"
+
+msgid "status_up"
+msgstr "Backend running"
+
+msgid "status_down"
+msgstr "Backend stopped"
+
+msgid "status_unknown"
+msgstr "Status unknown"
+
+msgid "view_card"
+msgstr "Card view"
+
+msgid "view_list"
+msgstr "List view"
+
+msgid "dashboard_public"
+msgstr "Public"
+
+msgid "dashboard_internal"
+msgstr "Internal"
+
+msgid "dashboard_with_auth"
+msgstr "With auth"
+
+msgid "dashboard_backend_status"
+msgstr "Backend status"
+
+msgid "users_first_admin_hint"
+msgstr "No users yet. Create an admin account below, then you can enable authentication."
+
+msgid "users_create_first_admin"
+msgstr "Create your first admin"
+
+msgid "msg_fallback_saved"
+msgstr "Fallback rule saved"
+
+msgid "msg_fallback_created"
+msgstr "fallback.caddy created"
+
+msgid "msg_error_page_saved"
+msgstr "Error page saved"
+
+msgid "certs_bulk_renew"
+msgstr "Bulk renew"
+
+msgid "certs_renew_all"
+msgstr "All certificates"
+
+msgid "certs_renew_expiring"
+msgstr "Expiring / at risk"
+
+msgid "certs_renew_expired"
+msgstr "Expired only"
+
+msgid "certs_bulk_renew_confirm"
+msgstr "Renew the selected certificates? They will be re-issued by Caddy."
+
+msgid "msg_certs_bulk_none"
+msgstr "No certificates matched the selected scope"
+
+msgid "msg_certs_bulk_done"
+msgstr "{0} certificate(s) queued for renewal"
+
+msgid "msg_certs_bulk_reload_failed"
+msgstr "Renewed but reload failed"
+
+msgid "certs_bulk_reloading"
+msgstr "Reloading Caddy…"
+
+msgid "certs_bulk_waiting"
+msgstr "Waiting for Caddy to re-issue certificates…"
+
+msgid "back_to_list"
+msgstr "Back to list"
+
+msgid "confirm_delete"
+msgstr "Delete this rule?"
+
+msgid "domains"
+msgstr "Domains"
+
+msgid "options"
+msgstr "Options"
+
+msgid "raw_config"
+msgstr "Raw configuration"
+
+msgid "run_in_background"
+msgstr "Run in background"
+
+msgid "site_info"
+msgstr "Rule info"
+
+msgid "snippets"
+msgstr "Snippets"
+
+msgid "tags"
+msgstr "Tags"
+
+msgid "target"
+msgstr "Target"
+
+msgid "snippets_reset_defaults"
+msgstr "Defaults"
+
+msgid "snippets_settings"
+msgstr "Settings"
+
+msgid "login_setup_title"
+msgstr "First Time Setup"
+
+msgid "login_setup_desc"
+msgstr "Create your administrator account to get started."
+
+msgid "login_rate_limited"
+msgstr "Too many failed login attempts. Please try again in 15 minutes."
+
+msgid "logs_level_all"
+msgstr "All"
+
+msgid "logs_level_info"
+msgstr "Info"
+
+msgid "logs_level_warn"
+msgstr "Warning"
+
+msgid "logs_level_error"
+msgstr "Error"
+
+msgid "logs_wrap"
+msgstr "Wrap lines"
+
+msgid "logs_clear"
+msgstr "Clear"
+
+msgid "logs_show_all"
+msgstr "Show all"
+
+msgid "logs_cleared_note"
+msgstr "Hiding logs before the clear point"
+
+msgid "discovery_status_help"
+msgstr "Whether this container is already linked to a proxy rule"

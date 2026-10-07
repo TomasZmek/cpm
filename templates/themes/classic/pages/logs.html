@@ -6,79 +6,308 @@
         <button class="btn btn-secondary" onclick="refreshLogs()">
             🔄 {{t .Lang "logs_refresh"}}
         </button>
+        <button class="btn btn-secondary" onclick="LV.clear()">
+            🧹 {{t .Lang "logs_clear"}}
+        </button>
     </div>
 </div>
 
-<!-- Filters -->
-<div class="filters-bar">
-    <div class="form-group">
-        <label for="log-filter">{{t .Lang "filter"}}:</label>
-        <input type="search" 
-               id="log-filter" 
-               name="filter"
-               value="{{.Filter}}"
-               placeholder="{{t .Lang "logs_search"}}"
-               onkeyup="filterLogs(this.value)">
+<style>
+.logv-toolbar {
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    padding: 12px 14px; margin-bottom: 14px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+}
+.logv-toolbar .logv-search { flex: 1; min-width: 200px; }
+.logv-toolbar input[type="search"], .logv-toolbar select {
+    width: 100%; box-sizing: border-box; background: var(--surface-2);
+    border: 1px solid var(--border); border-radius: 8px; padding: 8px 11px;
+    color: var(--text); font-size: 13.5px;
+}
+.logv-field { display: flex; align-items: center; gap: 8px; }
+.logv-field > label { font-size: 12.5px; color: var(--text-muted); white-space: nowrap; }
+
+/* level filter chips */
+.logv-levels { display: flex; gap: 6px; }
+.logv-chip {
+    cursor: pointer; user-select: none; font-size: 12.5px; font-weight: 600;
+    padding: 6px 11px; border-radius: 999px; border: 1px solid var(--border);
+    background: var(--surface-2); color: var(--text-muted); display: inline-flex; gap: 6px; align-items: center;
+}
+.logv-chip:hover { border-color: var(--border-strong); }
+.logv-chip.active { color: #fff; border-color: transparent; }
+.logv-chip[data-level="all"].active   { background: var(--accent); }
+.logv-chip[data-level="info"].active  { background: var(--info); }
+.logv-chip[data-level="warn"].active  { background: var(--warning); }
+.logv-chip[data-level="error"].active { background: var(--danger); }
+.logv-chip .logv-dot { width: 8px; height: 8px; border-radius: 50%; }
+.logv-chip[data-level="info"] .logv-dot  { background: var(--info); }
+.logv-chip[data-level="warn"] .logv-dot  { background: var(--warning); }
+.logv-chip[data-level="error"] .logv-dot { background: var(--danger); }
+.logv-chip.active .logv-dot { background: rgba(255,255,255,.9); }
+
+.logv-count { font-size: 12px; color: var(--text-muted); margin-left: auto; }
+
+/* viewer */
+.logv-viewer {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    overflow: auto; max-height: calc(100vh - 230px);
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 12.5px; line-height: 1.5;
+}
+.logv-row {
+    display: grid; grid-template-columns: 64px 78px auto; gap: 10px;
+    padding: 4px 14px; border-left: 3px solid transparent;
+    border-bottom: 1px solid color-mix(in srgb, var(--border) 45%, transparent);
+}
+.logv-row:hover { background: var(--surface-2); }
+.logv-row.lvl-error { border-left-color: var(--danger); background: color-mix(in srgb, var(--danger) 7%, transparent); }
+.logv-row.lvl-warn  { border-left-color: var(--warning); background: color-mix(in srgb, var(--warning) 7%, transparent); }
+.logv-row.lvl-info  { border-left-color: color-mix(in srgb, var(--info) 55%, transparent); }
+.logv-row.lvl-debug { border-left-color: var(--border-strong); }
+
+.logv-badge {
+    font-size: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+    padding: 2px 0; text-align: center; border-radius: 5px; height: fit-content; align-self: start; margin-top: 1px;
+}
+.logv-badge.lvl-error { background: var(--danger-soft); color: var(--danger); }
+.logv-badge.lvl-warn  { background: var(--warning-soft); color: var(--warning); }
+.logv-badge.lvl-info  { background: var(--info-soft); color: var(--info); }
+.logv-badge.lvl-debug { background: var(--surface-3); color: var(--text-muted); }
+
+.logv-time { color: var(--text-muted); align-self: start; margin-top: 1px; white-space: nowrap; }
+.logv-body { min-width: 0; color: var(--text); }
+.logv-body.nowrap { white-space: nowrap; }
+.logv-logger { color: var(--accent-600); font-weight: 600; margin-right: 6px; }
+.logv-msg { color: var(--text); }
+.logv-extra { color: var(--text-muted); }
+.logv-extra .k { color: var(--info); }
+
+.logv-empty { padding: 40px; text-align: center; color: var(--text-muted); }
+
+.logv-clearnote {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 9px 14px; margin: -4px 0 14px;
+    background: var(--warning-soft); border: 1px solid color-mix(in srgb, var(--warning) 40%, transparent);
+    border-radius: 10px; font-size: 13px; color: var(--text);
+}
+</style>
+
+<div class="logv-toolbar">
+    <div class="logv-search">
+        <input type="search" id="log-filter" value="{{if .Filter}}{{.Filter}}{{end}}"
+               placeholder="{{t .Lang "logs_search"}}" oninput="LV.apply()">
     </div>
-    
-    <div class="form-group">
-        <label for="log-lines">{{t .Lang "logs_lines"}}:</label>
-        <select id="log-lines" name="lines" onchange="changeLinesCount(this.value)">
+
+    <div class="logv-levels" id="log-levels">
+        <span class="logv-chip active" data-level="all">{{t .Lang "logs_level_all"}}</span>
+        <span class="logv-chip active" data-level="info"><span class="logv-dot"></span>{{t .Lang "logs_level_info"}}</span>
+        <span class="logv-chip active" data-level="warn"><span class="logv-dot"></span>{{t .Lang "logs_level_warn"}}</span>
+        <span class="logv-chip active" data-level="error"><span class="logv-dot"></span>{{t .Lang "logs_level_error"}}</span>
+    </div>
+
+    <div class="logv-field">
+        <label for="log-lines">{{t .Lang "logs_lines"}}</label>
+        <select id="log-lines" onchange="changeLinesCount(this.value)">
             <option value="50" {{if eq .Lines 50}}selected{{end}}>50</option>
             <option value="100" {{if eq .Lines 100}}selected{{end}}>100</option>
             <option value="200" {{if eq .Lines 200}}selected{{end}}>200</option>
             <option value="500" {{if eq .Lines 500}}selected{{end}}>500</option>
         </select>
     </div>
-    
-    <div class="form-group">
-        <label class="checkbox-label">
-            <input type="checkbox" id="auto-scroll" checked>
-            {{t .Lang "auto_scroll"}}
-        </label>
-    </div>
+
+    <label class="logv-field"><input type="checkbox" id="log-wrap" onchange="LV.render()"> {{t .Lang "logs_wrap"}}</label>
+    <label class="logv-field"><input type="checkbox" id="auto-scroll" checked> {{t .Lang "auto_scroll"}}</label>
+
+    <span class="logv-count" id="log-count"></span>
 </div>
 
-<!-- Log Viewer -->
-<div class="log-viewer" id="log-viewer">
-    <pre id="log-content">{{range .Logs}}{{.}}
-{{end}}</pre>
+<div class="logv-clearnote" id="log-clearnote" hidden>
+    <span>🧹 {{t .Lang "logs_cleared_note"}} <b id="log-hidden-count"></b></span>
+    <button class="btn btn-secondary btn-sm" onclick="LV.showAll()">{{t .Lang "logs_show_all"}}</button>
+</div>
+
+<!-- raw lines (hidden, read by JS) -->
+<div id="log-raw" hidden>{{range .Logs}}<i>{{.}}</i>{{end}}</div>
+
+<div class="logv-viewer" id="log-viewer">
+    <div id="log-list"></div>
 </div>
 
 <script>
-let autoScroll = true;
-const logViewer = document.getElementById('log-viewer');
-const logContent = document.getElementById('log-content');
+var LV = (function () {
+    var viewer = document.getElementById('log-viewer');
+    var list = document.getElementById('log-list');
+    var countEl = document.getElementById('log-count');
+    var activeLevels = { info: true, warn: true, error: true, debug: true };
+    var parsed = [];
+    var CLEAR_KEY = 'cpm-logs-cleared-at';
+    var baseline = parseFloat(localStorage.getItem(CLEAR_KEY)) || 0;
 
-document.getElementById('auto-scroll').addEventListener('change', function() {
-    autoScroll = this.checked;
-    if (autoScroll) {
-        logViewer.scrollTop = logViewer.scrollHeight;
+    function fmtEpoch(ep) {
+        if (!ep) return '';
+        return new Date(ep * 1000).toTimeString().slice(0, 8);
     }
-});
+
+    function normLevel(l) {
+        l = (l || '').toLowerCase();
+        if (l === 'error' || l === 'fatal' || l === 'panic') return 'error';
+        if (l === 'warn' || l === 'warning') return 'warn';
+        if (l === 'debug') return 'debug';
+        return 'info';
+    }
+
+    function parseLine(raw) {
+        raw = raw.replace(/\s+$/, '');
+        if (!raw.trim()) return null;
+
+        // Docker prepends an RFC3339 timestamp (Timestamps: true). Strip it off,
+        // but keep its epoch for the time column and the clear baseline.
+        var epoch = 0, rest = raw;
+        var m = raw.match(/^(\d{4}-\d{2}-\d{2}T[0-9:.]+(?:Z|[+-]\d{2}:?\d{2}))\s+([\s\S]*)$/);
+        if (m) {
+            var t = Date.parse(m[1]);
+            if (!isNaN(t)) epoch = t / 1000;
+            rest = m[2];
+        }
+
+        if (rest.charAt(0) === '{') {
+            try {
+                var o = JSON.parse(rest);
+                var extras = [];
+                Object.keys(o).forEach(function (k) {
+                    if (['level', 'ts', 'logger', 'msg'].indexOf(k) === -1) {
+                        var v = o[k];
+                        extras.push([k, typeof v === 'object' ? JSON.stringify(v) : String(v)]);
+                    }
+                });
+                if (!epoch && typeof o.ts === 'number') epoch = o.ts;
+                return {
+                    level: normLevel(o.level), epoch: epoch, time: fmtEpoch(epoch),
+                    logger: o.logger || '', msg: o.msg || '', extras: extras, raw: raw
+                };
+            } catch (e) {}
+        }
+        var low = rest.toLowerCase();
+        var lvl = 'info';
+        if (/^error|error:|\bfatal\b|panic/.test(low)) lvl = 'error';
+        else if (/\bwarn/.test(low)) lvl = 'warn';
+        return { level: lvl, epoch: epoch, time: fmtEpoch(epoch), logger: '', msg: rest, extras: [], raw: raw };
+    }
+
+    function esc(s) {
+        return s.replace(/[&<>]/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]; });
+    }
+
+    function rowHTML(p, wrap) {
+        var extra = '';
+        if (p.extras && p.extras.length) {
+            extra = ' ' + p.extras.map(function (kv) {
+                return '<span class="logv-extra"><span class="k">' + esc(kv[0]) + '</span>=' + esc(kv[1]) + '</span>';
+            }).join(' ');
+        }
+        var logger = p.logger ? '<span class="logv-logger">' + esc(p.logger) + '</span>' : '';
+        return '<div class="logv-row lvl-' + p.level + '" data-level="' + p.level + '">'
+            + '<span class="logv-badge lvl-' + p.level + '">' + p.level + '</span>'
+            + '<span class="logv-time">' + esc(p.time) + '</span>'
+            + '<span class="logv-body' + (wrap ? '' : ' nowrap') + '">' + logger
+            + '<span class="logv-msg">' + esc(p.msg) + '</span>' + extra + '</span>'
+            + '</div>';
+    }
+
+    function render() {
+        var q = (document.getElementById('log-filter').value || '').toLowerCase();
+        var wrap = document.getElementById('log-wrap').checked;
+        var html = [], shown = 0, hiddenByClear = 0;
+        for (var i = 0; i < parsed.length; i++) {
+            var p = parsed[i];
+            if (baseline && p.epoch && p.epoch <= baseline) { hiddenByClear++; continue; }
+            if (!activeLevels[p.level]) continue;
+            if (q && p.raw.toLowerCase().indexOf(q) === -1) continue;
+            html.push(rowHTML(p, wrap));
+            shown++;
+        }
+        list.innerHTML = html.length ? html.join('') : '<div class="logv-empty">{{t .Lang "logs_empty"}}</div>';
+        countEl.textContent = shown + ' / ' + parsed.length;
+
+        var note = document.getElementById('log-clearnote');
+        if (baseline && hiddenByClear > 0) {
+            note.hidden = false;
+            document.getElementById('log-hidden-count').textContent = '(' + hiddenByClear + ')';
+        } else {
+            note.hidden = true;
+        }
+        if (document.getElementById('auto-scroll').checked) viewer.scrollTop = viewer.scrollHeight;
+    }
+
+    function apply() { render(); }
+
+    function clearLogs() {
+        // Hide everything currently loaded; persist the cut point so it survives refresh.
+        var maxEpoch = 0;
+        for (var i = 0; i < parsed.length; i++) {
+            if (parsed[i].epoch > maxEpoch) maxEpoch = parsed[i].epoch;
+        }
+        baseline = maxEpoch || (Date.now() / 1000);
+        localStorage.setItem(CLEAR_KEY, String(baseline));
+        render();
+    }
+
+    function showAll() {
+        baseline = 0;
+        localStorage.removeItem(CLEAR_KEY);
+        render();
+    }
+
+    function setLevel(level) {
+        var chips = document.querySelectorAll('.logv-chip');
+        if (level === 'all') {
+            var allActive = activeLevels.info && activeLevels.warn && activeLevels.error;
+            var next = !allActive;
+            activeLevels = { info: next, warn: next, error: next, debug: next };
+        } else {
+            activeLevels[level] = !activeLevels[level];
+            if (level === 'info') activeLevels.debug = activeLevels.info;
+        }
+        chips.forEach(function (c) {
+            var lv = c.getAttribute('data-level');
+            if (lv === 'all') {
+                c.classList.toggle('active', activeLevels.info && activeLevels.warn && activeLevels.error);
+            } else {
+                c.classList.toggle('active', !!activeLevels[lv]);
+            }
+        });
+        render();
+    }
+
+    function init() {
+        parsed = [];
+        document.querySelectorAll('#log-raw > i').forEach(function (el) {
+            var p = parseLine(el.textContent);
+            if (p) parsed.push(p);
+        });
+        document.querySelectorAll('.logv-chip').forEach(function (c) {
+            c.addEventListener('click', function () { setLevel(c.getAttribute('data-level')); });
+        });
+        document.getElementById('auto-scroll').addEventListener('change', function () {
+            if (this.checked) viewer.scrollTop = viewer.scrollHeight;
+        });
+        render();
+    }
+
+    return { init: init, apply: apply, render: render, clear: clearLogs, showAll: showAll };
+})();
 
 function refreshLogs() {
-    const lines = document.getElementById('log-lines').value;
-    const filter = document.getElementById('log-filter').value;
-    window.location.href = `/logs?lines=${lines}&filter=${encodeURIComponent(filter)}`;
+    var lines = document.getElementById('log-lines').value;
+    var filter = document.getElementById('log-filter').value;
+    window.location.href = '/logs?lines=' + lines + '&filter=' + encodeURIComponent(filter);
 }
-
 function changeLinesCount(lines) {
-    const filter = document.getElementById('log-filter').value;
-    window.location.href = `/logs?lines=${lines}&filter=${encodeURIComponent(filter)}`;
+    var filter = document.getElementById('log-filter').value;
+    window.location.href = '/logs?lines=' + lines + '&filter=' + encodeURIComponent(filter);
 }
 
-function filterLogs(query) {
-    // Client-side filtering
-    const lines = logContent.innerText.split('\n');
-    const filtered = query ? lines.filter(line => 
-        line.toLowerCase().includes(query.toLowerCase())
-    ) : lines;
-    logContent.innerText = filtered.join('\n');
-}
-
-// Auto-scroll on load
-if (autoScroll) {
-    logViewer.scrollTop = logViewer.scrollHeight;
-}
+LV.init();
+document.body.addEventListener('htmx:afterSwap', function () { LV.init(); });
 </script>

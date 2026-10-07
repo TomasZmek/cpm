@@ -3,6 +3,18 @@
         <h1>📜 {{t .Lang "certs_title"}}</h1>
         <span class="badge">{{.Stats.total}} {{t .Lang "certs_count"}}</span>
     </div>
+    {{if .Certificates}}
+    <div class="page-header-actions">
+        <select id="bulk-renew-scope" name="scope" style="width:auto;">
+            <option value="all">{{t .Lang "certs_renew_all"}}</option>
+            <option value="expiring">{{t .Lang "certs_renew_expiring"}}</option>
+            <option value="expired">{{t .Lang "certs_renew_expired"}}</option>
+        </select>
+        <button type="button" class="btn btn-primary" onclick="startBulkRenew()">
+            🔄 {{t .Lang "certs_bulk_renew"}}
+        </button>
+    </div>
+    {{end}}
 </div>
 
 <!-- Stats -->
@@ -26,71 +38,45 @@
 </div>
 
 <!-- Certificates List -->
-<div class="table-container">
-    <table class="table">
-        <thead>
-            <tr>
-                <th>{{t .Lang "status"}}</th>
-                <th>{{t .Lang "certs_domain"}}</th>
-                <th>{{t .Lang "certs_issuer"}}</th>
-                <th>{{t .Lang "valid_from"}}</th>
-                <th>{{t .Lang "certs_expires"}}</th>
-                <th>{{t .Lang "certs_days_left"}}</th>
-                <th>{{t .Lang "actions"}}</th>
-            </tr>
-        </thead>
-        <tbody id="certificates-list">
-            {{if .Certificates}}
-                {{range .Certificates}}
-                <tr class="cert-row cert-{{.Status}}">
-                    <td>
-                        <span class="cert-status-icon">{{.StatusIcon}}</span>
-                    </td>
-                    <td>
-                        <strong>{{.Domain}}</strong>
-                    </td>
-                    <td>{{.Issuer}}</td>
-                    <td>{{.NotBefore.Format "2006-01-02"}}</td>
-                    <td>{{.NotAfter.Format "2006-01-02"}}</td>
-                    <td>
-                        <span class="{{.StatusClass}}">
-                            {{if lt .DaysLeft 0}}
-                                {{t $.Lang "certs_expired"}}
-                            {{else if eq .DaysLeft 0}}
-                                {{t $.Lang "today"}}
-                            {{else}}
-                                {{.DaysLeft}} {{t $.Lang "days"}}
-                            {{end}}
-                        </span>
-                    </td>
-                    <td>
-                        <button class="btn btn-sm btn-secondary"
-                                hx-post="/certificates/{{.Domain}}/renew"
-                                hx-confirm="{{t $.Lang "certs_confirm_renew"}} {{.Domain}}?">
-                            🔄 {{t $.Lang "certs_renew"}}
-                        </button>
-                        <button class="btn btn-sm btn-danger"
-                                hx-post="/certificates/{{.Domain}}/delete"
-                                hx-confirm="{{t $.Lang "certs_confirm_delete"}} {{.Domain}}?">
-                            🗑️ {{t $.Lang "delete"}}
-                        </button>
-                    </td>
-                </tr>
-                {{end}}
-            {{else}}
-                <tr>
-                    <td colspan="7" class="text-center">
-                        <div class="empty-state">
-                            <div class="empty-state-icon">📜</div>
-                            <h3>{{t .Lang "certs_empty_title"}}</h3>
-                            <p>{{t .Lang "certs_empty_desc"}}</p>
-                        </div>
-                    </td>
-                </tr>
-            {{end}}
-        </tbody>
-    </table>
+{{if .Certificates}}
+<div class="cert-list" id="certificates-list">
+    {{range .Certificates}}
+    <div class="cert-item cert-{{.Status}}" data-domain="{{.Domain}}">
+        <span class="status-dot"></span>
+        <div class="cert-item-info">
+            <div class="cert-item-domain">{{.Domain}}</div>
+            <div class="cert-item-issuer">{{.Issuer}}</div>
+        </div>
+        <div class="cert-item-dates">
+            <div class="text-muted">{{.NotBefore.Format "2006-01-02"}} &rarr; {{.NotAfter.Format "2006-01-02"}}</div>
+            <div class="cert-item-daysleft {{.StatusClass}}">
+                {{if lt .DaysLeft 0}}{{t $.Lang "certs_expired"}}
+                {{else if eq .DaysLeft 0}}{{t $.Lang "today"}}
+                {{else}}{{.DaysLeft}} {{t $.Lang "days"}}{{end}}
+            </div>
+        </div>
+        <div class="cert-item-actions">
+            <button class="btn btn-sm btn-secondary"
+                    hx-post="/certificates/{{.Domain}}/renew"
+                    hx-confirm="{{t $.Lang "certs_confirm_renew"}} {{.Domain}}?">
+                🔄 {{t $.Lang "certs_renew"}}
+            </button>
+            <button class="btn btn-sm btn-danger"
+                    hx-post="/certificates/{{.Domain}}/delete"
+                    hx-confirm="{{t $.Lang "certs_confirm_delete"}} {{.Domain}}?">
+                🗑️ {{t $.Lang "delete"}}
+            </button>
+        </div>
+    </div>
+    {{end}}
 </div>
+{{else}}
+<div class="empty-state">
+    <div class="empty-state-icon">📜</div>
+    <h3>{{t .Lang "certs_empty_title"}}</h3>
+    <p>{{t .Lang "certs_empty_desc"}}</p>
+</div>
+{{end}}
 
 <div class="info-box mt-4">
     <h4>ℹ️ {{t .Lang "certs_about_title"}}</h4>
@@ -100,3 +86,121 @@
         <li><strong>🗑️ {{t .Lang "delete"}}</strong> - {{t .Lang "certs_delete_desc"}}</li>
     </ul>
 </div>
+
+<!-- Bulk renew progress -->
+<div id="renew-progress-modal" class="modal-overlay" style="display:none;">
+    <div class="modal" style="max-width:440px;">
+        <div class="modal-header">
+            <h2>🔄 {{t .Lang "certs_bulk_renew"}}</h2>
+        </div>
+        <div class="modal-body">
+            <div id="renew-progress-label" class="text-muted" style="margin-bottom:12px;">…</div>
+            <div class="progress-track"><div id="renew-progress-fill" class="progress-fill"></div></div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
+                <button type="button" id="renew-progress-close" class="btn btn-sm btn-secondary" style="display:none;" onclick="closeRenewModal()">
+                    {{t .Lang "run_in_background"}}
+                </button>
+                <div id="renew-progress-count" class="text-sm text-muted" style="text-align:right; flex:1;">0 / 0</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function cpmCsrf2() {
+    var m = document.querySelector('meta[name="csrf-token"]');
+    return m ? m.getAttribute('content') : '';
+}
+
+function startBulkRenew() {
+    var scope = document.getElementById('bulk-renew-scope').value;
+    var sel = '.cert-item';
+    if (scope === 'expired') { sel = '.cert-item.cert-expired'; }
+    else if (scope === 'expiring') { sel = '.cert-item.cert-expiring, .cert-item.cert-critical, .cert-item.cert-expired'; }
+
+    var domains = [];
+    document.querySelectorAll(sel).forEach(function (el) {
+        var d = el.getAttribute('data-domain');
+        if (d) { domains.push(d); }
+    });
+    if (domains.length === 0) { alert('{{t .Lang "msg_certs_bulk_none"}}'); return; }
+    if (!confirm('{{t .Lang "certs_bulk_renew_confirm"}}\n(' + domains.length + ')')) { return; }
+    runBulkRenew(domains);
+}
+
+function runBulkRenew(domains) {
+    var modal = document.getElementById('renew-progress-modal');
+    var bar = document.getElementById('renew-progress-fill');
+    var label = document.getElementById('renew-progress-label');
+    var count = document.getElementById('renew-progress-count');
+
+    modal.style.display = 'flex';
+    var total = domains.length, done = 0, failed = 0, i = 0;
+    var initialTotalCount = {{.Stats.total}}; // Total certs before deletion
+
+    function updateDeleteProgress() {
+        var pct = Math.round((done + failed) / total * 100);
+        bar.style.width = pct + '%';
+        count.textContent = (done + failed) + ' / ' + total + ' deleted';
+    }
+    updateDeleteProgress();
+
+    function step() {
+        if (i >= total) { finish(); return; }
+        var domain = domains[i++];
+        label.textContent = '🗑️ ' + domain;
+        fetch('/certificates/' + encodeURIComponent(domain) + '/renew-step', {
+            method: 'POST', headers: { 'X-CSRF-Token': cpmCsrf2() }
+        })
+            .then(function (r) { if (r.ok) { done++; } else { failed++; } })
+            .catch(function () { failed++; })
+            .finally(function () { updateDeleteProgress(); step(); });
+    }
+
+    function finish() {
+        label.textContent = '{{t .Lang "certs_bulk_reloading"}}';
+        fetch('/caddy/reload-force', { method: 'POST', headers: { 'X-CSRF-Token': cpmCsrf2() } })
+            .finally(function () {
+                label.textContent = '{{t .Lang "certs_bulk_waiting"}}';
+                bar.style.width = '0%'; // Reset for reissue progress
+                waitForCerts(0);
+            });
+    }
+
+    function waitForCerts(tries) {
+        var targetCount = initialTotalCount;
+        var startCount = Math.max(0, initialTotalCount - done);
+
+        // Show "Run in background" button after 3 tries (~6 seconds)
+        if (tries === 3) {
+            document.getElementById('renew-progress-close').style.display = 'inline-block';
+        }
+
+        fetch('/certificates/count', { headers: { 'X-Requested-With': 'fetch' } })
+            .then(function (r) { return r.json(); })
+            .then(function (d) {
+                var currentCount = d.count || 0;
+                var restored = Math.max(0, currentCount - startCount);
+                var pct = done > 0 ? Math.min(100, Math.round((restored / done) * 100)) : 100;
+                
+                bar.style.width = pct + '%';
+                count.textContent = '🔐 ' + currentCount + ' / ' + targetCount;
+                
+                // Wait until all are restored or timeout after 90 tries (3 minutes)
+                if ((currentCount >= targetCount && targetCount > 0) || tries >= 90) {
+                    label.textContent = '✅ ' + restored + ' / ' + done + ' reissued' + (failed ? (' · ⚠️ ' + failed) : '');
+                    setTimeout(function () { location.href = '/certificates'; }, 1000);
+                } else {
+                    setTimeout(function () { waitForCerts(tries + 1); }, 2000);
+                }
+            })
+            .catch(function () { location.href = '/certificates'; });
+    }
+    step();
+}
+
+function closeRenewModal() {
+    document.getElementById('renew-progress-modal').style.display = 'none';
+    location.href = '/certificates';
+}
+</script>

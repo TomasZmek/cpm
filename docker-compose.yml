@@ -1,6 +1,8 @@
 services:
   caddy:
-    image: caddy:2-alpine
+    build:
+      context: .
+      dockerfile: Dockerfile.caddy
     container_name: caddy
     restart: unless-stopped
     ports:
@@ -17,13 +19,13 @@ services:
       - ./caddy-config/pages:/usr/share/caddy/pages
 
   cpm:
-    image: ghcr.io/tomaszmek/cpm:latest
+    # image: ghcr.io/tomaszmek/cpm:latest
     # Or build locally:
-    # build: .
+    build: .
     container_name: cpm
     restart: unless-stopped
     ports:
-      - "8080:8080"
+      - "8501:8501"
     environment:
       - CONTAINER_NAME=caddy
       - CADDY_CONFIG_PATH=/caddy-config

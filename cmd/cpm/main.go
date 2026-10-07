@@ -64,6 +64,17 @@ func main() {
 		log.Printf("Warning: Failed to create directory structure: %v", err)
 	}
 
+	// Auto-register the local machine as a Docker discovery host when a local
+	// Docker daemon is reachable. Runs in the background so a slow/unreachable
+	// Docker socket never delays startup.
+	go func() {
+		if added, err := settingsService.EnsureLocalDockerHost(dockerService); err != nil {
+			log.Printf("Local Docker auto-detect skipped: %v", err)
+		} else if added {
+			log.Printf("Local Docker host auto-registered for discovery")
+		}
+	}()
+
 	// Initialize template engine
 	engine := html.New("./templates/themes/classic", ".html")
 	engine.AddFunc("t", i18n.T)
@@ -201,6 +212,9 @@ func setupRoutes(app *fiber.App, h *handlers.Handler, authService *services.Auth
 	// Sites
 	protected.Get("/sites", h.SitesList)
 	protected.Get("/sites/new", edit, h.SiteNew)
+	protected.Get("/sites/import-preview", admin, h.SitesImportPreview)
+	protected.Post("/sites/import-preview", admin, h.SitesImportPreview)
+	protected.Post("/sites/import", admin, h.SitesImport)
 	protected.Post("/sites", edit, h.SiteCreate)
 	protected.Get("/sites/:id", h.SiteDetail)
 	protected.Get("/sites/:id/edit", edit, h.SiteEdit)
@@ -210,6 +224,7 @@ func setupRoutes(app *fiber.App, h *handlers.Handler, authService *services.Auth
 
 	// HTMX partials for sites
 	protected.Get("/htmx/sites/list", h.HTMXSitesList)
+	protected.Get("/htmx/sites/status", h.SitesStatus)
 	protected.Get("/htmx/sites/:id/card", h.HTMXSiteCard)
 	protected.Get("/htmx/sites/:id/preview", h.HTMXSitePreview)
 
@@ -221,7 +236,10 @@ func setupRoutes(app *fiber.App, h *handlers.Handler, authService *services.Auth
 	// Certificates
 	protected.Get("/certificates", h.CertificatesList)
 	protected.Post("/certificates/:domain/delete", edit, h.CertificateDelete)
+	protected.Post("/certificates/renew-all", edit, h.CertificatesRenewAll)
 	protected.Post("/certificates/:domain/renew", edit, h.CertificateRenew)
+	protected.Post("/certificates/:domain/renew-step", edit, h.CertificateRenewStep)
+	protected.Get("/certificates/count", h.CertificatesCount)
 	protected.Get("/htmx/certificates/list", h.HTMXCertificatesList)
 
 	// Logs
@@ -248,6 +266,9 @@ func setupRoutes(app *fiber.App, h *handlers.Handler, authService *services.Auth
 	protected.Get("/discovery", h.DiscoveryPage)
 	protected.Post("/discovery/create", edit, h.DiscoveryCreate)
 	protected.Get("/settings/docker", admin, h.SettingsDocker)
+	protected.Post("/settings/fallback", admin, h.FallbackSave)
+	protected.Post("/settings/fallback/create", admin, h.FallbackCreate)
+	protected.Post("/settings/error-page/:code", admin, h.ErrorPageSave)
 	protected.Post("/settings/discovery-hosts", admin, h.SettingsDiscoveryHostsSave)
 	protected.Get("/settings/discovery-detect", admin, h.SettingsDiscoveryDetect)
 
@@ -260,6 +281,7 @@ func setupRoutes(app *fiber.App, h *handlers.Handler, authService *services.Auth
 
 	// Caddy actions
 	protected.Post("/caddy/reload", edit, h.CaddyReload)
+	protected.Post("/caddy/reload-force", edit, h.CaddyReloadForce)
 	protected.Post("/caddy/validate", edit, h.CaddyValidate)
 
 	// API v1 — uses the same session authentication as the UI
