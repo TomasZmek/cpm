@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/TomasZmek/cpm/internal/config"
@@ -169,5 +170,20 @@ func TestDemuxDockerStream(t *testing.T) {
 	}
 	if got := demuxDockerStream([]byte("raw tty output\n")); got != "raw tty output\n" {
 		t.Errorf("raw stream altered: %q", got)
+	}
+}
+
+// Tags are written as the first line, so the regex must work per line;
+// before the fix editing a rule silently dropped its tags.
+func TestParseTagsFromGeneratedSite(t *testing.T) {
+	p := NewParserService()
+	for _, site := range []*models.Site{
+		{Domains: []string{"app.example.com"}, TargetIP: "10.0.0.1", TargetPort: "80", Tags: []string{"media", "home"}},
+		{Domains: []string{"app.example.com"}, TargetIP: "10.0.0.1", TargetPort: "80", Tags: []string{"media"}, TLSMode: "wildcard:example.com"},
+	} {
+		parsed := p.Parse(site.ToCaddyfile(), "app.example.com")
+		if strings.Join(parsed.Tags, ",") != strings.Join(site.Tags, ",") {
+			t.Errorf("tags lost (wildcard=%v): got %v, want %v", site.IsWildcard(), parsed.Tags, site.Tags)
+		}
 	}
 }

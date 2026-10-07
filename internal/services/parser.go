@@ -124,7 +124,7 @@ func (p *ParserService) parseDomainsFromHandleBlock(content, defaultDomain strin
 
 // parseTags extracts tags from # @tags: comment
 func (p *ParserService) parseTags(content string) []string {
-	re := regexp.MustCompile(`#\s*@tags:\s*(.+)$`)
+	re := regexp.MustCompile(`(?m)^\s*#\s*@tags:[ \t]*(.+?)[ \t]*\r?$`)
 	match := re.FindStringSubmatch(content)
 	if len(match) < 2 {
 		return []string{}
