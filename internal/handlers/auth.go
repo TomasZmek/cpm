@@ -229,7 +229,10 @@ func (h *Handler) UserUpdateRole(c *fiber.Ctx) error {
 	setFlash(c, "success", tl(c, "msg_role_updated"))
 
 	if c.Get("HX-Request") == "true" {
-		return c.SendString("OK")
+		// Reload the page so the flash message is shown (returning plain text
+		// would be swapped into the role <select>)
+		c.Set("HX-Redirect", "/settings/users")
+		return c.SendStatus(fiber.StatusOK)
 	}
 
 	return c.Redirect("/settings/users")

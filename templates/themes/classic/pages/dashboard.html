@@ -76,14 +76,16 @@
             <button 
                 class="btn btn-secondary"
                 hx-post="/caddy/reload"
-                hx-swap="outerHTML"
+                hx-target="#caddy-action-result"
+                hx-swap="innerHTML"
             >
                 🔄 {{t .Lang "dashboard_reload"}}
             </button>
             <button 
                 class="btn btn-secondary"
                 hx-post="/caddy/validate"
-                hx-swap="outerHTML"
+                hx-target="#caddy-action-result"
+                hx-swap="innerHTML"
             >
                 ✓ {{t .Lang "dashboard_validate"}}
             </button>
@@ -91,6 +93,8 @@
                 💾 {{t .Lang "dashboard_backup"}}
             </a>
         </div>
+        <!-- Result of reload / validate (filled by HTMX) -->
+        <div id="caddy-action-result" class="mt-2" aria-live="polite"></div>
     </div>
 </div>
 

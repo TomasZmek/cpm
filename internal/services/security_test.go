@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"unsafe"
 
 	"github.com/TomasZmek/cpm/internal/config"
 	"github.com/TomasZmek/cpm/internal/models"
@@ -185,5 +186,25 @@ func TestParseTagsFromGeneratedSite(t *testing.T) {
 		if strings.Join(parsed.Tags, ",") != strings.Join(site.Tags, ",") {
 			t.Errorf("tags lost (wildcard=%v): got %v, want %v", site.IsWildcard(), parsed.Tags, site.Tags)
 		}
+	}
+}
+
+// Fiber (without Immutable) hands out strings that alias the request buffer.
+// The session must not keep such a string: once the buffer was reused by the
+// next request, the stored username changed and the user was logged out.
+func TestSessionSurvivesReusedRequestBuffer(t *testing.T) {
+	a := NewAuthService(t.TempDir())
+	if err := a.CreateInitialAdmin("admin", "password123"); err != nil {
+		t.Fatal(err)
+	}
+	buf := []byte("admin")
+	username := unsafe.String(&buf[0], len(buf)) // aliases buf, like a Fiber FormValue
+	token, err := a.Authenticate(username, "password123")
+	if err != nil {
+		t.Fatal(err)
+	}
+	copy(buf, "xxxxx") // next request overwrites the buffer
+	if a.ValidateSession(token) == nil {
+		t.Fatal("session was invalidated by reuse of the request buffer")
 	}
 }

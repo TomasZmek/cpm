@@ -100,6 +100,11 @@ func main() {
 		ServerHeader: "CPM",
 		ErrorHandler: handlers.ErrorHandler,
 		Views:        engine,
+		// Values returned by Ctx (FormValue, Params, Cookies, ...) are copies,
+		// not views into the request buffer. Services keep some of them beyond
+		// the request (e.g. the username in a session); without this, a later
+		// request reusing the buffer silently changed them and logged users out.
+		Immutable: true,
 	})
 
 	// Global middleware

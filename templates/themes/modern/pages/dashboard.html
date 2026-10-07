@@ -94,10 +94,12 @@
         <div class="card-body">
             <div class="flex flex-col gap-2">
                 <a href="/sites/new" class="btn btn-primary">➕ {{t .Lang "dashboard_new_rule"}}</a>
-                <button class="btn btn-secondary" hx-post="/caddy/reload" hx-swap="none">🔄 {{t .Lang "dashboard_reload"}}</button>
-                <button class="btn btn-secondary" hx-post="/caddy/validate" hx-swap="none">✓ {{t .Lang "dashboard_validate"}}</button>
+                <button class="btn btn-secondary" hx-post="/caddy/reload" hx-target="#caddy-action-result" hx-swap="innerHTML">🔄 {{t .Lang "dashboard_reload"}}</button>
+                <button class="btn btn-secondary" hx-post="/caddy/validate" hx-target="#caddy-action-result" hx-swap="innerHTML">✓ {{t .Lang "dashboard_validate"}}</button>
                 <a href="/settings/backup" class="btn btn-secondary">💾 {{t .Lang "dashboard_backup"}}</a>
             </div>
+            <!-- Result of reload / validate (filled by HTMX) -->
+            <div id="caddy-action-result" class="mt-2" aria-live="polite"></div>
         </div>
     </div>
 

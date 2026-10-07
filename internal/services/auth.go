@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 	"sync"
 	"time"
 
@@ -205,7 +206,7 @@ func (a *AuthService) CreateUser(username, password string, role models.Role) er
 		}
 	}
 
-	user, err := models.NewUser(username, password, role)
+	user, err := models.NewUser(strings.Clone(username), password, role)
 	if err != nil {
 		return fmt.Errorf("failed to create user: %w", err)
 	}
@@ -228,7 +229,7 @@ func (a *AuthService) CreateInitialAdmin(username, password string) error {
 		return fmt.Errorf("initial setup already completed")
 	}
 
-	user, err := models.NewUser(username, password, models.RoleAdmin)
+	user, err := models.NewUser(strings.Clone(username), password, models.RoleAdmin)
 	if err != nil {
 		return fmt.Errorf("failed to create user: %w", err)
 	}
@@ -316,10 +317,11 @@ func (a *AuthService) Authenticate(username, password string) (string, error) {
 			user.LastLogin = time.Now()
 			a.saveConfig()
 
-			// Create session
+			// Create session (store the user's own name, never a string that
+			// may alias a request buffer)
 			token := generateToken()
 			a.sessions[token] = &Session{
-				Username:  username,
+				Username:  user.Username,
 				ExpiresAt: time.Now().Add(time.Duration(a.config.SessionTimeoutHours) * time.Hour),
 			}
 
