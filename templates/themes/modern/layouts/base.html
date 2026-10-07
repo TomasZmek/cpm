@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{.CSRFToken}}">
     <title>{{.Title}} - CPM</title>
+    <script>
+    (function(){try{var c=localStorage.getItem('cpm-theme')||'system';var d=c==='dark'||(c==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.setAttribute('data-theme',d?'dark':'light');var a=localStorage.getItem('cpm-accent');if(a&&a!=='indigo'){document.documentElement.setAttribute('data-accent',a);}}catch(e){}})();
+    </script>
     <link rel="stylesheet" href="{{.ThemeCSS}}">
     <link rel="icon" type="image/svg+xml" href="/static/img/logo.svg">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
@@ -59,6 +62,11 @@
                     </button>
                 </form>
                 {{end}}
+                <div class="theme-toggle" role="group" aria-label="Theme">
+                    <button type="button" data-theme-choice="system" title="{{t .Lang "theme_system"}}">🖥️</button>
+                    <button type="button" data-theme-choice="light" title="{{t .Lang "theme_light"}}">☀️</button>
+                    <button type="button" data-theme-choice="dark" title="{{t .Lang "theme_dark"}}">🌙</button>
+                </div>
                 <div class="text-muted mt-2" style="font-size: 0.75rem;">
                     v{{.Version}}
                 </div>
@@ -90,6 +98,24 @@
             evt.detail.headers['X-CSRF-Token'] = meta.getAttribute('content');
         }
     });
+    </script>
+    <script>
+    (function(){
+        var KEY='cpm-theme';
+        function sysDark(){ return window.matchMedia('(prefers-color-scheme: dark)').matches; }
+        function resolve(c){ return (c==='dark' || (c==='system' && sysDark())) ? 'dark' : 'light'; }
+        function mark(c){ document.querySelectorAll('[data-theme-choice]').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-theme-choice')===c); }); }
+        function apply(c){ document.documentElement.setAttribute('data-theme', resolve(c)); mark(c); }
+        function current(){ try{ return localStorage.getItem(KEY)||'system'; }catch(e){ return 'system'; } }
+        window.cpmSetTheme=function(c){ try{ localStorage.setItem(KEY,c); }catch(e){} apply(c); };
+        document.addEventListener('DOMContentLoaded', function(){
+            document.querySelectorAll('[data-theme-choice]').forEach(function(b){
+                b.addEventListener('click', function(){ window.cpmSetTheme(b.getAttribute('data-theme-choice')); });
+            });
+            apply(current());
+        });
+        try{ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(){ if(current()==='system') apply('system'); }); }catch(e){}
+    })();
     </script>
 </body>
 </html>

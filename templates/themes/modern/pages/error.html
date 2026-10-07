@@ -1,0 +1,13 @@
+<div class="error-page">
+    <div class="error-code">{{.Code}}</div>
+    <div class="error-message">{{.Message}}</div>
+    <div class="error-actions mt-4">
+        <button type="button" class="btn btn-primary" onclick="if(document.referrer){history.back();}else{location.href='/sites';}">
+            ← {{t .Lang "back"}}
+        </button>
+        <a href="/" class="btn btn-secondary">
+            {{t .Lang "nav_dashboard"}}
+        </a>
+    </div>
+</div>
+

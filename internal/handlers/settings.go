@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/TomasZmek/cpm/internal/i18n"
+	"github.com/TomasZmek/cpm/internal/middleware"
 	"github.com/TomasZmek/cpm/internal/models"
 	"github.com/TomasZmek/cpm/internal/services"
 	"github.com/gofiber/fiber/v2"
@@ -121,10 +122,7 @@ func (h *Handler) renderSettingsTab(c *fiber.Ctx, tab string) error {
 	case "general":
 		// Language and theme settings
 		data["Languages"] = i18n.SelectableLanguages()
-		data["Themes"] = []map[string]string{
-			{"code": "classic", "name": "Classic"},
-			{"code": "modern", "name": "Modern (Coming Soon)"},
-		}
+		data["Themes"] = middleware.ThemeList()
 
 	case "backup":
 		sites, _ := h.caddyService.GetAllSites()

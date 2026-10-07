@@ -1342,3 +1342,6 @@ msgstr "설정을 저장하지 못했습니다"
 
 msgid "msg_discovery_hosts_saved"
 msgstr "검색 호스트가 저장되었습니다"
+
+msgid "settings_accent"
+msgstr "강조 색상"

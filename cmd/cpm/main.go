@@ -14,12 +14,12 @@ import (
 	"github.com/TomasZmek/cpm/internal/i18n"
 	"github.com/TomasZmek/cpm/internal/middleware"
 	"github.com/TomasZmek/cpm/internal/services"
+	"github.com/TomasZmek/cpm/internal/views"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/compress"
 	"github.com/gofiber/fiber/v2/middleware/csrf"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
-	"github.com/gofiber/template/html/v2"
 )
 
 const (
@@ -75,26 +75,24 @@ func main() {
 		}
 	}()
 
-	// Initialize template engine
-	engine := html.New("./templates/themes/classic", ".html")
-	engine.AddFunc("t", i18n.T)
-	engine.AddFunc("tn", i18n.TN)
-	engine.AddFunc("timeAgo", services.TimeAgo)
-	engine.AddFunc("contains", func(slice []string, item string) bool {
-		for _, s := range slice {
-			if s == item {
-				return true
+	// Initialize template engines, one per UI theme (templates/themes/<name>)
+	engine := views.New("./templates/themes", middleware.ThemeNames(), "classic", map[string]interface{}{
+		"t":       i18n.T,
+		"tn":      i18n.TN,
+		"timeAgo": services.TimeAgo,
+		"contains": func(slice []string, item string) bool {
+			for _, s := range slice {
+				if s == item {
+					return true
+				}
 			}
-		}
-		return false
-	})
-	engine.AddFunc("join", strings.Join)
-	engine.AddFunc("replace", strings.ReplaceAll)
-	engine.AddFunc("sub", func(a, b int) int { return a - b })
-	engine.AddFunc("eq", func(a, b interface{}) bool { return a == b })
-
-	// Reload templates in development
-	engine.Reload(true)
+			return false
+		},
+		"join":    strings.Join,
+		"replace": strings.ReplaceAll,
+		"sub":     func(a, b int) int { return a - b },
+		"eq":      func(a, b interface{}) bool { return a == b },
+	}, true) // reload templates from disk (development convenience)
 
 	// Create Fiber app
 	app := fiber.New(fiber.Config{

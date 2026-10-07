@@ -1340,3 +1340,6 @@ msgstr "Failed to save settings"
 
 msgid "msg_discovery_hosts_saved"
 msgstr "Discovery hosts saved"
+
+msgid "settings_accent"
+msgstr "Accent colour"

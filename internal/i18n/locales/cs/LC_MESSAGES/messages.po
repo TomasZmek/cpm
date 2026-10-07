@@ -1340,3 +1340,6 @@ msgstr "Nastavení se nepodařilo uložit"
 
 msgid "msg_discovery_hosts_saved"
 msgstr "Hostitelé pro discovery uloženi"
+
+msgid "settings_accent"
+msgstr "Barva zvýraznění"
