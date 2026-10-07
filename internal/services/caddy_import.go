@@ -16,15 +16,9 @@ func (c *CaddyService) MainCaddyfilePath() string {
 // PreviewImportFromMainCaddyfile parses the site blocks written directly in the
 // main Caddyfile and returns them WITHOUT writing anything to disk.
 func (c *CaddyService) PreviewImportFromMainCaddyfile() ([]*models.Site, error) {
-	return c.PreviewImportFromFile(c.MainCaddyfilePath())
-}
-
-// PreviewImportFromFile parses site blocks from the Caddyfile at the given path
-// WITHOUT writing anything to disk.
-func (c *CaddyService) PreviewImportFromFile(path string) ([]*models.Site, error) {
-	content, err := os.ReadFile(path)
+	content, err := os.ReadFile(c.MainCaddyfilePath())
 	if err != nil {
-		return nil, fmt.Errorf("failed to read Caddyfile %q: %w", path, err)
+		return nil, fmt.Errorf("failed to read the main Caddyfile")
 	}
 	return c.PreviewImportContent(string(content))
 }
@@ -46,13 +40,7 @@ func (c *CaddyService) PreviewImportContent(content string) ([]*models.Site, err
 // (already-existing files or write errors, with a reason appended), and a fatal
 // error only if the Caddyfile could not be read or parsed at all.
 func (c *CaddyService) ImportFromMainCaddyfile() (imported []string, failed []string, err error) {
-	return c.ImportFromFile(c.MainCaddyfilePath())
-}
-
-// ImportFromFile parses the Caddyfile at path and saves each site block to
-// sites/standard/{domain}.caddy.
-func (c *CaddyService) ImportFromFile(path string) (imported []string, failed []string, err error) {
-	sites, err := c.PreviewImportFromFile(path)
+	sites, err := c.PreviewImportFromMainCaddyfile()
 	if err != nil {
 		return nil, nil, err
 	}

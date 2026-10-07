@@ -125,16 +125,12 @@
         <div class="modal-body">
             <p class="text-muted">{{t .Lang "sites_import_desc"}}</p>
             <div class="form-group">
-                <label for="import-path">{{t .Lang "sites_import_path_label"}}</label>
                 <div style="display:flex; gap:8px; align-items:stretch; flex-wrap:wrap;">
-                    <input type="text" id="import-path" placeholder="{{t .Lang "sites_import_path_ph"}}" value=""
-                           style="flex:1; min-width:200px;" onkeydown="if(event.key==='Enter'){event.preventDefault();runImportPreview();}">
-                    <button type="button" class="btn btn-secondary" onclick="runImportPreview()">🔍 {{t .Lang "sites_import_preview_btn"}}</button>
+                    <button type="button" class="btn btn-secondary" onclick="clearImportFile()">🔍 {{t .Lang "sites_import_preview_btn"}}</button>
                     <button type="button" class="btn btn-secondary" onclick="document.getElementById('import-file').click()">📂 {{t .Lang "sites_import_file_btn"}}</button>
                     <input type="file" id="import-file" style="display:none;" onchange="onImportFileSelected(this)">
                 </div>
                 <div class="form-hint" id="import-file-name" style="display:none;"></div>
-                <div class="form-hint">{{t .Lang "sites_import_path_hint"}}</div>
             </div>
             <div id="import-preview-status" class="text-muted">{{t .Lang "sites_import_loading"}}</div>
             <div id="import-preview-list" class="migrate-list" style="display:none;"></div>
@@ -142,7 +138,6 @@
         <div class="modal-footer">
             <form id="import-form" action="/sites/import" method="POST" style="display:inline;">
                 <input type="hidden" name="_csrf" value="{{.CSRFToken}}">
-                <input type="hidden" name="path" id="import-path-hidden" value="">
                 <input type="hidden" name="content" id="import-content-hidden" value="">
                 <button id="import-submit" type="submit" class="btn btn-primary" disabled>
                     🚀 {{t .Lang "sites_import_execute"}}
@@ -169,7 +164,6 @@ function onImportFileSelected(input) {
     var reader = new FileReader();
     reader.onload = function (e) {
         importFileContent = e.target.result;
-        document.getElementById('import-path').value = '';
         var nameEl = document.getElementById('import-file-name');
         nameEl.style.display = 'block';
         nameEl.textContent = '📄 ' + f.name;
@@ -182,7 +176,6 @@ function openImportModal() {
     importFileContent = null;
     var fn = document.getElementById('import-file-name'); if (fn) { fn.style.display = 'none'; }
     var fi = document.getElementById('import-file'); if (fi) { fi.value = ''; }
-    var pi = document.getElementById('import-path'); if (pi) { pi.value = ''; }
     document.getElementById('import-modal').style.display = 'flex';
     runImportPreview();
 }
@@ -191,16 +184,6 @@ function runImportPreview() {
     var status = document.getElementById('import-preview-status');
     var list = document.getElementById('import-preview-list');
     var submit = document.getElementById('import-submit');
-    var pathInput = document.getElementById('import-path');
-    var path = (pathInput.value || '').trim();
-
-    // A typed path overrides a previously selected file.
-    if (path) {
-        importFileContent = null;
-        var fn = document.getElementById('import-file-name'); if (fn) { fn.style.display = 'none'; }
-    }
-
-    document.getElementById('import-path-hidden').value = path;
     document.getElementById('import-content-hidden').value = importFileContent || '';
 
     list.style.display = 'none';
@@ -209,20 +192,12 @@ function runImportPreview() {
     status.style.display = 'block';
     status.textContent = '{{t .Lang "sites_import_loading"}}';
 
-    var url = '/sites/import-preview';
-    var opts;
-    if (importFileContent) {
-        opts = {
-            method: 'POST',
-            headers: { 'X-CSRF-Token': cpmCsrf(), 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: 'content=' + encodeURIComponent(importFileContent)
-        };
-    } else {
-        if (path) { url += '?path=' + encodeURIComponent(path); }
-        opts = { headers: { 'X-Requested-With': 'fetch' } };
-    }
-
-    fetch(url, opts)
+    // Without an uploaded file the server previews the main Caddyfile.
+    fetch('/sites/import-preview', {
+        method: 'POST',
+        headers: { 'X-CSRF-Token': cpmCsrf(), 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'content=' + encodeURIComponent(importFileContent || '')
+    })
         .then(function (r) { return r.json(); })
         .then(function (data) {
             if (data.error) {
@@ -251,6 +226,14 @@ function runImportPreview() {
             submit.disabled = false;
         })
         .catch(function (e) { status.textContent = '' + e; });
+}
+
+// Drop a previously selected file and preview the main Caddyfile again.
+function clearImportFile() {
+    importFileContent = null;
+    var fn = document.getElementById('import-file-name'); if (fn) { fn.style.display = 'none'; }
+    var fi = document.getElementById('import-file'); if (fi) { fi.value = ''; }
+    runImportPreview();
 }
 
 function closeImportModal() {

@@ -12,23 +12,18 @@ import (
 // Caddyfile and returns them as JSON WITHOUT saving anything. Used to populate
 // the import modal on the proxy-rules page.
 func (h *Handler) SitesImportPreview(c *fiber.Ctx) error {
+	// Sources are limited to an uploaded file's content or the main Caddyfile.
+	// Arbitrary server-side paths are deliberately not accepted (#29).
 	content := c.FormValue("content")
-	path := strings.TrimSpace(c.Query("path"))
-	if path == "" {
-		path = strings.TrimSpace(c.FormValue("path"))
-	}
 	var sites []*models.Site
 	var err error
-	switch {
-	case content != "":
+	if content != "" {
 		sites, err = h.caddyService.PreviewImportContent(content)
-	case path != "":
-		sites, err = h.caddyService.PreviewImportFromFile(path)
-	default:
+	} else {
 		sites, err = h.caddyService.PreviewImportFromMainCaddyfile()
 	}
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
 		})
 	}
@@ -70,15 +65,11 @@ func (h *Handler) SitesImportPreview(c *fiber.Ctx) error {
 // sites/standard/{domain}.caddy, then validates and reloads Caddy.
 func (h *Handler) SitesImport(c *fiber.Ctx) error {
 	content := c.FormValue("content")
-	path := strings.TrimSpace(c.FormValue("path"))
 	var imported, failed []string
 	var err error
-	switch {
-	case content != "":
+	if content != "" {
 		imported, failed, err = h.caddyService.ImportContent(content)
-	case path != "":
-		imported, failed, err = h.caddyService.ImportFromFile(path)
-	default:
+	} else {
 		imported, failed, err = h.caddyService.ImportFromMainCaddyfile()
 	}
 	if err != nil {

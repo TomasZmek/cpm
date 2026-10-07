@@ -212,7 +212,6 @@ func setupRoutes(app *fiber.App, h *handlers.Handler, authService *services.Auth
 	// Sites
 	protected.Get("/sites", h.SitesList)
 	protected.Get("/sites/new", edit, h.SiteNew)
-	protected.Get("/sites/import-preview", admin, h.SitesImportPreview)
 	protected.Post("/sites/import-preview", admin, h.SitesImportPreview)
 	protected.Post("/sites/import", admin, h.SitesImport)
 	protected.Post("/sites", edit, h.SiteCreate)
