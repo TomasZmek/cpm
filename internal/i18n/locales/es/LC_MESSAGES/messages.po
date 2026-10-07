@@ -100,7 +100,7 @@ msgid "dashboard_internal"
 msgstr "Interno"
 
 msgid "dashboard_with_auth"
-msgstr "Con auth"
+msgstr "Con autenticación"
 
 msgid "dashboard_backend_status"
 msgstr "Estado del backend"

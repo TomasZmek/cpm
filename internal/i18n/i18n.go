@@ -3,6 +3,7 @@ package i18n
 import (
 	"embed"
 	"fmt"
+	"sort"
 	"strings"
 	"sync"
 
@@ -22,6 +23,21 @@ var AvailableLanguages = map[string]string{
 	"es": "Español",
 	"de": "Deutsch",
 	"fr": "Français",
+}
+
+// languageOrder is the order languages are offered in the UI.
+var languageOrder = []string{"en", "cs", "ko", "ja", "zh", "es", "de", "fr"}
+
+// MinCoverage is the share of English keys a language must translate to be
+// offered in the language selector. Incomplete languages would otherwise show
+// a mostly English UI (#35).
+const MinCoverage = 0.95
+
+// Language describes a language and how complete its translation is.
+type Language struct {
+	Code     string
+	Name     string
+	Coverage float64 // 0..1, share of English keys translated
 }
 
 // pluralFunc selects the plural form index for a given n.
@@ -193,10 +209,67 @@ func applyArgs(s string, args []interface{}) string {
 	return s
 }
 
-// IsValidLanguage reports whether lang is a supported language code.
+// IsValidLanguage reports whether lang can be selected, i.e. it is known and
+// sufficiently translated (see MinCoverage).
 func IsValidLanguage(lang string) bool {
-	_, ok := AvailableLanguages[lang]
-	return ok
+	if _, ok := AvailableLanguages[lang]; !ok {
+		return false
+	}
+	return Coverage(lang) >= MinCoverage
+}
+
+// Coverage returns the share of English keys translated in lang (0..1).
+func Coverage(lang string) float64 {
+	mu.RLock()
+	defer mu.RUnlock()
+	en, ld := locales["en"], locales[lang]
+	if en == nil || ld == nil || len(en.singular) == 0 {
+		return 0
+	}
+	if lang == "en" {
+		return 1
+	}
+	translated := 0
+	for key := range en.singular {
+		if _, ok := ld.singular[key]; ok {
+			translated++
+		}
+	}
+	return float64(translated) / float64(len(en.singular))
+}
+
+// MissingKeys returns the English keys that lang does not translate.
+func MissingKeys(lang string) []string {
+	mu.RLock()
+	defer mu.RUnlock()
+	en, ld := locales["en"], locales[lang]
+	if en == nil || ld == nil {
+		return nil
+	}
+	var missing []string
+	for key := range en.singular {
+		if _, ok := ld.singular[key]; !ok {
+			missing = append(missing, key)
+		}
+	}
+	sort.Strings(missing)
+	return missing
+}
+
+// SelectableLanguages returns the languages offered in the UI, in display
+// order, skipping incomplete translations.
+func SelectableLanguages() []Language {
+	var langs []Language
+	for _, code := range languageOrder {
+		name, ok := AvailableLanguages[code]
+		if !ok {
+			continue
+		}
+		if cov := Coverage(code); cov >= MinCoverage {
+			langs = append(langs, Language{Code: code, Name: name, Coverage: cov})
+		}
+	}
+	return langs
 }
 
 // GetLanguages returns the map of supported language codes to display names.

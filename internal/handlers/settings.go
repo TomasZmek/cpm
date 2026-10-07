@@ -4,6 +4,7 @@ import (
 	"io"
 	"strings"
 
+	"github.com/TomasZmek/cpm/internal/i18n"
 	"github.com/TomasZmek/cpm/internal/models"
 	"github.com/TomasZmek/cpm/internal/services"
 	"github.com/gofiber/fiber/v2"
@@ -119,16 +120,7 @@ func (h *Handler) renderSettingsTab(c *fiber.Ctx, tab string) error {
 	switch tab {
 	case "general":
 		// Language and theme settings
-		data["Languages"] = []map[string]string{
-			{"code": "en", "name": "English"},
-			{"code": "ko", "name": "한국어"},
-			{"code": "ja", "name": "日本語"},
-			{"code": "zh", "name": "中文"},
-			{"code": "es", "name": "Español"},
-			{"code": "de", "name": "Deutsch"},
-			{"code": "fr", "name": "Français"},
-			{"code": "cs", "name": "Čeština"},
-		}
+		data["Languages"] = i18n.SelectableLanguages()
 		data["Themes"] = []map[string]string{
 			{"code": "classic", "name": "Classic"},
 			{"code": "modern", "name": "Modern (Coming Soon)"},

@@ -36,7 +36,7 @@
                     <label for="language">🌐 {{t .Lang "settings_language"}}</label>
                     <select id="language" name="language" onchange="changeLanguage(this.value)">
                         {{range .Languages}}
-                        <option value="{{.code}}" {{if eq $.Lang .code}}selected{{end}}>{{.name}}</option>
+                        <option value="{{.Code}}" {{if eq $.Lang .Code}}selected{{end}}>{{.Name}}</option>
                         {{end}}
                     </select>
                 </div>

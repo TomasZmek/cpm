@@ -4,13 +4,13 @@ msgid ""
 msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
 
 msgid "nav_dashboard"
 msgstr "ダッシュボード"
 
 msgid "nav_sites"
-msgstr "プロキシ規則"
+msgstr "プロキシルール"
 
 msgid "nav_snippets"
 msgstr "スニペット"
@@ -46,7 +46,7 @@ msgid "dashboard_title"
 msgstr "ダッシュボード"
 
 msgid "sites_title"
-msgstr "プロキシ規則"
+msgstr "プロキシルール"
 
 msgid "settings_title"
 msgstr "設定"
@@ -73,7 +73,7 @@ msgid "status_up"
 msgstr "稼働中"
 
 msgid "status_down"
-msgstr "停止"
+msgstr "停止中"
 
 msgid "status_unknown"
 msgstr "不明"

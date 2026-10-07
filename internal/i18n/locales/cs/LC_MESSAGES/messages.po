@@ -1283,3 +1283,45 @@ msgstr "Obnova mnoha certifikátů najednou může narazit na limity Let's Encry
 
 msgid "msg_certs_bulk_failed"
 msgstr "{0} se nepodařilo smazat: {1}"
+
+msgid "discovery_status_help"
+msgstr "Zda je tento kontejner už propojený s pravidlem proxy"
+
+msgid "login_rate_limited"
+msgstr "Příliš mnoho neúspěšných pokusů o přihlášení. Zkuste to znovu za 15 minut."
+
+msgid "login_setup_desc"
+msgstr "Pro začátek vytvořte účet administrátora."
+
+msgid "login_setup_title"
+msgstr "První nastavení"
+
+msgid "logs_clear"
+msgstr "Vymazat"
+
+msgid "logs_cleared_note"
+msgstr "Skryty logy před bodem vymazání"
+
+msgid "logs_level_all"
+msgstr "Vše"
+
+msgid "logs_level_error"
+msgstr "Chyba"
+
+msgid "logs_level_info"
+msgstr "Info"
+
+msgid "logs_level_warn"
+msgstr "Varování"
+
+msgid "logs_show_all"
+msgstr "Zobrazit vše"
+
+msgid "logs_wrap"
+msgstr "Zalamovat řádky"
+
+msgid "snippets_reset_defaults"
+msgstr "Výchozí"
+
+msgid "snippets_settings"
+msgstr "Nastavení"

@@ -47,7 +47,7 @@ The Makefile `VERSION` variable is stale (still `3.2.0`). Version is authoritati
 - **SweetAlert2** — dialogs
 - **github.com/leonelquinteros/gotext** — i18n library
 - Templates live in `templates/themes/classic/`, static assets in `web/static/`
-- i18n: English, Czech & Korean — PO/MO format via `github.com/leonelquinteros/gotext`, files in `internal/i18n/locales/{en,cs,ko}/LC_MESSAGES/messages.po`, embedded via `embed.FS`
+- i18n: English, Czech & Korean (ja, zh, es, de, fr exist but are hidden until complete) — PO/MO format via `github.com/leonelquinteros/gotext`, files in `internal/i18n/locales/{en,cs,ko}/LC_MESSAGES/messages.po`, embedded via `embed.FS`
 - **github.com/moby/moby/client** — Docker API client (`api/pkg/stdcopy` for demultiplexing exec/log streams)
 
 ## Architecture
@@ -190,7 +190,9 @@ Translations use gettext PO format via `github.com/leonelquinteros/gotext`.
 **Adding a new language:**
 1. Create `locales/{lang}/LC_MESSAGES/messages.po` with correct plural forms header
 2. Copy all msgid keys from `locales/en/LC_MESSAGES/messages.po`
-3. Add `"{lang}": "Language Name"` to `AvailableLanguages` in `internal/i18n/i18n.go`
-4. Run `go build ./...` to verify embed compiles correctly
+3. Add `"{lang}": "Language Name"` to `AvailableLanguages`, the code to `languageOrder` and a plural rule to `pluralRules` in `internal/i18n/i18n.go`
+4. Run `go test ./internal/i18n/` — it lists missing keys and checks that the `Plural-Forms` header matches `pluralRules`
+
+A language is only offered in the UI (and accepted from cookie / `Accept-Language`) once it translates at least `MinCoverage` (95 %) of the English keys; incomplete languages stay hidden. Every new UI key must be added to en, cs and ko.
 
 **Plural strings** use `i18n.TN(lang, singular, plural, n)` in Go and `{{tn .Lang "singular" "plural" .Count}}` in templates.
