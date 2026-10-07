@@ -3,11 +3,15 @@ package services
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"log"
 	"os"
 	"strings"
+	"sync"
+	"sync/atomic"
+	"syscall"
 	"time"
 
 	"github.com/moby/moby/api/pkg/stdcopy"
@@ -32,7 +36,19 @@ type DiscoveredContainer struct {
 // DockerService handles Docker container operations
 type DockerService struct {
 	containerName string
-	client        *client.Client
+
+	// clientPtr is swapped by reconnect() while requests are in flight, so it
+	// is only accessed atomically through cli() (#33).
+	clientPtr   atomic.Pointer[client.Client]
+	reconnectMu sync.Mutex
+}
+
+// errDockerUnavailable is returned when no Docker client could be created.
+var errDockerUnavailable = errors.New("Docker client not available")
+
+// cli returns the current Docker client (nil if none could be created).
+func (d *DockerService) cli() *client.Client {
+	return d.clientPtr.Load()
 }
 
 // NewDockerService creates a new Docker service
@@ -43,26 +59,27 @@ func NewDockerService(containerName string) *DockerService {
 		log.Printf("Warning: Could not connect to Docker: %v", err)
 	}
 
-	return &DockerService{
-		containerName: containerName,
-		client:        cli,
+	d := &DockerService{containerName: containerName}
+	if err == nil {
+		d.clientPtr.Store(cli)
 	}
+	return d
 }
 
 // IsAvailable checks if Docker is available
 func (d *DockerService) IsAvailable() bool {
-	return d.client != nil
+	return d.cli() != nil
 }
 
 // Ping verifies that a Docker daemon is actually reachable (not just that a
 // client was constructed). Used at startup to auto-register the local host.
 func (d *DockerService) Ping() bool {
-	if d.client == nil {
+	if d.cli() == nil {
 		return false
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
-	if _, err := d.client.ContainerList(ctx, client.ContainerListOptions{}); err != nil {
+	if _, err := d.cli().ContainerList(ctx, client.ContainerListOptions{}); err != nil {
 		return false
 	}
 	return true
@@ -70,14 +87,14 @@ func (d *DockerService) Ping() bool {
 
 // GetContainerID finds the container ID by name
 func (d *DockerService) GetContainerID() (string, error) {
-	if d.client == nil {
-		return "", fmt.Errorf("Docker client not available")
+	if d.cli() == nil {
+		return "", errDockerUnavailable
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	result, err := d.client.ContainerList(ctx, client.ContainerListOptions{All: true})
+	result, err := d.cli().ContainerList(ctx, client.ContainerListOptions{All: true})
 	if err != nil {
 		return "", fmt.Errorf("failed to list containers: %w", err)
 	}
@@ -96,7 +113,7 @@ func (d *DockerService) GetContainerID() (string, error) {
 
 // IsContainerRunning checks if the Caddy container is running
 func (d *DockerService) IsContainerRunning() bool {
-	if d.client == nil {
+	if d.cli() == nil {
 		return false
 	}
 
@@ -108,7 +125,7 @@ func (d *DockerService) IsContainerRunning() bool {
 		return false
 	}
 
-	inspect, err := d.client.ContainerInspect(ctx, containerID, client.ContainerInspectOptions{})
+	inspect, err := d.cli().ContainerInspect(ctx, containerID, client.ContainerInspectOptions{})
 	if err != nil {
 		return false
 	}
@@ -120,8 +137,8 @@ func (d *DockerService) IsContainerRunning() bool {
 // environment variable with the given name. Only the name is checked; the
 // value is never returned.
 func (d *DockerService) ContainerHasEnv(name string) (bool, error) {
-	if d.client == nil {
-		return false, fmt.Errorf("Docker client not available")
+	if d.cli() == nil {
+		return false, errDockerUnavailable
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -132,7 +149,7 @@ func (d *DockerService) ContainerHasEnv(name string) (bool, error) {
 		return false, err
 	}
 
-	inspect, err := d.client.ContainerInspect(ctx, containerID, client.ContainerInspectOptions{})
+	inspect, err := d.cli().ContainerInspect(ctx, containerID, client.ContainerInspectOptions{})
 	if err != nil {
 		return false, fmt.Errorf("failed to inspect container: %w", err)
 	}
@@ -198,9 +215,10 @@ func (d *DockerService) ExecCommand(cmd ...string) error {
 // connection has gone stale (e.g. Docker Desktop restarted), it transparently
 // reconnects and retries once.
 func (d *DockerService) ExecCommandWithOutput(cmd ...string) (string, error) {
+	used := d.cli()
 	out, err := d.execCommandOnce(cmd...)
 	if err != nil && isDockerUnreachable(err) {
-		d.reconnect()
+		d.reconnect(used)
 		out, err = d.execCommandOnce(cmd...)
 	}
 	return out, err
@@ -208,9 +226,22 @@ func (d *DockerService) ExecCommandWithOutput(cmd ...string) (string, error) {
 
 // reconnect recreates the Docker client (used after the previous connection
 // dropped, e.g. Docker Desktop restarted).
-func (d *DockerService) reconnect() {
-	if cli, e := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation()); e == nil {
-		d.client = cli
+//
+// Concurrent callers that saw the same failed client reconnect only once;
+// the previous client is closed after it has been replaced.
+func (d *DockerService) reconnect(failed *client.Client) {
+	d.reconnectMu.Lock()
+	defer d.reconnectMu.Unlock()
+
+	if current := d.cli(); current != failed {
+		return // another goroutine already reconnected
+	}
+	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		return
+	}
+	if old := d.clientPtr.Swap(cli); old != nil {
+		old.Close()
 	}
 }
 
@@ -219,6 +250,11 @@ func isDockerUnreachable(err error) bool {
 	if err == nil {
 		return false
 	}
+	if errors.Is(err, errDockerUnavailable) || client.IsErrConnectionFailed(err) ||
+		errors.Is(err, syscall.ECONNREFUSED) || errors.Is(err, syscall.ENOENT) {
+		return true
+	}
+	// Fallback for errors that are not typed (e.g. Windows named pipes)
 	m := err.Error()
 	return strings.Contains(m, "connect to the docker API") ||
 		strings.Contains(m, "Cannot connect to the Docker daemon") ||
@@ -228,8 +264,8 @@ func isDockerUnreachable(err error) bool {
 }
 
 func (d *DockerService) execCommandOnce(cmd ...string) (string, error) {
-	if d.client == nil {
-		return "", fmt.Errorf("Docker client not available")
+	if d.cli() == nil {
+		return "", errDockerUnavailable
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
@@ -246,12 +282,12 @@ func (d *DockerService) execCommandOnce(cmd ...string) (string, error) {
 		AttachStderr: true,
 	}
 
-	execID, err := d.client.ExecCreate(ctx, containerID, execConfig)
+	execID, err := d.cli().ExecCreate(ctx, containerID, execConfig)
 	if err != nil {
 		return "", fmt.Errorf("failed to create exec: %w", err)
 	}
 
-	resp, err := d.client.ExecAttach(ctx, execID.ID, client.ExecAttachOptions{})
+	resp, err := d.cli().ExecAttach(ctx, execID.ID, client.ExecAttachOptions{})
 	if err != nil {
 		return "", fmt.Errorf("failed to attach exec: %w", err)
 	}
@@ -262,7 +298,7 @@ func (d *DockerService) execCommandOnce(cmd ...string) (string, error) {
 	outputStr := demuxDockerStream(output)
 
 	// Check exit code
-	inspect, err := d.client.ExecInspect(ctx, execID.ID, client.ExecInspectOptions{})
+	inspect, err := d.cli().ExecInspect(ctx, execID.ID, client.ExecInspectOptions{})
 	if err != nil {
 		return outputStr, fmt.Errorf("failed to inspect exec: %w", err)
 	}
@@ -291,8 +327,8 @@ func demuxDockerStream(data []byte) string {
 
 // GetLogs retrieves container logs
 func (d *DockerService) GetLogs(lines int) ([]string, error) {
-	if d.client == nil {
-		return nil, fmt.Errorf("Docker client not available")
+	if d.cli() == nil {
+		return nil, errDockerUnavailable
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -310,7 +346,7 @@ func (d *DockerService) GetLogs(lines int) ([]string, error) {
 		Timestamps: true,
 	}
 
-	logs, err := d.client.ContainerLogs(ctx, containerID, options)
+	logs, err := d.cli().ContainerLogs(ctx, containerID, options)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get logs: %w", err)
 	}
@@ -335,14 +371,14 @@ func (d *DockerService) GetLogs(lines int) ([]string, error) {
 // ContainerStates returns a map of container name -> state ("running", "exited", ...)
 // for all containers (running and stopped). Used to show backend health per site.
 func (d *DockerService) ContainerStates() (map[string]string, error) {
-	if d.client == nil {
-		return nil, fmt.Errorf("Docker client not available")
+	if d.cli() == nil {
+		return nil, errDockerUnavailable
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	result, err := d.client.ContainerList(ctx, client.ContainerListOptions{All: true})
+	result, err := d.cli().ContainerList(ctx, client.ContainerListOptions{All: true})
 	if err != nil {
 		return nil, fmt.Errorf("failed to list containers: %w", err)
 	}
@@ -360,8 +396,8 @@ func (d *DockerService) ContainerStates() (map[string]string, error) {
 // Caddy (d.containerName) and the CPM container itself are excluded.
 // Containers with N ports are returned as N separate entries (one per port).
 func (d *DockerService) ListDiscoverableContainers() ([]DiscoveredContainer, error) {
-	if d.client == nil {
-		return nil, fmt.Errorf("Docker client not available")
+	if d.cli() == nil {
+		return nil, errDockerUnavailable
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -369,7 +405,7 @@ func (d *DockerService) ListDiscoverableContainers() ([]DiscoveredContainer, err
 
 	selfHostname, _ := os.Hostname()
 
-	result, err := d.client.ContainerList(ctx, client.ContainerListOptions{All: false})
+	result, err := d.cli().ContainerList(ctx, client.ContainerListOptions{All: false})
 	if err != nil {
 		return nil, fmt.Errorf("failed to list containers: %w", err)
 	}
@@ -445,7 +481,7 @@ func (d *DockerService) ListDiscoverableContainers() ([]DiscoveredContainer, err
 
 // GetContainerStatus returns the container status
 func (d *DockerService) GetContainerStatus() string {
-	if d.client == nil {
+	if d.cli() == nil {
 		return "unknown"
 	}
 
@@ -457,7 +493,7 @@ func (d *DockerService) GetContainerStatus() string {
 		return "not found"
 	}
 
-	inspect, err := d.client.ContainerInspect(ctx, containerID, client.ContainerInspectOptions{})
+	inspect, err := d.cli().ContainerInspect(ctx, containerID, client.ContainerInspectOptions{})
 	if err != nil {
 		return "error"
 	}
