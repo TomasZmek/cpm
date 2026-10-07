@@ -116,6 +116,43 @@ func (d *DockerService) IsContainerRunning() bool {
 	return inspect.Container.State.Running
 }
 
+// ContainerHasEnv reports whether the Caddy container defines a non-empty
+// environment variable with the given name. Only the name is checked; the
+// value is never returned.
+func (d *DockerService) ContainerHasEnv(name string) (bool, error) {
+	if d.client == nil {
+		return false, fmt.Errorf("Docker client not available")
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	containerID, err := d.GetContainerID()
+	if err != nil {
+		return false, err
+	}
+
+	inspect, err := d.client.ContainerInspect(ctx, containerID, client.ContainerInspectOptions{})
+	if err != nil {
+		return false, fmt.Errorf("failed to inspect container: %w", err)
+	}
+	if inspect.Container.Config == nil {
+		return false, nil
+	}
+	return envListHas(inspect.Container.Config.Env, name), nil
+}
+
+// envListHas reports whether a KEY=VALUE list contains name with a non-empty value
+func envListHas(env []string, name string) bool {
+	prefix := name + "="
+	for _, kv := range env {
+		if strings.HasPrefix(kv, prefix) && len(kv) > len(prefix) {
+			return true
+		}
+	}
+	return false
+}
+
 // ReloadCaddy reloads Caddy configuration
 func (d *DockerService) ReloadCaddy() error {
 	output, err := d.ExecCommandWithOutput("caddy", "reload", "--config", "/etc/caddy/Caddyfile")

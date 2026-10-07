@@ -150,39 +150,18 @@ func (s *SnippetsService) GenerateSnippetsFile(cfg *models.SnippetConfig) error 
 	lines = append(lines, "")
 
 	// Cloudflare DNS.
-	// Emit the (cloudflare_dns) snippet whenever it is enabled in the snippet
-	// config OR whenever any wildcard domain uses the cloudflare provider.
-	// Standard sites "import cloudflare_dns", so the definition must always be
-	// present while those sites exist — otherwise Caddy fails to validate with
-	// "File to import not found: cloudflare_dns". This prevents the snippet from
-	// being silently dropped when the form toggle happens to be off.
-	cfEnabled := cfg.CloudflareDNS.Enabled
-	cfUseEnv := cfg.CloudflareDNS.UseEnv
-	cfToken := cfg.CloudflareDNS.APIToken
+	// The (cloudflare_dns) snippet must exist whenever it is enabled OR a
+	// wildcard domain uses Cloudflare, because standard sites
+	// "import cloudflare_dns" and Caddy fails to validate otherwise.
+	var wildcardDomains []models.WildcardDomain
 	if s.wildcardService != nil {
-		if wc, err := s.wildcardService.GetConfig(); err == nil && wc != nil {
-			for _, d := range wc.Domains {
-				if d.Provider == "cloudflare" {
-					cfEnabled = true
-					if d.UseEnv {
-						cfUseEnv = true
-					} else if cfToken == "" && d.APIToken != "" {
-						cfToken = d.APIToken
-					}
-					break
-				}
-			}
-		}
+		wildcardDomains, _ = s.wildcardService.GetDomains()
 	}
-	if cfEnabled {
+	if directive, ok := CloudflareDNSDirective(cfg.CloudflareDNS, wildcardDomains); ok {
 		lines = append(lines, "# --- CLOUDFLARE DNS CHALLENGE ---")
 		lines = append(lines, "(cloudflare_dns) {")
 		lines = append(lines, "    tls {")
-		if cfUseEnv || cfToken == "" {
-			lines = append(lines, "        dns cloudflare {env.CF_API_TOKEN}")
-		} else {
-			lines = append(lines, fmt.Sprintf("        dns cloudflare %s", cfToken))
-		}
+		lines = append(lines, "        "+directive)
 		lines = append(lines, "    }")
 		lines = append(lines, "}")
 		lines = append(lines, "")
@@ -315,6 +294,47 @@ func (s *SnippetsService) GenerateSnippetsFile(cfg *models.SnippetConfig) error 
 	snippetsPath := filepath.Join(s.config.ConfigDir, "snippets.caddy")
 
 	return os.WriteFile(snippetsPath, []byte(content), 0644)
+}
+
+// CloudflareDNSEnvPlaceholder is the Caddy placeholder used when the token
+// is taken from the CF_API_TOKEN environment variable of the Caddy container.
+const CloudflareDNSEnvPlaceholder = "{env.CF_API_TOKEN}"
+
+// CloudflareDNSDirective returns the "dns cloudflare ..." line for the
+// (cloudflare_dns) snippet and whether the snippet should be emitted at all.
+//
+// Token source priority:
+//  1. snippet enabled with an explicit token (and env disabled) -> that token
+//  2. snippet enabled with env enabled                         -> {env.CF_API_TOKEN}
+//  3. otherwise the first Cloudflare wildcard domain's setting  -> its token or env
+//  4. fallback                                                  -> {env.CF_API_TOKEN}
+//
+// An explicit token always wins over env placeholders coming from wildcard
+// domains, so a token entered in the snippet form is never silently replaced
+// by an (empty) environment variable (TomasZmek/cpm#21).
+func CloudflareDNSDirective(cf models.CloudflareDNSConfig, wildcardDomains []models.WildcardDomain) (string, bool) {
+	var wildcardCF *models.WildcardDomain
+	for i := range wildcardDomains {
+		if wildcardDomains[i].Provider == "cloudflare" || wildcardDomains[i].Provider == "" {
+			wildcardCF = &wildcardDomains[i]
+			break
+		}
+	}
+
+	if !cf.Enabled && wildcardCF == nil {
+		return "", false
+	}
+
+	token := CloudflareDNSEnvPlaceholder
+	switch {
+	case cf.Enabled && !cf.UseEnv && cf.APIToken != "":
+		token = cf.APIToken
+	case cf.Enabled && cf.UseEnv:
+		// env placeholder
+	case wildcardCF != nil && !wildcardCF.UseEnv && wildcardCF.APIToken != "":
+		token = wildcardCF.APIToken
+	}
+	return "dns cloudflare " + token, true
 }
 
 // managedSnippetNames are the snippet names CPM generates itself.

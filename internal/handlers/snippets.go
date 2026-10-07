@@ -41,15 +41,34 @@ func (h *Handler) SnippetUpdate(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
 	}
 
+	var envWarning string
+
 	switch snippetName {
 	case "cloudflare_dns":
 		cfg.CloudflareDNS.Enabled = c.FormValue("enabled") == "on"
+		if !cfg.CloudflareDNS.Enabled {
+			// The form disables (and therefore omits) all fields of a disabled
+			// card; keep the stored token/env choice for when it is re-enabled.
+			break
+		}
 		cfg.CloudflareDNS.UseEnv = c.FormValue("use_env") == "on"
 		cfg.CloudflareDNS.APIToken = strings.TrimSpace(c.FormValue("api_token"))
-		if !cfg.CloudflareDNS.UseEnv && cfg.CloudflareDNS.APIToken != "" {
+		// A token typed into the form is an explicit choice: use it even if the
+		// "use env" toggle was left on (its default). Otherwise Caddy would get
+		// an empty {env.CF_API_TOKEN} and fail with "API token '' appears
+		// invalid" (TomasZmek/cpm#21). The form disables the token field while
+		// the toggle is on, so switching to env does not submit the old token.
+		if cfg.CloudflareDNS.APIToken != "" {
+			cfg.CloudflareDNS.UseEnv = false
 			if err := services.ValidateAPIToken(cfg.CloudflareDNS.APIToken); err != nil {
 				return c.Status(fiber.StatusBadRequest).SendString(err.Error())
 			}
+		}
+		if cfg.CloudflareDNS.Enabled && !cfg.CloudflareDNS.UseEnv && cfg.CloudflareDNS.APIToken == "" {
+			return c.Status(fiber.StatusBadRequest).SendString(tl(c, "msg_cf_token_required"))
+		}
+		if cfg.CloudflareDNS.Enabled && cfg.CloudflareDNS.UseEnv {
+			envWarning = h.cloudflareEnvWarning(c)
 		}
 
 	case "internal_only":
@@ -98,9 +117,14 @@ func (h *Handler) SnippetUpdate(c *fiber.Ctx) error {
 
 	// Reload Caddy
 	result := h.caddyService.ReloadWithValidation()
-	if !result.Success {
+	switch {
+	case !result.Success && envWarning != "":
+		setFlash(c, "warning", envWarning+" "+tl(c, "msg_snippet_reload_failed")+": "+result.Error)
+	case !result.Success:
 		setFlash(c, "warning", tl(c, "msg_snippet_reload_failed")+": "+result.Error)
-	} else {
+	case envWarning != "":
+		setFlash(c, "warning", envWarning)
+	default:
 		setFlash(c, "success", tl(c, "msg_snippet_updated", snippetName))
 	}
 
@@ -141,6 +165,20 @@ func parseNetworks(input string) []string {
 		}
 	}
 	return networks
+}
+
+// cloudflareEnvWarning returns a translated warning when the Caddy container
+// does not define CF_API_TOKEN, which makes "{env.CF_API_TOKEN}" empty.
+// Returns "" when the variable is set or Docker cannot be queried.
+func (h *Handler) cloudflareEnvWarning(c *fiber.Ctx) string {
+	if h.dockerService == nil || !h.dockerService.IsAvailable() {
+		return ""
+	}
+	has, err := h.dockerService.ContainerHasEnv("CF_API_TOKEN")
+	if err != nil || has {
+		return ""
+	}
+	return tl(c, "msg_cf_env_missing", h.config.ContainerName)
 }
 
 // isValidNetwork reports whether v is an IP address, a CIDR range or Caddy's

@@ -748,6 +748,15 @@ msgstr "'{0}'의 인증서가 삭제되었습니다. 갱신이 시작됩니다."
 msgid "msg_snippet_updated"
 msgstr "코드 조각 '{0}'이(가) 성공적으로 업데이트되었습니다"
 
+msgid "msg_cf_token_required"
+msgstr "Cloudflare API 토큰을 입력하거나 \"CF_API_TOKEN 환경 변수 사용\"을 켜세요."
+
+msgid "msg_cf_env_missing"
+msgstr "Caddy 컨테이너 \"{0}\"에 CF_API_TOKEN 환경 변수가 없어 Caddy가 빈 토큰을 받게 됩니다. Caddy 컨테이너에 CF_API_TOKEN을 설정하거나 여기에 토큰을 입력하세요."
+
+msgid "snippets_use_env_hint"
+msgstr "켜면 토큰을 Caddy 컨테이너의 CF_API_TOKEN 변수에서 읽으며 아래 입력란은 무시됩니다."
+
 msgid "msg_snippet_reload_failed"
 msgstr "코드 조각이 업데이트되었지만 재로드에 실패했습니다"
 

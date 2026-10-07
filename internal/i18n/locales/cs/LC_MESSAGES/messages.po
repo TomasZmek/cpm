@@ -746,6 +746,15 @@ msgstr "Certifikát pro '{0}' smazán. Bude spuštěna obnova."
 msgid "msg_snippet_updated"
 msgstr "Snippet '{0}' byl úspěšně aktualizován"
 
+msgid "msg_cf_token_required"
+msgstr "Zadejte Cloudflare API token nebo zapněte „Použít proměnnou prostředí CF_API_TOKEN“."
+
+msgid "msg_cf_env_missing"
+msgstr "Kontejner Caddy „{0}“ nemá proměnnou prostředí CF_API_TOKEN, Caddy tak dostane prázdný token. Nastavte CF_API_TOKEN v kontejneru Caddy, nebo zadejte token zde."
+
+msgid "snippets_use_env_hint"
+msgstr "Když je zapnuto, token se čte z proměnné CF_API_TOKEN kontejneru Caddy a pole níže se ignoruje."
+
 msgid "msg_snippet_reload_failed"
 msgstr "Snippet aktualizován, ale reload selhal"
 

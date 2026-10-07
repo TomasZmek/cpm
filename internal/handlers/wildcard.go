@@ -28,8 +28,12 @@ func (h *Handler) WildcardSettings(c *fiber.Ctx) error {
 		domains = []models.WildcardDomain{}
 	}
 
+	flashType, flashMsg := getFlash(c)
+
 	data := h.baseData(c, "Settings - Wildcard SSL")
 	data["ActiveTab"] = "wildcard"
+	data["FlashType"] = flashType
+	data["FlashMessage"] = flashMsg
 	data["WildcardDomains"] = domains
 
 	return c.Render("pages/settings", data, "layouts/base")
@@ -83,6 +87,13 @@ func (h *Handler) WildcardAdd(c *fiber.Ctx) error {
 		return c.Redirect("/settings/wildcard")
 	}
 
+	// Warn early if the token is expected from an env var the Caddy container does not have
+	if useEnv {
+		if warning := h.cloudflareEnvWarning(c); warning != "" {
+			setFlash(c, "warning", warning)
+		}
+	}
+
 	// Redirect to migration page
 	return c.Redirect("/settings/wildcard/migrate/" + url.PathEscape(domain))
 }
@@ -108,7 +119,11 @@ func (h *Handler) WildcardMigratePage(c *fiber.Ctx) error {
 		return c.Redirect("/settings/wildcard")
 	}
 
+	flashType, flashMsg := getFlash(c)
+
 	data := h.baseData(c, "Migrate to Wildcard SSL")
+	data["FlashType"] = flashType
+	data["FlashMessage"] = flashMsg
 	data["ActiveTab"] = "wildcard"
 	data["MigrationInfo"] = info
 	data["Domain"] = domain

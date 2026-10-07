@@ -746,6 +746,15 @@ msgstr "Certificate for '{0}' deleted. Renewal will be triggered."
 msgid "msg_snippet_updated"
 msgstr "Snippet '{0}' updated successfully"
 
+msgid "msg_cf_token_required"
+msgstr "Enter a Cloudflare API token or enable \"Use CF_API_TOKEN environment variable\"."
+
+msgid "msg_cf_env_missing"
+msgstr "The Caddy container \"{0}\" has no CF_API_TOKEN environment variable, so Caddy will receive an empty token. Set CF_API_TOKEN for the Caddy container or enter the token here."
+
+msgid "snippets_use_env_hint"
+msgstr "When enabled, the token is read from the CF_API_TOKEN variable of the Caddy container and the field below is ignored."
+
 msgid "msg_snippet_reload_failed"
 msgstr "Snippet updated but reload failed"
 

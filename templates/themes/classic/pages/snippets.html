@@ -128,9 +128,10 @@
                         <span class="toggle-slider"></span>
                     </label>
                 </div>
+                <div class="form-hint">{{t .Lang "snippets_use_env_hint"}}</div>
                 <div class="snipc-fg">
                     <label for="cf_api_token">{{t .Lang "snippets_api_token"}}</label>
-                    <input type="password" id="cf_api_token" name="api_token"
+                    <input type="password" id="cf_api_token" name="api_token" data-disabled-when="use_env"
                            value="{{.Config.CloudflareDNS.APIToken}}"
                            placeholder="{{t .Lang "snippets_api_token_placeholder"}}">
                 </div>
@@ -364,6 +365,12 @@
         body.querySelectorAll('input, select, textarea, button').forEach(function (el) {
             el.disabled = !on;
         });
+        // Fields that only apply when another checkbox is off (e.g. the API
+        // token is ignored while "use CF_API_TOKEN env" is on).
+        body.querySelectorAll('[data-disabled-when]').forEach(function (el) {
+            var dep = card.querySelector('[name="' + el.getAttribute('data-disabled-when') + '"]');
+            if (on && dep && dep.checked) el.disabled = true;
+        });
         if (status) {
             status.textContent = on ? ENABLED_LABEL : DISABLED_LABEL;
             status.classList.toggle('on', on);
@@ -382,6 +389,10 @@
         document.querySelectorAll('.snipc-card[data-snippet]').forEach(function (card) {
             var toggle = card.querySelector('[data-card-toggle]');
             if (toggle) toggle.addEventListener('change', function () { syncCard(card); });
+            card.querySelectorAll('[data-disabled-when]').forEach(function (el) {
+                var dep = card.querySelector('[name="' + el.getAttribute('data-disabled-when') + '"]');
+                if (dep) dep.addEventListener('change', function () { syncCard(card); });
+            });
             var resetBtn = card.querySelector('[data-reset]');
             if (resetBtn) resetBtn.addEventListener('click', function () { resetCard(card); });
             syncCard(card);
