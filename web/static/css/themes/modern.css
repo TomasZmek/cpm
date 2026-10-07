@@ -437,10 +437,12 @@ select {
     display: flex; flex-direction: column; gap: 12px;
 }
 .site-card:hover, .snippet-card:hover { box-shadow: var(--shadow); transform: translateY(-2px); border-color: var(--border-strong); }
-.site-card-header { display: flex; align-items: flex-start; gap: 12px; }
+.site-card-header { display: flex; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
 .site-card-icon { font-size: 1.4rem; line-height: 1; }
-.site-card-title { flex: 1; min-width: 0; }
-.site-card-title h3 { margin: 0; font-size: 1rem; overflow-wrap: anywhere; }
+/* The title keeps at least ~10rem; the action buttons wrap below it instead
+   of squeezing the domain into one character per line */
+.site-card-title { flex: 1 1 10rem; min-width: 0; }
+.site-card-title h3 { margin: 0; font-size: 1rem; overflow-wrap: break-word; }
 .site-card-badges { display: flex; gap: 6px; }
 .site-card-actions { display: flex; gap: 7px; flex-wrap: wrap; }
 .site-card-body { display: flex; flex-direction: column; gap: 10px; }
@@ -877,3 +879,7 @@ details[open] summary::before { transform: rotate(90deg); }
     height: 100%; width: 0; background: var(--accent-600);
     transition: width .2s ease;
 }
+
+/* The hidden attribute must win over component display rules (e.g. the
+   "logs cleared" note used display:flex and was always visible) */
+[hidden] { display: none !important; }

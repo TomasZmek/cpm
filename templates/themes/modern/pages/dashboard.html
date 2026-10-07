@@ -55,7 +55,7 @@
                 <div class="info-item">
                     <span class="info-label">🔧 {{t .Lang "dashboard_caddy_status"}}</span>
                     <span class="info-value">
-                        {{if eq .CaddyStatus "running"}}<span class="text-success">● {{t .Lang "status_up"}}</span>{{else}}<span class="text-danger">● {{.CaddyStatus}}</span>{{end}}
+                        {{if eq .CaddyStatus "running"}}<span class="text-success">● {{t .Lang "caddy_running"}}</span>{{else}}<span class="text-danger">● {{.CaddyStatus}}</span>{{end}}
                     </span>
                 </div>
             </div>

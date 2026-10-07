@@ -46,7 +46,7 @@ The Makefile `VERSION` variable is stale (still `3.2.0`). Version is authoritati
 - **HTMX** — frontend interactivity (no build step, CDN)
 - **SweetAlert2** — dialogs
 - **github.com/leonelquinteros/gotext** — i18n library
-- Templates live in `templates/themes/classic/`, static assets in `web/static/`
+- Templates live in `templates/themes/<theme>/` (`classic` = default, `modern` = optional redesign with dark mode), stylesheets in `web/static/css/themes/<theme>.css`, other static assets in `web/static/`
 - i18n: English, Czech & Korean (ja, zh, es, de, fr exist but are hidden until complete) — PO/MO format via `github.com/leonelquinteros/gotext`, files in `internal/i18n/locales/{en,cs,ko}/LC_MESSAGES/messages.po`, embedded via `embed.FS`
 - **github.com/moby/moby/client** — Docker API client (`api/pkg/stdcopy` for demultiplexing exec/log streams)
 
@@ -144,6 +144,12 @@ Roles are enforced per route in `setupRoutes` (`cmd/cpm/main.go`) via `middlewar
 - **Output**: HTML built by hand in handlers must use `escapeHTML`; redirects to the Referer go through `safeRedirectTarget`.
 - **Secrets**: files containing tokens or password hashes are written with `0600`.
 - **CSRF**: forms include `<input type="hidden" name="_csrf" value="{{.CSRFToken}}">`; HTMX/fetch requests send the `X-CSRF-Token` header (set globally in `layouts/base.html`).
+
+### UI themes
+
+Two complete template sets: **Classic** (default) and **Modern** (optional, from PR #19: light/dark mode, accent colours). `internal/views.Themed` holds one template engine per theme; `middleware.Theme` reads the `cpm_theme` cookie (default: `THEME` env) and binds it via `c.Bind`, so every `c.Render(...)` picks the right set. Users switch in Settings → General.
+
+**A UI feature must be implemented in both themes.** Handlers pass the same data to both; only the markup differs. Themes are registered in `middleware/theme.go` (`AvailableThemes`, `themeOrder`).
 
 ### Flash messages
 

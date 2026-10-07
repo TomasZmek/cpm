@@ -1345,3 +1345,12 @@ msgstr "검색 호스트가 저장되었습니다"
 
 msgid "settings_accent"
 msgstr "강조 색상"
+
+msgid "wildcard_migrate_done"
+msgstr "확인 (완료)"
+
+msgid "logs_level"
+msgstr "레벨"
+
+msgid "caddy_running"
+msgstr "실행 중"

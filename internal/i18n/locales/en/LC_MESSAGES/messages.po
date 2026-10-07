@@ -1343,3 +1343,12 @@ msgstr "Discovery hosts saved"
 
 msgid "settings_accent"
 msgstr "Accent colour"
+
+msgid "wildcard_migrate_done"
+msgstr "Done"
+
+msgid "logs_level"
+msgstr "Level"
+
+msgid "caddy_running"
+msgstr "Running"

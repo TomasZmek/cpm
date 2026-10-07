@@ -26,6 +26,23 @@
     </div>
 </div>
 
+<!-- Backend status (containers matched by target name) -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h2 class="card-title">🐳 {{t .Lang "dashboard_backend_status"}}</h2>
+    </div>
+    <div class="backend-status">
+        <span><span class="bs-dot bs-up"></span>{{t .Lang "status_up"}}: <strong>{{.BackendUp}}</strong></span>
+        <span><span class="bs-dot bs-down"></span>{{t .Lang "status_down"}}: <strong>{{.BackendDown}}</strong></span>
+        <span><span class="bs-dot bs-unknown"></span>{{t .Lang "status_unknown"}}: <strong>{{.BackendUnknown}}</strong></span>
+    </div>
+</div>
+<style>
+.backend-status { display: flex; flex-wrap: wrap; gap: var(--space-6); }
+.bs-dot { display: inline-block; width: 0.6rem; height: 0.6rem; border-radius: 50%; margin-right: var(--space-2); vertical-align: middle; }
+.bs-up { background: var(--success); } .bs-down { background: var(--error); } .bs-unknown { background: var(--gray-400); }
+</style>
+
 <div class="grid grid-2">
     <!-- Alerts -->
     <div class="card">
