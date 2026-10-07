@@ -1319,3 +1319,9 @@ msgstr "Skipped {0}: {1}"
 
 msgid "msg_fallback_rolled_back"
 msgstr "The fallback change was rolled back because Caddy rejected the configuration"
+
+msgid "certs_bulk_all_warning"
+msgstr "Renewing many certificates at once can hit Let's Encrypt rate limits (e.g. 5 duplicate certificates per week). Wildcard certificates are skipped."
+
+msgid "msg_certs_bulk_failed"
+msgstr "{0} could not be deleted: {1}"

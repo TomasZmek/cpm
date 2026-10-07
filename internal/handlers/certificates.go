@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/TomasZmek/cpm/internal/models"
 	"github.com/gofiber/fiber/v2"
@@ -78,12 +79,19 @@ func (h *Handler) HTMXCertificatesList(c *fiber.Ctx) error {
 }
 
 // CertificatesRenewAll renews certificates in bulk based on a scope:
-//   all      -> every certificate
-//   expiring -> expiring, critical or already-expired certificates
-//   expired  -> only already-expired certificates
-// Renewal = delete the cert so Caddy re-issues it on the next request.
+//
+//	expiring (default) -> expiring, critical or already-expired certificates
+//	expired            -> only already-expired certificates
+//	all                -> every certificate
+//
+// Wildcard certificates are always excluded; renewing many certificates at
+// once can hit Let's Encrypt rate limits (#34). Renewal = delete the cert so
+// Caddy re-issues it after a forced reload.
 func (h *Handler) CertificatesRenewAll(c *fiber.Ctx) error {
-	scope := c.FormValue("scope")
+	scope := c.FormValue("scope", "expiring")
+	if scope != "expiring" && scope != "expired" && scope != "all" {
+		return c.Status(fiber.StatusBadRequest).SendString("invalid scope")
+	}
 
 	certs, err := h.certService.GetAllCertificates()
 	if err != nil {
@@ -92,7 +100,11 @@ func (h *Handler) CertificatesRenewAll(c *fiber.Ctx) error {
 	}
 
 	renewed := 0
+	var failed []string
 	for _, cert := range certs {
+		if cert.IsWildcard() {
+			continue
+		}
 		match := false
 		switch scope {
 		case "expired":
@@ -101,26 +113,36 @@ func (h *Handler) CertificatesRenewAll(c *fiber.Ctx) error {
 			match = cert.Status == models.CertStatusExpiring ||
 				cert.Status == models.CertStatusCritical ||
 				cert.Status == models.CertStatusExpired
-		default: // "all"
+		case "all":
 			match = true
 		}
 		if !match {
 			continue
 		}
-		if delErr := h.certService.DeleteCertificate(cert.Domain); delErr == nil {
-			renewed++
+		if delErr := h.certService.DeleteCertificate(cert.Domain); delErr != nil {
+			failed = append(failed, cert.Domain)
+			continue
 		}
+		renewed++
 	}
 
-	if renewed == 0 {
+	if renewed == 0 && len(failed) == 0 {
 		setFlash(c, "info", tl(c, "msg_certs_bulk_none"))
 		return certsRedirect(c)
 	}
 
-	result := h.caddyService.Reload()
-	if !result.Success {
-		setFlash(c, "warning", fmt.Sprintf("%s (%d): %s", tl(c, "msg_certs_bulk_reload_failed"), renewed, result.Error))
-	} else {
+	failedMsg := ""
+	if len(failed) > 0 {
+		failedMsg = " " + tl(c, "msg_certs_bulk_failed", len(failed), strings.Join(failed, ", "))
+	}
+
+	result := h.caddyService.ReloadForce()
+	switch {
+	case !result.Success:
+		setFlash(c, "warning", fmt.Sprintf("%s (%d): %s", tl(c, "msg_certs_bulk_reload_failed"), renewed, result.Error)+failedMsg)
+	case len(failed) > 0:
+		setFlash(c, "warning", tl(c, "msg_certs_bulk_done", renewed)+failedMsg)
+	default:
 		setFlash(c, "success", tl(c, "msg_certs_bulk_done", renewed))
 	}
 	return certsRedirect(c)

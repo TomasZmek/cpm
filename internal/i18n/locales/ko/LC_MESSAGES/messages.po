@@ -1321,3 +1321,9 @@ msgstr "{0}개 건너뜀: {1}"
 
 msgid "msg_fallback_rolled_back"
 msgstr "Caddy가 구성을 거부하여 대체 규칙 변경이 되돌려졌습니다"
+
+msgid "certs_bulk_all_warning"
+msgstr "많은 인증서를 한 번에 갱신하면 Let's Encrypt 속도 제한(예: 주당 중복 인증서 5개)에 걸릴 수 있습니다. 와일드카드 인증서는 건너뜁니다."
+
+msgid "msg_certs_bulk_failed"
+msgstr "{0}개를 삭제하지 못했습니다: {1}"

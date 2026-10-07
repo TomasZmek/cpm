@@ -6,9 +6,9 @@
     {{if .Certificates}}
     <div class="page-header-actions">
         <select id="bulk-renew-scope" name="scope" style="width:auto;">
-            <option value="all">{{t .Lang "certs_renew_all"}}</option>
-            <option value="expiring">{{t .Lang "certs_renew_expiring"}}</option>
+            <option value="expiring" selected>{{t .Lang "certs_renew_expiring"}}</option>
             <option value="expired">{{t .Lang "certs_renew_expired"}}</option>
+            <option value="all">{{t .Lang "certs_renew_all"}}</option>
         </select>
         <button type="button" class="btn btn-primary" onclick="startBulkRenew()">
             🔄 {{t .Lang "certs_bulk_renew"}}
@@ -41,7 +41,7 @@
 {{if .Certificates}}
 <div class="cert-list" id="certificates-list">
     {{range .Certificates}}
-    <div class="cert-item cert-{{.Status}}" data-domain="{{.Domain}}">
+    <div class="cert-item cert-{{.Status}}" data-domain="{{.Domain}}"{{if .IsWildcard}} data-wildcard="1"{{end}}>
         <span class="status-dot"></span>
         <div class="cert-item-info">
             <div class="cert-item-domain">{{.Domain}}</div>
@@ -118,13 +118,16 @@ function startBulkRenew() {
     if (scope === 'expired') { sel = '.cert-item.cert-expired'; }
     else if (scope === 'expiring') { sel = '.cert-item.cert-expiring, .cert-item.cert-critical, .cert-item.cert-expired'; }
 
+    // Wildcard certificates are never bulk-renewed (renew them individually)
     var domains = [];
     document.querySelectorAll(sel).forEach(function (el) {
         var d = el.getAttribute('data-domain');
-        if (d) { domains.push(d); }
+        if (d && !el.hasAttribute('data-wildcard')) { domains.push(d); }
     });
-    if (domains.length === 0) { alert('{{t .Lang "msg_certs_bulk_none"}}'); return; }
-    if (!confirm('{{t .Lang "certs_bulk_renew_confirm"}}\n(' + domains.length + ')')) { return; }
+    if (domains.length === 0) { alert({{t .Lang "msg_certs_bulk_none"}}); return; }
+    var question = {{t .Lang "certs_bulk_renew_confirm"}} + '\n(' + domains.length + ')';
+    if (scope === 'all') { question += '\n\n⚠️ ' + {{t .Lang "certs_bulk_all_warning"}}; }
+    if (!confirm(question)) { return; }
     runBulkRenew(domains);
 }
 
