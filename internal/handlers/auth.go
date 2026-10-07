@@ -1,11 +1,13 @@
 package handlers
 
 import (
+	"errors"
 	"net/url"
 	"sync"
 	"time"
 
 	"github.com/TomasZmek/cpm/internal/models"
+	"github.com/TomasZmek/cpm/internal/services"
 	"github.com/TomasZmek/cpm/internal/utils"
 	"github.com/gofiber/fiber/v2"
 )
@@ -164,21 +166,6 @@ func redirectFlash(c *fiber.Ctx, typ, msg, to string) error {
 	return c.Redirect(to)
 }
 
-// isLastAdmin reports whether username is the only remaining admin account.
-func (h *Handler) isLastAdmin(username string) bool {
-	admins := 0
-	target := false
-	for _, u := range h.authService.GetUsers() {
-		if u.Role == models.RoleAdmin {
-			admins++
-			if u.Username == username {
-				target = true
-			}
-		}
-	}
-	return target && admins <= 1
-}
-
 // UserCreate creates a new user (settings page)
 func (h *Handler) UserCreate(c *fiber.Ctx) error {
 	username := c.FormValue("username")
@@ -206,15 +193,14 @@ func (h *Handler) UserDelete(c *fiber.Ctx) error {
 	// Can't delete yourself (only matters when auth is enabled).
 	currentUser := h.getCurrentUser(c)
 	if user, ok := currentUser.(*models.User); ok && user.Username == username {
-		return redirectFlash(c, "warning", "Cannot delete your own account", "/settings/users")
+		return redirectFlash(c, "warning", tl(c, "msg_user_delete_self"), "/settings/users")
 	}
 
-	// Protect the last admin only while auth is enabled (otherwise no lockout risk).
-	if h.authService.IsEnabled() && h.isLastAdmin(username) {
-		return redirectFlash(c, "warning", "Cannot delete the last administrator while authentication is enabled. Disable auth first.", "/settings/users")
-	}
-
+	// AuthService refuses to delete the last admin
 	if err := h.authService.DeleteUser(username); err != nil {
+		if errors.Is(err, services.ErrLastAdmin) {
+			return redirectFlash(c, "warning", tl(c, "msg_user_last_admin"), "/settings/users")
+		}
 		return redirectFlash(c, "error", err.Error(), "/settings/users")
 	}
 
@@ -233,11 +219,10 @@ func (h *Handler) UserUpdateRole(c *fiber.Ctx) error {
 	username := c.Params("username")
 	role := models.Role(c.FormValue("role"))
 
-	if h.authService.IsEnabled() && role != models.RoleAdmin && h.isLastAdmin(username) {
-		return redirectFlash(c, "warning", "Cannot remove the last administrator's role while authentication is enabled", "/settings/users")
-	}
-
 	if err := h.authService.UpdateRole(username, role); err != nil {
+		if errors.Is(err, services.ErrLastAdmin) {
+			return redirectFlash(c, "warning", tl(c, "msg_user_last_admin"), "/settings/users")
+		}
 		return c.Status(fiber.StatusBadRequest).SendString(err.Error())
 	}
 

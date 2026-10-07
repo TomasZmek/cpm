@@ -56,13 +56,13 @@ func (m *CaddyfileManager) GetSiteDirectory(site *models.Site) string {
 // GetSiteFilename returns the filename with correct suffix for wildcard sites
 func (m *CaddyfileManager) GetSiteFilename(site *models.Site) string {
 	baseName := sanitizeFilename(site.PrimaryDomain())
-	
+
 	if site.IsWildcard() {
 		// For wildcard sites, use pattern: name.domain.caddy
 		// e.g., home.perteus.cz.caddy
 		return baseName + ".caddy"
 	}
-	
+
 	return baseName + ".caddy"
 }
 
@@ -121,19 +121,19 @@ func (m *CaddyfileManager) GenerateCaddyfile() (string, error) {
 // generateWildcardBlock generates a complete wildcard block for Caddyfile
 func (m *CaddyfileManager) generateWildcardBlock(wd models.WildcardDomain) string {
 	var lines []string
-	
+
 	snippetName := "wildcard-tls-" + strings.ReplaceAll(wd.Domain, ".", "-")
 	importPattern := fmt.Sprintf("/etc/caddy/sites/wildcard/*.%s.caddy", wd.Domain)
 
 	lines = append(lines, fmt.Sprintf("# --- %s ---", strings.ToUpper(wd.Domain)))
 	lines = append(lines, fmt.Sprintf("*.%s {", wd.Domain))
 	lines = append(lines, fmt.Sprintf("    import %s", snippetName))
-	
+
 	lines = append(lines, "")
 	lines = append(lines, "    # Import site-specific handle blocks")
 	lines = append(lines, fmt.Sprintf("    import %s", importPattern))
 	lines = append(lines, "")
-	
+
 	// Error pages - must be at wildcard level, not inside handle blocks
 	lines = append(lines, "    # Error handling")
 	lines = append(lines, "    handle_errors {")

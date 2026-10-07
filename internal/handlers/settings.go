@@ -59,18 +59,18 @@ func (h *Handler) SettingsDiscoveryHostsSave(c *fiber.Ctx) error {
 
 	settings, err := h.settingsService.Get()
 	if err != nil {
-		setFlash(c, "error", "Failed to load settings: "+err.Error())
+		setFlash(c, "error", tl(c, "msg_settings_load_failed")+": "+err.Error())
 		return c.Redirect("/settings/docker")
 	}
 
 	settings.DiscoveryHosts = hosts
 
 	if err := h.settingsService.Save(settings); err != nil {
-		setFlash(c, "error", "Failed to save settings: "+err.Error())
+		setFlash(c, "error", tl(c, "msg_settings_save_failed")+": "+err.Error())
 		return c.Redirect("/settings/docker")
 	}
 
-	setFlash(c, "success", "Discovery hosts saved")
+	setFlash(c, "success", tl(c, "msg_discovery_hosts_saved"))
 	return c.Redirect("/settings/docker")
 }
 

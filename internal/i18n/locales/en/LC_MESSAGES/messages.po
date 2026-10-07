@@ -1325,3 +1325,18 @@ msgstr "Renewing many certificates at once can hit Let's Encrypt rate limits (e.
 
 msgid "msg_certs_bulk_failed"
 msgstr "{0} could not be deleted: {1}"
+
+msgid "msg_user_delete_self"
+msgstr "You cannot delete your own account"
+
+msgid "msg_user_last_admin"
+msgstr "The last administrator cannot be deleted or lose the admin role"
+
+msgid "msg_settings_load_failed"
+msgstr "Failed to load settings"
+
+msgid "msg_settings_save_failed"
+msgstr "Failed to save settings"
+
+msgid "msg_discovery_hosts_saved"
+msgstr "Discovery hosts saved"

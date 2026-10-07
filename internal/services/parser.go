@@ -157,7 +157,7 @@ func (p *ParserService) parseDomains(content, defaultDomain string) []string {
 		}
 		domainParts = append(domainParts, line)
 	}
-	
+
 	domainsStr := strings.Join(domainParts, " ")
 	domainsStr = strings.TrimSpace(domainsStr)
 
@@ -378,4 +378,3 @@ func (p *ParserService) parseTLSMode(content string) string {
 
 	return "auto"
 }
-

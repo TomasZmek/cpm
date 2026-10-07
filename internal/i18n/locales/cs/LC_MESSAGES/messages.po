@@ -1325,3 +1325,18 @@ msgstr "Výchozí"
 
 msgid "snippets_settings"
 msgstr "Nastavení"
+
+msgid "msg_user_delete_self"
+msgstr "Nemůžete smazat vlastní účet"
+
+msgid "msg_user_last_admin"
+msgstr "Posledního administrátora nelze smazat ani mu odebrat roli admin"
+
+msgid "msg_settings_load_failed"
+msgstr "Nastavení se nepodařilo načíst"
+
+msgid "msg_settings_save_failed"
+msgstr "Nastavení se nepodařilo uložit"
+
+msgid "msg_discovery_hosts_saved"
+msgstr "Hostitelé pro discovery uloženi"

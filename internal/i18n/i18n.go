@@ -86,8 +86,8 @@ var pluralRules = map[string]pluralFunc{
 
 // langData holds extracted translation maps for one language.
 type langData struct {
-	singular map[string]string          // msgid → msgstr
-	plural   map[string]map[int]string  // msgid → {form_index → msgstr}
+	singular map[string]string         // msgid → msgstr
+	plural   map[string]map[int]string // msgid → {form_index → msgstr}
 	selectN  pluralFunc
 }
 

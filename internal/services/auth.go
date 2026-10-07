@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -142,6 +143,9 @@ func (a *AuthService) GetUser(username string) *models.User {
 	return nil
 }
 
+// ErrLastAdmin is returned when an operation would remove the last admin
+var ErrLastAdmin = errors.New("the last admin user cannot be deleted or demoted")
+
 // MinPasswordLength is the minimum accepted password length
 const MinPasswordLength = 8
 
@@ -242,7 +246,7 @@ func (a *AuthService) DeleteUser(username string) error {
 	for i, user := range a.config.Users {
 		if user.Username == username {
 			if user.Role == models.RoleAdmin && a.countAdmins() <= 1 {
-				return fmt.Errorf("cannot delete the last admin user")
+				return ErrLastAdmin
 			}
 			a.config.Users = append(a.config.Users[:i], a.config.Users[i+1:]...)
 			a.invalidateUserSessions(username)
@@ -287,7 +291,7 @@ func (a *AuthService) UpdateRole(username string, role models.Role) error {
 	for _, user := range a.config.Users {
 		if user.Username == username {
 			if user.Role == models.RoleAdmin && role != models.RoleAdmin && a.countAdmins() <= 1 {
-				return fmt.Errorf("cannot demote the last admin user")
+				return ErrLastAdmin
 			}
 			user.Role = role
 			return a.saveConfig()

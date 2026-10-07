@@ -131,7 +131,6 @@ func (s *SettingsService) Save(settings *models.AppSettings) error {
 	return nil
 }
 
-
 // EnsureLocalDockerHost auto-registers the local machine as a Docker discovery
 // host when (a) a local Docker daemon is reachable and (b) no host is already
 // flagged as the local Docker host. It returns true if settings were changed.

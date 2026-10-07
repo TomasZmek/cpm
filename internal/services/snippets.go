@@ -1,11 +1,11 @@
 package services
 
 import (
-	"regexp"
 	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/TomasZmek/cpm/internal/config"

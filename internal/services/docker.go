@@ -210,7 +210,6 @@ func (d *DockerService) ExecCommand(cmd ...string) error {
 	return err
 }
 
-// ExecCommandWithOutput executes a command inside the container and returns output
 // ExecCommandWithOutput runs a command in the Caddy container. If the Docker
 // connection has gone stale (e.g. Docker Desktop restarted), it transparently
 // reconnects and retries once.

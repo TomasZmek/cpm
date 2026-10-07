@@ -1327,3 +1327,18 @@ msgstr "많은 인증서를 한 번에 갱신하면 Let's Encrypt 속도 제한(
 
 msgid "msg_certs_bulk_failed"
 msgstr "{0}개를 삭제하지 못했습니다: {1}"
+
+msgid "msg_user_delete_self"
+msgstr "자신의 계정은 삭제할 수 없습니다"
+
+msgid "msg_user_last_admin"
+msgstr "마지막 관리자는 삭제하거나 관리자 역할을 제거할 수 없습니다"
+
+msgid "msg_settings_load_failed"
+msgstr "설정을 불러오지 못했습니다"
+
+msgid "msg_settings_save_failed"
+msgstr "설정을 저장하지 못했습니다"
+
+msgid "msg_discovery_hosts_saved"
+msgstr "검색 호스트가 저장되었습니다"
