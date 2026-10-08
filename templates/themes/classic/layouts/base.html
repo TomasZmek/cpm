@@ -14,9 +14,21 @@
     <script>window.cpmLang = '{{.Lang}}';</script>
 </head>
 <body>
+    <!-- Top bar with menu button (narrow screens only, see .mobile-topbar CSS) -->
+    <header class="mobile-topbar">
+        <button type="button" class="nav-toggle" aria-controls="sidebar" aria-expanded="false" aria-label="{{t .Lang "nav_menu"}}">
+            <span class="nav-toggle-icon" aria-hidden="true"></span>
+        </button>
+        <a href="/" class="mobile-topbar-logo">
+            <img src="/static/img/logo.svg" alt="">
+            <span>CPM</span>
+        </a>
+    </header>
+    <div class="nav-backdrop" hidden></div>
+
     <div class="app-container">
-        <!-- Sidebar -->
-        <aside class="sidebar">
+        <!-- Sidebar (off-canvas drawer on narrow screens) -->
+        <aside class="sidebar" id="sidebar">
             <div class="sidebar-logo">
                 <img src="/static/img/logo.svg" alt="CPM">
                 <span>CPM</span>

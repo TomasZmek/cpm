@@ -1354,3 +1354,6 @@ msgstr "레벨"
 
 msgid "caddy_running"
 msgstr "실행 중"
+
+msgid "nav_menu"
+msgstr "메뉴"

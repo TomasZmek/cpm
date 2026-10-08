@@ -149,6 +149,8 @@ Roles are enforced per route in `setupRoutes` (`cmd/cpm/main.go`) via `middlewar
 
 Two complete template sets: **Classic** (default) and **Modern** (optional, from PR #19: light/dark mode, accent colours). `internal/views.Themed` holds one template engine per theme; `middleware.Theme` reads the `cpm_theme` cookie (default: `THEME` env) and binds it via `c.Bind`, so every `c.Render(...)` picks the right set. Users switch in Settings → General.
 
+On narrow screens both layouts switch the sidebar to an off-canvas drawer opened from `.mobile-topbar` (Modern below 1024 px, Classic below 768 px; behaviour in `web/static/js/app.js`). Check new pages at phone width (~390 px) — the page must not scroll horizontally.
+
 **A UI feature must be implemented in both themes.** Handlers pass the same data to both; only the markup differs. Themes are registered in `middleware/theme.go` (`AvailableThemes`, `themeOrder`).
 
 ### Flash messages

@@ -1352,3 +1352,6 @@ msgstr "Úroveň"
 
 msgid "caddy_running"
 msgstr "Běží"
+
+msgid "nav_menu"
+msgstr "Menu"

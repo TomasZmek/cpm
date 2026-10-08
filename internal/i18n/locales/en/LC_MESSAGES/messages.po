@@ -1352,3 +1352,6 @@ msgstr "Level"
 
 msgid "caddy_running"
 msgstr "Running"
+
+msgid "nav_menu"
+msgstr "Menu"

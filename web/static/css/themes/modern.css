@@ -735,19 +735,69 @@ details[open] summary::before { transform: rotate(90deg); }
 .mt-4 { margin-top: 1rem; }
 
 /* ---------- Responsive --------------------------------------------------- */
-@media (max-width: 860px) {
-    .app-container { flex-direction: column; }
-    .sidebar {
-        width: 100%; height: auto; position: static;
-        flex-direction: row; align-items: center; flex-wrap: wrap;
-        padding: 10px 12px; gap: 6px;
+/* Below 1024px (tablets, phones) the sidebar becomes an off-canvas drawer
+   opened from a slim top bar; the content gets the full width. */
+.mobile-topbar, .nav-backdrop { display: none; }
+
+@media (max-width: 1023px) {
+    .mobile-topbar {
+        display: flex; align-items: center; gap: 10px;
+        position: sticky; top: 0; z-index: 40;
+        padding: 8px 12px; padding-top: calc(8px + env(safe-area-inset-top, 0px));
+        background: var(--surface); border-bottom: 1px solid var(--border);
     }
-    .sidebar-logo { padding: 4px 8px; }
-    .sidebar-nav { flex-direction: row; flex-wrap: wrap; flex: 1; }
-    .sidebar-nav a { padding: 7px 10px; }
-    .sidebar-footer { margin: 0; border: none; padding: 0; display: flex; align-items: center; gap: 10px; }
-    .main-content { padding: 18px; max-width: none; }
+    .mobile-topbar-logo {
+        display: flex; align-items: center; gap: 8px;
+        font-weight: 750; font-size: 1.05rem; color: var(--text); text-decoration: none;
+    }
+    .mobile-topbar-logo img { width: 26px; height: 26px; }
+
+    .nav-toggle {
+        width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center;
+        border: 1px solid var(--border); border-radius: var(--radius-sm);
+        background: var(--surface); color: var(--text); cursor: pointer;
+    }
+    .nav-toggle:focus-visible { outline: 2px solid var(--accent-600); outline-offset: 2px; }
+    .nav-toggle-icon, .nav-toggle-icon::before, .nav-toggle-icon::after {
+        display: block; width: 18px; height: 2px; border-radius: 2px; background: currentColor;
+        transition: transform .2s, opacity .2s;
+    }
+    .nav-toggle-icon { position: relative; }
+    .nav-toggle-icon::before, .nav-toggle-icon::after { content: ""; position: absolute; left: 0; }
+    .nav-toggle-icon::before { top: -6px; }
+    .nav-toggle-icon::after { top: 6px; }
+    .nav-open .nav-toggle-icon { background: transparent; }
+    .nav-open .nav-toggle-icon::before { transform: translateY(6px) rotate(45deg); }
+    .nav-open .nav-toggle-icon::after { transform: translateY(-6px) rotate(-45deg); }
+
+    .app-container { display: block; }
+    .sidebar {
+        position: fixed; top: 0; left: 0; z-index: 60;
+        width: min(280px, 85vw); height: 100vh; height: 100dvh;
+        overflow-y: auto; overscroll-behavior: contain;
+        padding-top: calc(18px + env(safe-area-inset-top, 0px));
+        padding-bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+        transform: translateX(-100%); visibility: hidden;
+        transition: transform .22s ease, visibility 0s linear .22s;
+        box-shadow: var(--shadow-lg);
+    }
+    .nav-open .sidebar { transform: none; visibility: visible; transition: transform .22s ease; }
+    .nav-backdrop {
+        display: block; position: fixed; inset: 0; z-index: 50;
+        background: rgb(0 0 0 / .35);
+    }
+    .nav-open { overflow: hidden; }
+
+    .main-content { padding: 18px 16px; max-width: none; }
     .grid-2 { grid-template-columns: 1fr; }
+
+    /* Settings tabs scroll sideways instead of wrapping onto several lines */
+    .tabs-nav { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: thin; }
+    .tabs-nav .tab { white-space: nowrap; flex: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sidebar, .nav-toggle-icon, .nav-toggle-icon::before, .nav-toggle-icon::after { transition: none !important; }
 }
 
 /* ---------- Theme toggle (sidebar) -------------------------------------- */

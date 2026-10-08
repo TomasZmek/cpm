@@ -209,3 +209,41 @@ function createToastContainer() {
 document.addEventListener('alpine:init', () => {
   // Add any Alpine.js stores or magic helpers here
 });
+
+// Off-canvas navigation on narrow screens (tablet / phone)
+(function () {
+  function init() {
+    var toggle = document.querySelector('.nav-toggle');
+    var backdrop = document.querySelector('.nav-backdrop');
+    if (!toggle) return;
+
+    function setOpen(open) {
+      document.body.classList.toggle('nav-open', open);
+      toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      if (backdrop) backdrop.hidden = !open;
+    }
+
+    toggle.addEventListener('click', function () {
+      setOpen(!document.body.classList.contains('nav-open'));
+    });
+    if (backdrop) backdrop.addEventListener('click', function () { setOpen(false); });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && document.body.classList.contains('nav-open')) {
+        setOpen(false);
+        toggle.focus();
+      }
+    });
+    document.querySelectorAll('.sidebar-nav a').forEach(function (a) {
+      a.addEventListener('click', function () { setOpen(false); });
+    });
+    // Leaving the narrow layout (rotation, resize) closes the drawer
+    window.addEventListener('resize', function () {
+      if (getComputedStyle(toggle.parentNode).display === 'none') setOpen(false);
+    });
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
