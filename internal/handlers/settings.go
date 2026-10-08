@@ -77,8 +77,46 @@ func (h *Handler) SettingsDiscoveryHostsSave(c *fiber.Ctx) error {
 
 // SettingsPage renders the settings page
 func (h *Handler) SettingsPage(c *fiber.Ctx) error {
-	tab := c.Query("tab", "general")
+	// Without ?tab= this is the settings index: wide screens show the
+	// General tab, phones show the section list (list–detail navigation).
+	tab := c.Query("tab")
+	if tab == "" {
+		return h.renderSettings(c, "general", true)
+	}
 	return h.renderSettingsTab(c, tab)
+}
+
+// SettingsSection is one entry of the settings navigation (tabs on wide
+// screens, section list on phones).
+type SettingsSection struct {
+	Key   string
+	URL   string
+	Icon  string
+	Title string // i18n key
+	Desc  string // i18n key
+}
+
+var settingsSections = []struct {
+	SettingsSection
+	Permission string
+}{
+	{SettingsSection{"general", "/settings/general", "⚙️", "settings_general", "settings_desc_general"}, "view"},
+	{SettingsSection{"backup", "/settings/backup", "💾", "settings_backup", "settings_desc_backup"}, "admin"},
+	{SettingsSection{"caddy", "/settings/caddy", "🔧", "settings_caddy", "settings_desc_caddy"}, "view"},
+	{SettingsSection{"wildcard", "/settings/wildcard", "🔐", "settings_wildcard", "settings_desc_wildcard"}, "admin"},
+	{SettingsSection{"docker", "/settings/docker", "🐳", "settings_docker", "settings_desc_docker"}, "admin"},
+	{SettingsSection{"users", "/settings/users", "👥", "settings_users", "settings_desc_users"}, "admin"},
+}
+
+// visibleSettingsSections returns the sections the current user may open.
+func (h *Handler) visibleSettingsSections(c *fiber.Ctx) []SettingsSection {
+	var out []SettingsSection
+	for _, s := range settingsSections {
+		if h.hasPermission(c, s.Permission) {
+			out = append(out, s.SettingsSection)
+		}
+	}
+	return out
 }
 
 // SettingsGeneral renders the general settings tab
@@ -102,6 +140,10 @@ func (h *Handler) SettingsUsers(c *fiber.Ctx) error {
 }
 
 func (h *Handler) renderSettingsTab(c *fiber.Ctx, tab string) error {
+	return h.renderSettings(c, tab, false)
+}
+
+func (h *Handler) renderSettings(c *fiber.Ctx, tab string, index bool) error {
 	// Users and backup tabs expose sensitive data (user list, configuration
 	// with API tokens) and are reachable via ?tab=, so check here as well.
 	if (tab == "users" || tab == "backup" || tab == "docker") && !h.hasPermission(c, "admin") {
@@ -116,6 +158,8 @@ func (h *Handler) renderSettingsTab(c *fiber.Ctx, tab string) error {
 	data["FlashMessage"] = flashMsg
 	data["Config"] = h.config
 	data["Active"] = "settings"
+	data["Sections"] = h.visibleSettingsSections(c)
+	data["IsSettingsIndex"] = index
 
 	// Tab-specific data
 	switch tab {

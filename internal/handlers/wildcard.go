@@ -35,6 +35,8 @@ func (h *Handler) WildcardSettings(c *fiber.Ctx) error {
 	data["FlashType"] = flashType
 	data["FlashMessage"] = flashMsg
 	data["WildcardDomains"] = domains
+	data["Active"] = "settings"
+	data["Sections"] = h.visibleSettingsSections(c)
 
 	return c.Render("pages/settings", data, "layouts/base")
 }

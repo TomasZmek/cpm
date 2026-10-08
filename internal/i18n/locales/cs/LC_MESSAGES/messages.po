@@ -1355,3 +1355,21 @@ msgstr "Běží"
 
 msgid "nav_menu"
 msgstr "Menu"
+
+msgid "settings_desc_general"
+msgstr "Jazyk, téma a vzhled"
+
+msgid "settings_desc_backup"
+msgstr "Zálohy, obnova, import a export pravidel"
+
+msgid "settings_desc_caddy"
+msgstr "Výchozí pravidlo a vlastní chybové stránky"
+
+msgid "settings_desc_wildcard"
+msgstr "Wildcard domény a DNS API tokeny"
+
+msgid "settings_desc_docker"
+msgstr "Hosty pro automatické vyhledávání Dockeru"
+
+msgid "settings_desc_users"
+msgstr "Uživatelé, role a přihlašování"

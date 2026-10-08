@@ -933,3 +933,44 @@ details[open] summary::before { transform: rotate(90deg); }
 /* The hidden attribute must win over component display rules (e.g. the
    "logs cleared" note used display:flex and was always visible) */
 [hidden] { display: none !important; }
+
+/* ---------- Settings: list–detail on phones ------------------------------ */
+.settings-index, .settings-back { display: none; }
+@media (max-width: 767px) {
+    .tabs-container > .tabs-nav { display: none; }
+    .settings-is-index > .tab-content { display: none; }
+    .settings-index {
+        display: flex; flex-direction: column;
+        background: var(--surface); border: 1px solid var(--border);
+        border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); overflow: hidden;
+    }
+    .settings-index-item {
+        display: flex; align-items: center; gap: 14px;
+        padding: 14px 16px; min-height: 56px;
+        color: var(--text); text-decoration: none;
+        border-bottom: 1px solid var(--border);
+    }
+    .settings-index-item:last-child { border-bottom: none; }
+    .settings-index-item:active, .settings-index-item:hover { background: var(--surface-2); text-decoration: none; }
+    .settings-index-icon { font-size: 1.3rem; flex: none; width: 1.6em; text-align: center; }
+    .settings-index-text { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+    .settings-index-title { font-weight: 620; }
+    .settings-index-desc { color: var(--text-muted); font-size: .84rem; margin-top: 2px; }
+    .settings-index-chevron { color: var(--text-muted); font-size: 1.4rem; flex: none; }
+    .settings-back {
+        display: inline-flex; align-items: center; gap: 6px;
+        min-height: 44px; margin-bottom: 8px;
+        color: var(--accent-600); font-weight: 600; text-decoration: none;
+    }
+    /* Section content must not widen the page: tables scroll in their card,
+       help tooltips span the viewport instead of overflowing its edge. */
+    .table-container { overflow-x: auto; }
+    input[type="file"] { max-width: 100%; }
+    .btn { white-space: normal; max-width: 100%; line-height: 1.25; }
+    .help::before { display: none; }
+    .help::after {
+        position: fixed; top: 72px; bottom: auto; left: 16px; right: 16px;
+        width: auto; max-width: none; transform: none;
+    }
+    .help:hover::after, .help:focus::after { transform: none; }
+}

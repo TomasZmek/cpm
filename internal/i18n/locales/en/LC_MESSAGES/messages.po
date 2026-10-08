@@ -1355,3 +1355,21 @@ msgstr "Running"
 
 msgid "nav_menu"
 msgstr "Menu"
+
+msgid "settings_desc_general"
+msgstr "Language, theme and appearance"
+
+msgid "settings_desc_backup"
+msgstr "Backups, restore, import and export of rules"
+
+msgid "settings_desc_caddy"
+msgstr "Fallback rule and custom error pages"
+
+msgid "settings_desc_wildcard"
+msgstr "Wildcard domains and DNS API tokens"
+
+msgid "settings_desc_docker"
+msgstr "Docker auto-discovery hosts"
+
+msgid "settings_desc_users"
+msgstr "Users, roles and authentication"

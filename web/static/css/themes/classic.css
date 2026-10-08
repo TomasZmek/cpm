@@ -1306,3 +1306,47 @@ details.mt-2 summary {
 @media (prefers-reduced-motion: reduce) {
   .sidebar, .nav-toggle-icon, .nav-toggle-icon::before, .nav-toggle-icon::after { transition: none !important; }
 }
+
+/* Settings: list–detail on phones */
+.settings-index, .settings-back { display: none; }
+@media (max-width: 767px) {
+  .tabs-container > .tabs-nav { display: none; }
+  .settings-is-index > .tab-content { display: none; }
+  .settings-index {
+    display: flex;
+    flex-direction: column;
+    background: white;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+  }
+  .settings-index-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    min-height: 56px;
+    color: var(--gray-800);
+    text-decoration: none;
+    border-bottom: 1px solid var(--gray-200);
+  }
+  .settings-index-item:last-child { border-bottom: none; }
+  .settings-index-item:active, .settings-index-item:hover { background: var(--gray-50); text-decoration: none; }
+  .settings-index-icon { font-size: 1.25rem; flex: none; width: 1.6em; text-align: center; }
+  .settings-index-text { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+  .settings-index-title { font-weight: 600; }
+  .settings-index-desc { color: var(--gray-500); font-size: 0.85rem; margin-top: 2px; }
+  .settings-index-chevron { color: var(--gray-400); font-size: 1.4rem; flex: none; }
+  .settings-back {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    margin-bottom: var(--space-2);
+    color: var(--primary);
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .table-container { overflow-x: auto; }
+  input[type="file"] { max-width: 100%; }
+}

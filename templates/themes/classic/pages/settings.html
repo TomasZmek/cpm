@@ -4,29 +4,33 @@
     </div>
 </div>
 
-<!-- Settings Tabs -->
-<div class="tabs-container">
-    <nav class="tabs-nav">
-        <a href="/settings/general" class="tab {{if eq .ActiveTab "general"}}active{{end}}">
-            ⚙️ {{t .Lang "settings_general"}}
+<!-- Settings navigation: tabs on wide screens, list–detail on phones -->
+<div class="tabs-container{{if .IsSettingsIndex}} settings-is-index{{end}}">
+    <nav class="tabs-nav" aria-label="{{t .Lang "settings_title"}}">
+        {{range .Sections}}
+        <a href="{{.URL}}" class="tab {{if eq $.ActiveTab .Key}}active{{end}}"{{if eq $.ActiveTab .Key}} aria-current="page"{{end}}>
+            {{.Icon}} {{t $.Lang .Title}}
         </a>
-        <a href="/settings/backup" class="tab {{if eq .ActiveTab "backup"}}active{{end}}">
-            💾 {{t .Lang "settings_backup"}}
-        </a>
-        <a href="/settings/caddy" class="tab {{if eq .ActiveTab "caddy"}}active{{end}}">
-            🔧 {{t .Lang "settings_caddy"}}
-        </a>
-        <a href="/settings/wildcard" class="tab {{if eq .ActiveTab "wildcard"}}active{{end}}">
-            🔐 {{t .Lang "settings_wildcard"}}
-        </a>
-        <a href="/settings/docker" class="tab {{if eq .ActiveTab "docker"}}active{{end}}">
-            🐳 {{t .Lang "settings_docker"}}
-        </a>
-        <a href="/settings/users" class="tab {{if eq .ActiveTab "users"}}active{{end}}">
-            👥 {{t .Lang "settings_users"}}
-        </a>
+        {{end}}
     </nav>
-    
+
+    {{if .IsSettingsIndex}}
+    <nav class="settings-index" aria-label="{{t .Lang "settings_title"}}">
+        {{range .Sections}}
+        <a href="{{.URL}}" class="settings-index-item">
+            <span class="settings-index-icon" aria-hidden="true">{{.Icon}}</span>
+            <span class="settings-index-text">
+                <span class="settings-index-title">{{t $.Lang .Title}}</span>
+                <span class="settings-index-desc">{{t $.Lang .Desc}}</span>
+            </span>
+            <span class="settings-index-chevron" aria-hidden="true">›</span>
+        </a>
+        {{end}}
+    </nav>
+    {{else}}
+    <a href="/settings" class="settings-back">← {{t .Lang "settings_title"}}</a>
+    {{end}}
+
     <div class="tab-content">
         {{if eq .ActiveTab "general"}}
         <!-- General Settings -->
