@@ -5,6 +5,7 @@ go 1.26
 require (
 	github.com/gofiber/fiber/v2 v2.52.13
 	github.com/gofiber/template/html/v2 v2.1.3
+	github.com/moby/moby/api v1.54.2
 	github.com/moby/moby/client v0.4.1
 	golang.org/x/crypto v0.52.0
 )
@@ -29,7 +30,6 @@ require (
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-runewidth v0.0.16 // indirect
 	github.com/moby/docker-image-spec v1.3.1 // indirect
-	github.com/moby/moby/api v1.54.2 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.1 // indirect
 	github.com/philhofer/fwd v1.1.3-0.20240916144458-20a13a1f6b7c // indirect

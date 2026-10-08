@@ -124,7 +124,7 @@ func (p *ParserService) parseDomainsFromHandleBlock(content, defaultDomain strin
 
 // parseTags extracts tags from # @tags: comment
 func (p *ParserService) parseTags(content string) []string {
-	re := regexp.MustCompile(`#\s*@tags:\s*(.+)$`)
+	re := regexp.MustCompile(`(?m)^\s*#\s*@tags:[ \t]*(.+?)[ \t]*\r?$`)
 	match := re.FindStringSubmatch(content)
 	if len(match) < 2 {
 		return []string{}
@@ -157,7 +157,7 @@ func (p *ParserService) parseDomains(content, defaultDomain string) []string {
 		}
 		domainParts = append(domainParts, line)
 	}
-	
+
 	domainsStr := strings.Join(domainParts, " ")
 	domainsStr = strings.TrimSpace(domainsStr)
 
@@ -378,4 +378,3 @@ func (p *ParserService) parseTLSMode(content string) string {
 
 	return "auto"
 }
-

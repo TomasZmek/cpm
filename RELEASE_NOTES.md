@@ -1,3 +1,83 @@
+# CPM v3.4.0 - Modern theme, Caddyfile import & security hardening
+
+Released 2026-10-08. Includes PR #19 by [@redstar-programmer](https://github.com/redstar-programmer) together with a security review and follow-up fixes.
+
+## ⚠️ Upgrade notes
+
+- **Roles are now enforced.** Viewer can only browse, Editor manages rules, snippets, certificates and reloads, and only Admin can manage users, backups, import/export, Wildcard SSL and Docker settings.
+- **The API `/api/v1/*` requires login** (session cookie) and a CSRF token for POST requests. Scripts that called the API without logging in will stop working.
+- **New passwords need at least 8 characters.** Existing passwords keep working.
+- **Cloudflare snippet:** with "Use CF_API_TOKEN environment variable" enabled, the Caddy container must define `CF_API_TOKEN`; CPM now warns when it does not. A token typed into the form always takes precedence.
+- **Caddyfile import** saves a backup to `caddy-config/backups/` first and removes the imported blocks from the main Caddyfile.
+
+## ✨ New Features
+
+- **Modern theme** (optional, PR #19) — redesigned UI with automatic light/dark mode and selectable accent colour. Classic stays the default; switch in Settings → General (or `THEME=modern`). Every feature works in both themes.
+- **Caddyfile import** — import site blocks from the main Caddyfile or an uploaded file; blocks are stored verbatim (no directive is lost), custom snippets are carried over, duplicates are skipped, and the change is rolled back if Caddy rejects it
+- **Logs viewer** — parsed Caddy JSON logs with level colours, level filter, search and line wrapping
+- **Bulk certificate renewal** — expiring / expired / all, wildcard certificates excluded, warning about Let's Encrypt rate limits
+- **Backend status** — reachability of each rule's backend on the rules list and dashboard
+- **Container picker** in the rule form — fills service name and port from running containers
+- **Docker Auto-Discovery** — local Docker host registered automatically; rules targeting a service/container name are paired correctly
+- **Fallback rule** and custom 403/404 error pages are now actually loaded by Caddy (the fallback file was written but never imported)
+- **Docker resilience** — automatic reconnect with one retry; "Docker unreachable — change saved" instead of a misleading validation error
+
+## 📱 Phones & tablets
+
+- Sidebar becomes an off-canvas menu with a top bar (Modern below 1024 px, Classic below 768 px)
+- Settings on phones use list–detail navigation: a list of sections, each opening full-width with a back button
+- Settings show only the sections the user's role may open
+- Tables scroll inside their card; pages no longer scroll sideways
+
+## 🔒 Security Fixes
+
+- **Arbitrary file read** (#29) — Caddyfile import accepted a file path and could read any file readable by CPM; only the main Caddyfile or an uploaded file can be imported now, preview is POST-only
+- **Data race in Docker reconnect** (#33) — the Docker client is swapped atomically and the old client is closed
+- **Unauthenticated API** (cmd/cpm/main.go) — `/api/v1/*` now requires a session (previously anyone could list all rules and trigger a reload); CSRF protection now applies to the API too
+- **Role enforcement** (internal/middleware/auth.go, cmd/cpm/main.go) — `RequirePermission` is implemented and applied to routes: Viewer is read-only, Editor manages rules/snippets/certificates/reload, Admin manages users, auth, backups, import/export and wildcard SSL
+- **Path traversal in rules import** (internal/services/backup.go, caddy.go) — site filenames are validated (`ValidateSiteFilename`) before any file is read, written or deleted
+- **Backup restore hardening** (internal/services/backup.go) — only files that a backup produces may be restored (no more overwriting `.auth_config.json`), `pages/../` traversal fixed, 10 MB per-file limit against zip bombs
+- **Caddyfile injection** (internal/models/site.go, services/wildcard.go, handlers/snippets.go) — site fields, wildcard domains, DNS API tokens, allowed networks and security header values are validated so they cannot inject directives
+- **XSS in HTMX error responses** (internal/handlers/handlers.go) — error messages are HTML-escaped
+- **Open redirect** (internal/handlers/api.go) — reload/validate redirect only back to a same-host path
+- **Initial admin setup** (internal/services/auth.go) — atomic `CreateInitialAdmin`, username/password validation (min. 8 characters)
+- **User management** — role values validated, last admin cannot be deleted or demoted, password change/user deletion invalidates sessions, constant-time-ish login for unknown users
+- **Cookies & files** — session cookie gets `Secure` when served over HTTPS and its lifetime matches the server session; `wildcard.json` and `.snippets_config.json` (API tokens) written with `0600`
+- **Security headers** — UI sends `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: same-origin`
+
+## 🐛 Bug Fixes
+
+- Random logouts right after saving (the session username aliased Fiber's request buffer); no "saved" message was shown
+- Tags were lost when editing a rule
+- Cloudflare snippet used an empty `{env.CF_API_TOKEN}` instead of the entered token (#21)
+- Fresh install: generated Caddyfile imported a missing `snippets.caddy`
+- Wildcard migration discarded its backup; wildcard settings did not show flash messages
+- Modern theme: missing notifications after reload/validate and role change, broken domain names on rule cards
+- Only the first checked snippet was saved when creating/editing a rule
+- Backups did not include `sites/wildcard/`, `sites/standard/` and `wildcard.json`
+- Raw edit wrote the file to `sites/` instead of the rule's actual directory (duplicate, change not applied)
+- Uploaded backup/import files could be read only partially (`io.ReadAll`)
+- Docker exec/log output corrupted by stripping 8 bytes per line; now properly demultiplexed with `stdcopy`
+- Log viewer `lines` parameter capped (1–5000); log SSE stream stops when the client disconnects
+- 429 login page was missing the CSRF token
+- Tags and snippets are trimmed; validation errors return 400 instead of 500
+
+## 🌐 i18n
+
+- New UI texts translated in English, Czech and Korean
+- Japanese, Chinese, Spanish, German and French added by PR #19 are included but hidden until they translate at least 95 % of the texts
+- Fixed plural-form headers
+
+## ✅ Tests
+
+- Added tests for Caddyfile import and rollback, fallback import, Docker reconnect (race detector), token source priority, translation coverage, theme rendering, session buffer aliasing, site validation, filename/domain validation, backup restore/import traversal, backup contents, auth (last admin, sessions), Docker stream demux and safe redirects
+
+## 🙏 Credits
+
+UI redesign, Caddyfile import, logs viewer, Docker discovery improvements and new locales by [@redstar-programmer](https://github.com/redstar-programmer) (PR #19).
+
+---
+
 # CPM v3.3.1 - Security Patch
 
 ## 🔒 Security Fixes

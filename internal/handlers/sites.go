@@ -50,7 +50,7 @@ func (h *Handler) SiteNew(c *fiber.Ctx) error {
 	availableSnippets, _ := h.snippetsService.GetAvailableSnippets()
 	templates := models.GetServiceTemplates()
 	categories := models.GetTemplateCategories()
-	
+
 	// Get wildcard domains for TLS selection
 	var wildcardDomains []models.WildcardDomain
 	if h.wildcardService != nil {
@@ -70,12 +70,15 @@ func (h *Handler) SiteNew(c *fiber.Ctx) error {
 
 	appSettings, _ := h.settingsService.Get()
 
+	containers := h.discoverableContainers()
+
 	data := h.baseData(c, "New Proxy Rule")
 	data["IsNew"] = true
 	data["Site"] = site
 	data["DefaultIP"] = h.config.DefaultIP
 	data["AvailableSnippets"] = availableSnippets
 	data["WildcardDomains"] = wildcardDomains
+	data["Containers"] = containers
 	data["Templates"] = templates
 	data["Categories"] = categories
 	data["DiscoveryHosts"] = appSettings.DiscoveryHosts
@@ -102,17 +105,13 @@ func (h *Handler) SiteCreate(c *fiber.Ctx) error {
 	}
 
 	// Parse snippets
-	if snippets := c.FormValue("snippets"); snippets != "" {
-		site.Snippets = strings.Split(snippets, ",")
-	}
+	site.Snippets = formList(c, "snippets")
 
 	// Derive IsInternal from snippets (internal_only snippet = internal site)
 	site.IsInternal = utils.Contains(site.Snippets, "internal_only")
 
 	// Parse tags
-	if tags := c.FormValue("tags"); tags != "" {
-		site.Tags = strings.Split(tags, ",")
-	}
+	site.Tags = splitList(c.FormValue("tags"))
 
 	// Validation
 	if len(site.Domains) == 0 {
@@ -124,7 +123,7 @@ func (h *Handler) SiteCreate(c *fiber.Ctx) error {
 
 	// Create site
 	if err := h.caddyService.CreateSite(site); err != nil {
-		return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
+		return c.Status(fiber.StatusBadRequest).SendString(err.Error())
 	}
 
 	// Reload Caddy
@@ -170,7 +169,7 @@ func (h *Handler) SiteEdit(c *fiber.Ctx) error {
 	}
 
 	availableSnippets, _ := h.snippetsService.GetAvailableSnippets()
-	
+
 	// Get wildcard domains for TLS selection
 	var wildcardDomains []models.WildcardDomain
 	if h.wildcardService != nil {
@@ -179,12 +178,15 @@ func (h *Handler) SiteEdit(c *fiber.Ctx) error {
 
 	appSettings, _ := h.settingsService.Get()
 
+	containers := h.discoverableContainers()
+
 	data := h.baseData(c, "Edit: "+site.PrimaryDomain())
 	data["IsNew"] = false
 	data["Site"] = site
 	data["DefaultIP"] = h.config.DefaultIP
 	data["AvailableSnippets"] = availableSnippets
 	data["WildcardDomains"] = wildcardDomains
+	data["Containers"] = containers
 	data["DiscoveryHosts"] = appSettings.DiscoveryHosts
 	data["Active"] = "sites"
 
@@ -220,22 +222,15 @@ func (h *Handler) SiteUpdate(c *fiber.Ctx) error {
 		}
 
 		// Parse snippets
-		site.Snippets = []string{}
-		if snippets := c.FormValue("snippets"); snippets != "" {
-			site.Snippets = strings.Split(snippets, ",")
-		}
-		
+		site.Snippets = formList(c, "snippets")
+
 		// Derive IsInternal from snippets
 		site.IsInternal = utils.Contains(site.Snippets, "internal_only")
-		
-		if tags := c.FormValue("tags"); tags != "" {
-			site.Tags = strings.Split(tags, ",")
-		} else {
-			site.Tags = []string{}
-		}
+
+		site.Tags = splitList(c.FormValue("tags"))
 
 		if err := h.caddyService.UpdateSite(site); err != nil {
-			return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
+			return c.Status(fiber.StatusBadRequest).SendString(err.Error())
 		}
 	}
 
@@ -350,6 +345,83 @@ func (h *Handler) HTMXSitePreview(c *fiber.Ctx) error {
 	}
 
 	return c.SendString(site.RawContent)
+}
+
+// formList collects all values of a (possibly repeated) form field, e.g.
+// several checked checkboxes with the same name, also accepting a single
+// comma-separated value.
+func formList(c *fiber.Ctx, key string) []string {
+	var raw []string
+	if form, err := c.MultipartForm(); err == nil && form != nil {
+		raw = form.Value[key]
+	} else {
+		for _, v := range c.Request().PostArgs().PeekMulti(key) {
+			raw = append(raw, string(v))
+		}
+	}
+
+	items := []string{}
+	for _, v := range raw {
+		for _, item := range splitList(v) {
+			if !utils.Contains(items, item) {
+				items = append(items, item)
+			}
+		}
+	}
+	return items
+}
+
+// splitList splits a comma-separated form value into trimmed, non-empty items
+func splitList(v string) []string {
+	items := []string{}
+	for _, item := range strings.Split(v, ",") {
+		if item = strings.TrimSpace(item); item != "" {
+			items = append(items, item)
+		}
+	}
+	return items
+}
+
+// SitesStatus returns each site's backend status as JSON: filename -> "up"|"down"|"unknown".
+// "up"/"down" are based on whether a Docker container matching the target name is running.
+// IP targets (or names without a matching container) are reported as "unknown".
+func (h *Handler) SitesStatus(c *fiber.Ctx) error {
+	sites, _ := h.caddyService.GetAllSites()
+
+	var states map[string]string
+	if h.dockerService != nil && h.dockerService.IsAvailable() {
+		states, _ = h.dockerService.ContainerStates()
+	}
+
+	out := make(map[string]string, len(sites))
+	for _, s := range sites {
+		status := "unknown"
+		if states != nil {
+			if st, ok := states[s.TargetIP]; ok {
+				if st == "running" {
+					status = "up"
+				} else {
+					status = "down"
+				}
+			}
+		}
+		out[s.Filename] = status
+	}
+	return c.JSON(out)
+}
+
+// discoverableContainers returns running containers for the rule form's
+// service-name picker. Returns nil when Docker is unavailable so the template
+// simply omits the picker.
+func (h *Handler) discoverableContainers() []services.DiscoveredContainer {
+	if h.dockerService == nil || !h.dockerService.IsAvailable() {
+		return nil
+	}
+	containers, err := h.dockerService.ListDiscoverableContainers()
+	if err != nil {
+		return nil
+	}
+	return containers
 }
 
 // filterSites filters sites by search query and tag

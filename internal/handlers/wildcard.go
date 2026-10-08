@@ -3,7 +3,9 @@ package handlers
 import (
 	"fmt"
 	"log"
+	"net/url"
 	"path/filepath"
+	"strings"
 
 	"github.com/TomasZmek/cpm/internal/models"
 	"github.com/TomasZmek/cpm/internal/services"
@@ -13,7 +15,7 @@ import (
 // WildcardSettings renders the wildcard settings page
 func (h *Handler) WildcardSettings(c *fiber.Ctx) error {
 	var domains []models.WildcardDomain
-	
+
 	if h.wildcardService != nil {
 		var err error
 		domains, err = h.wildcardService.GetDomains()
@@ -26,9 +28,15 @@ func (h *Handler) WildcardSettings(c *fiber.Ctx) error {
 		domains = []models.WildcardDomain{}
 	}
 
+	flashType, flashMsg := getFlash(c)
+
 	data := h.baseData(c, "Settings - Wildcard SSL")
 	data["ActiveTab"] = "wildcard"
+	data["FlashType"] = flashType
+	data["FlashMessage"] = flashMsg
 	data["WildcardDomains"] = domains
+	data["Active"] = "settings"
+	data["Sections"] = h.visibleSettingsSections(c)
 
 	return c.Render("pages/settings", data, "layouts/base")
 }
@@ -40,14 +48,14 @@ func (h *Handler) WildcardAdd(c *fiber.Ctx) error {
 		return c.Redirect("/settings/wildcard")
 	}
 
-	domain := c.FormValue("domain")
+	domain := strings.ToLower(strings.TrimSpace(c.FormValue("domain")))
 	provider := c.FormValue("provider")
 	useEnv := c.FormValue("use_env") == "on"
-	apiToken := c.FormValue("api_token")
+	apiToken := strings.TrimSpace(c.FormValue("api_token"))
 
 	log.Printf("WildcardAdd: domain=%s, provider=%s, useEnv=%v", domain, provider, useEnv)
 
-	if domain == "" {
+	if err := services.ValidateDomainName(domain); err != nil {
 		setFlash(c, "error", tl(c, "msg_wildcard_domain_required"))
 		return c.Redirect("/settings/wildcard")
 	}
@@ -57,7 +65,7 @@ func (h *Handler) WildcardAdd(c *fiber.Ctx) error {
 	for _, d := range existing {
 		if d.Domain == domain {
 			setFlash(c, "info", tl(c, "msg_wildcard_exists"))
-			return c.Redirect("/settings/wildcard/migrate/" + domain)
+			return c.Redirect("/settings/wildcard/migrate/" + url.PathEscape(domain))
 		}
 	}
 
@@ -81,14 +89,21 @@ func (h *Handler) WildcardAdd(c *fiber.Ctx) error {
 		return c.Redirect("/settings/wildcard")
 	}
 
+	// Warn early if the token is expected from an env var the Caddy container does not have
+	if useEnv {
+		if warning := h.cloudflareEnvWarning(c); warning != "" {
+			setFlash(c, "warning", warning)
+		}
+	}
+
 	// Redirect to migration page
-	return c.Redirect("/settings/wildcard/migrate/" + domain)
+	return c.Redirect("/settings/wildcard/migrate/" + url.PathEscape(domain))
 }
 
 // WildcardMigratePage shows the migration options for a wildcard domain
 func (h *Handler) WildcardMigratePage(c *fiber.Ctx) error {
 	domain := c.Params("domain")
-	
+
 	if h.wildcardService == nil {
 		setFlash(c, "error", tl(c, "msg_wildcard_unavailable"))
 		return c.Redirect("/settings/wildcard")
@@ -106,7 +121,11 @@ func (h *Handler) WildcardMigratePage(c *fiber.Ctx) error {
 		return c.Redirect("/settings/wildcard")
 	}
 
+	flashType, flashMsg := getFlash(c)
+
 	data := h.baseData(c, "Migrate to Wildcard SSL")
+	data["FlashType"] = flashType
+	data["FlashMessage"] = flashMsg
 	data["ActiveTab"] = "wildcard"
 	data["MigrationInfo"] = info
 	data["Domain"] = domain
@@ -117,17 +136,20 @@ func (h *Handler) WildcardMigratePage(c *fiber.Ctx) error {
 // WildcardMigrateExecute performs the migration
 func (h *Handler) WildcardMigrateExecute(c *fiber.Ctx) error {
 	domain := c.Params("domain")
+	if err := services.ValidateDomainName(domain); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
 	migrateSites := c.FormValue("migrate_sites") == "on"
 	deleteCerts := c.FormValue("delete_certs") == "on"
 
 	log.Printf("WildcardMigrateExecute: domain=%s, migrateSites=%v, deleteCerts=%v", domain, migrateSites, deleteCerts)
 
 	// 1. Create backup first
-	_, backupName, err := h.backupService.CreateBackup()
+	backupName, err := h.backupService.SaveBackupToDisk()
 	if err != nil {
 		log.Printf("Error creating backup: %v", err)
 		setFlash(c, "error", tl(c, "msg_wildcard_migrate_backup_failed")+": "+err.Error())
-		return c.Redirect("/settings/wildcard/migrate/" + domain)
+		return c.Redirect("/settings/wildcard/migrate/" + url.PathEscape(domain))
 	}
 	log.Printf("Backup created: %s", backupName)
 
@@ -139,7 +161,7 @@ func (h *Handler) WildcardMigrateExecute(c *fiber.Ctx) error {
 	if migrateSites {
 		info, _ := h.wildcardService.GetMigrationInfo(domain, h.config.SitesDir, h.config.DataDir)
 		for _, siteFile := range info.MatchingSites {
-			sitePath := filepath.Join(h.config.SitesDir, siteFile)
+			sitePath := filepath.Join(h.config.SitesDir, "standard", siteFile)
 			if err := h.wildcardService.MigrateSiteConfig(sitePath, snippetName); err != nil {
 				log.Printf("Error migrating site %s: %v", siteFile, err)
 				errors = append(errors, "Site "+siteFile+": "+err.Error())

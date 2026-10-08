@@ -1,10 +1,12 @@
 package handlers
 
 import (
+	"net/url"
 	"strings"
 
 	"github.com/TomasZmek/cpm/internal/config"
 	"github.com/TomasZmek/cpm/internal/i18n"
+	"github.com/TomasZmek/cpm/internal/models"
 	"github.com/TomasZmek/cpm/internal/services"
 	"github.com/gofiber/fiber/v2"
 )
@@ -57,7 +59,7 @@ func ErrorHandler(c *fiber.Ctx, err error) error {
 
 	// For HTMX requests, return error as HTML
 	if c.Get("HX-Request") == "true" {
-		return c.Status(code).SendString(`<div class="alert alert-error">` + err.Error() + `</div>`)
+		return c.Status(code).SendString(`<div class="alert alert-error">` + escapeHTML(err.Error()) + `</div>`)
 	}
 
 	// For API requests, return JSON
@@ -74,12 +76,17 @@ func ErrorHandler(c *fiber.Ctx, err error) error {
 		lang = l
 	}
 
+	themeCSS := "/static/css/themes/classic.css"
+	if css, ok := c.Locals("themeCSS").(string); ok && css != "" {
+		themeCSS = css
+	}
+
 	return c.Status(code).Render("pages/error", fiber.Map{
 		"Code":     code,
 		"Message":  err.Error(),
 		"Title":    "Error",
 		"Lang":     lang,
-		"ThemeCSS": "/static/css/themes/classic.css",
+		"ThemeCSS": themeCSS,
 		"Version":  c.Locals("version"),
 	}, "layouts/base")
 }
@@ -93,6 +100,40 @@ func isAPIRequest(c *fiber.Ctx) bool {
 // getCurrentUser returns the current user from context
 func (h *Handler) getCurrentUser(c *fiber.Ctx) interface{} {
 	return c.Locals("user")
+}
+
+// hasPermission reports whether the current request may perform actions
+// requiring the given permission. With authentication disabled everything is allowed.
+func (h *Handler) hasPermission(c *fiber.Ctx, permission string) bool {
+	if !h.authService.IsEnabled() {
+		return true
+	}
+	user, ok := c.Locals("user").(*models.User)
+	return ok && user != nil && user.HasPermission(permission)
+}
+
+// safeRedirectTarget returns the Referer path if it points back into this
+// application (relative path), otherwise "/". Prevents open redirects.
+func safeRedirectTarget(c *fiber.Ctx) string {
+	ref := c.Get("Referer")
+	if ref == "" {
+		return "/"
+	}
+	u, err := url.Parse(ref)
+	if err != nil {
+		return "/"
+	}
+	if u.Host != "" && u.Host != c.Hostname() {
+		return "/"
+	}
+	path := u.EscapedPath()
+	if !strings.HasPrefix(path, "/") || strings.HasPrefix(path, "//") {
+		return "/"
+	}
+	if u.RawQuery != "" {
+		path += "?" + u.RawQuery
+	}
+	return path
 }
 
 // baseData returns common template data
@@ -152,4 +193,3 @@ func getFlash(c *fiber.Ctx) (string, string) {
 
 	return msgType, message
 }
-

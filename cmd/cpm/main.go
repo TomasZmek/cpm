@@ -14,18 +14,17 @@ import (
 	"github.com/TomasZmek/cpm/internal/i18n"
 	"github.com/TomasZmek/cpm/internal/middleware"
 	"github.com/TomasZmek/cpm/internal/services"
+	"github.com/TomasZmek/cpm/internal/views"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/compress"
 	"github.com/gofiber/fiber/v2/middleware/csrf"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
-	"github.com/gofiber/template/html/v2"
 )
 
 const (
-	Version   = "3.3.1"
-	BuildDate = "2026-06-17"
-
+	Version   = "3.4.0"
+	BuildDate = "2026-10-08"
 )
 
 func main() {
@@ -65,26 +64,35 @@ func main() {
 		log.Printf("Warning: Failed to create directory structure: %v", err)
 	}
 
-	// Initialize template engine
-	engine := html.New("./templates/themes/classic", ".html")
-	engine.AddFunc("t", i18n.T)
-	engine.AddFunc("tn", i18n.TN)
-	engine.AddFunc("timeAgo", services.TimeAgo)
-	engine.AddFunc("contains", func(slice []string, item string) bool {
-		for _, s := range slice {
-			if s == item {
-				return true
-			}
+	// Auto-register the local machine as a Docker discovery host when a local
+	// Docker daemon is reachable. Runs in the background so a slow/unreachable
+	// Docker socket never delays startup.
+	go func() {
+		if added, err := settingsService.EnsureLocalDockerHost(dockerService); err != nil {
+			log.Printf("Local Docker auto-detect skipped: %v", err)
+		} else if added {
+			log.Printf("Local Docker host auto-registered for discovery")
 		}
-		return false
-	})
-	engine.AddFunc("join", strings.Join)
-	engine.AddFunc("replace", strings.ReplaceAll)
-	engine.AddFunc("sub", func(a, b int) int { return a - b })
-	engine.AddFunc("eq", func(a, b interface{}) bool { return a == b })
+	}()
 
-	// Reload templates in development
-	engine.Reload(true)
+	// Initialize template engines, one per UI theme (templates/themes/<name>)
+	engine := views.New("./templates/themes", middleware.ThemeNames(), "classic", map[string]interface{}{
+		"t":       i18n.T,
+		"tn":      i18n.TN,
+		"timeAgo": services.TimeAgo,
+		"contains": func(slice []string, item string) bool {
+			for _, s := range slice {
+				if s == item {
+					return true
+				}
+			}
+			return false
+		},
+		"join":    strings.Join,
+		"replace": strings.ReplaceAll,
+		"sub":     func(a, b int) int { return a - b },
+		"eq":      func(a, b interface{}) bool { return a == b },
+	}, true) // reload templates from disk (development convenience)
 
 	// Create Fiber app
 	app := fiber.New(fiber.Config{
@@ -92,6 +100,11 @@ func main() {
 		ServerHeader: "CPM",
 		ErrorHandler: handlers.ErrorHandler,
 		Views:        engine,
+		// Values returned by Ctx (FormValue, Params, Cookies, ...) are copies,
+		// not views into the request buffer. Services keep some of them beyond
+		// the request (e.g. the username in a session); without this, a later
+		// request reusing the buffer silently changed them and logged users out.
+		Immutable: true,
 	})
 
 	// Global middleware
@@ -102,7 +115,7 @@ func main() {
 	app.Use(compress.New())
 
 	// CSRF protection — accepts token from form field "_csrf" or header "X-CSRF-Token".
-	// API routes (/api/*) are excluded as they use token-based auth.
+	// Applies to API routes as well, since they are authenticated by the session cookie.
 	app.Use(csrf.New(csrf.Config{
 		Expiration:     24 * time.Hour,
 		CookieName:     "cpm_csrf",
@@ -118,10 +131,15 @@ func main() {
 			}
 			return "", csrf.ErrTokenNotFound
 		},
-		Next: func(c *fiber.Ctx) bool {
-			return strings.HasPrefix(c.Path(), "/api/")
-		},
 	}))
+
+	// Basic hardening headers for the management UI itself
+	app.Use(func(c *fiber.Ctx) error {
+		c.Set("X-Frame-Options", "DENY")
+		c.Set("X-Content-Type-Options", "nosniff")
+		c.Set("Referrer-Policy", "same-origin")
+		return c.Next()
+	})
 
 	// Static files
 	app.Static("/static", "./web/static")
@@ -184,33 +202,46 @@ func setupRoutes(app *fiber.App, h *handlers.Handler, authService *services.Auth
 	// Protected routes
 	protected := app.Group("", middleware.Auth(authService))
 
+	// Permission levels (see models.User.HasPermission):
+	//   view  - every authenticated user (read-only pages)
+	//   edit  - Editor and Admin (proxy rules, snippets, certificates, reload)
+	//   admin - Admin only (users, auth, backups, import/export, wildcard SSL)
+	edit := middleware.RequirePermission(authService, "edit")
+	admin := middleware.RequirePermission(authService, "admin")
+
 	// Dashboard
 	protected.Get("/", h.Dashboard)
 
 	// Sites
 	protected.Get("/sites", h.SitesList)
-	protected.Get("/sites/new", h.SiteNew)
-	protected.Post("/sites", h.SiteCreate)
+	protected.Get("/sites/new", edit, h.SiteNew)
+	protected.Post("/sites/import-preview", admin, h.SitesImportPreview)
+	protected.Post("/sites/import", admin, h.SitesImport)
+	protected.Post("/sites", edit, h.SiteCreate)
 	protected.Get("/sites/:id", h.SiteDetail)
-	protected.Get("/sites/:id/edit", h.SiteEdit)
-	protected.Post("/sites/:id", h.SiteUpdate)
-	protected.Post("/sites/:id/delete", h.SiteDelete)
-	protected.Post("/sites/:id/duplicate", h.SiteDuplicate)
+	protected.Get("/sites/:id/edit", edit, h.SiteEdit)
+	protected.Post("/sites/:id", edit, h.SiteUpdate)
+	protected.Post("/sites/:id/delete", edit, h.SiteDelete)
+	protected.Post("/sites/:id/duplicate", edit, h.SiteDuplicate)
 
 	// HTMX partials for sites
 	protected.Get("/htmx/sites/list", h.HTMXSitesList)
+	protected.Get("/htmx/sites/status", h.SitesStatus)
 	protected.Get("/htmx/sites/:id/card", h.HTMXSiteCard)
 	protected.Get("/htmx/sites/:id/preview", h.HTMXSitePreview)
 
 	// Snippets
 	protected.Get("/snippets", h.SnippetsList)
-	protected.Post("/snippets/:name", h.SnippetUpdate)
-	protected.Get("/htmx/snippets/:name/form", h.HTMXSnippetForm)
+	protected.Post("/snippets/:name", edit, h.SnippetUpdate)
+	protected.Get("/htmx/snippets/:name/form", edit, h.HTMXSnippetForm)
 
 	// Certificates
 	protected.Get("/certificates", h.CertificatesList)
-	protected.Post("/certificates/:domain/delete", h.CertificateDelete)
-	protected.Post("/certificates/:domain/renew", h.CertificateRenew)
+	protected.Post("/certificates/:domain/delete", edit, h.CertificateDelete)
+	protected.Post("/certificates/renew-all", edit, h.CertificatesRenewAll)
+	protected.Post("/certificates/:domain/renew", edit, h.CertificateRenew)
+	protected.Post("/certificates/:domain/renew-step", edit, h.CertificateRenewStep)
+	protected.Get("/certificates/count", h.CertificatesCount)
 	protected.Get("/htmx/certificates/list", h.HTMXCertificatesList)
 
 	// Logs
@@ -220,42 +251,46 @@ func setupRoutes(app *fiber.App, h *handlers.Handler, authService *services.Auth
 	// Settings
 	protected.Get("/settings", h.SettingsPage)
 	protected.Get("/settings/general", h.SettingsGeneral)
-	protected.Get("/settings/backup", h.SettingsBackup)
+	protected.Get("/settings/backup", admin, h.SettingsBackup)
 	protected.Get("/settings/caddy", h.SettingsCaddy)
-	protected.Get("/settings/users", h.SettingsUsers)
-	protected.Post("/settings/backup/create", h.BackupCreate)
-	protected.Post("/settings/backup/restore", h.BackupRestore)
-	protected.Post("/settings/import", h.ImportRules)
-	protected.Get("/settings/export", h.ExportRules)
-	protected.Post("/settings/users", h.UserCreate)
-	protected.Post("/settings/users/:username/delete", h.UserDelete)
-	protected.Post("/settings/users/:username/role", h.UserUpdateRole)
-	protected.Post("/settings/users/:username/password", h.UserUpdatePassword)
-	protected.Post("/settings/auth/toggle", h.ToggleAuth)
+	protected.Get("/settings/users", admin, h.SettingsUsers)
+	protected.Post("/settings/backup/create", admin, h.BackupCreate)
+	protected.Post("/settings/backup/restore", admin, h.BackupRestore)
+	protected.Post("/settings/import", admin, h.ImportRules)
+	protected.Get("/settings/export", admin, h.ExportRules)
+	protected.Post("/settings/users", admin, h.UserCreate)
+	protected.Post("/settings/users/:username/delete", admin, h.UserDelete)
+	protected.Post("/settings/users/:username/role", admin, h.UserUpdateRole)
+	protected.Post("/settings/users/:username/password", admin, h.UserUpdatePassword)
+	protected.Post("/settings/auth/toggle", admin, h.ToggleAuth)
 
 	// Docker Auto-Discovery
 	protected.Get("/discovery", h.DiscoveryPage)
-	protected.Post("/discovery/create", h.DiscoveryCreate)
-	protected.Get("/settings/docker", h.SettingsDocker)
-	protected.Post("/settings/discovery-hosts", h.SettingsDiscoveryHostsSave)
-	protected.Get("/settings/discovery-detect", h.SettingsDiscoveryDetect)
+	protected.Post("/discovery/create", edit, h.DiscoveryCreate)
+	protected.Get("/settings/docker", admin, h.SettingsDocker)
+	protected.Post("/settings/fallback", admin, h.FallbackSave)
+	protected.Post("/settings/fallback/create", admin, h.FallbackCreate)
+	protected.Post("/settings/error-page/:code", admin, h.ErrorPageSave)
+	protected.Post("/settings/discovery-hosts", admin, h.SettingsDiscoveryHostsSave)
+	protected.Get("/settings/discovery-detect", admin, h.SettingsDiscoveryDetect)
 
 	// Wildcard SSL
-	protected.Get("/settings/wildcard", h.WildcardSettings)
-	protected.Post("/settings/wildcard", h.WildcardAdd)
-	protected.Get("/settings/wildcard/migrate/:domain", h.WildcardMigratePage)
-	protected.Post("/settings/wildcard/migrate/:domain", h.WildcardMigrateExecute)
-	protected.Post("/settings/wildcard/:domain/delete", h.WildcardDelete)
+	protected.Get("/settings/wildcard", admin, h.WildcardSettings)
+	protected.Post("/settings/wildcard", admin, h.WildcardAdd)
+	protected.Get("/settings/wildcard/migrate/:domain", admin, h.WildcardMigratePage)
+	protected.Post("/settings/wildcard/migrate/:domain", admin, h.WildcardMigrateExecute)
+	protected.Post("/settings/wildcard/:domain/delete", admin, h.WildcardDelete)
 
 	// Caddy actions
-	protected.Post("/caddy/reload", h.CaddyReload)
-	protected.Post("/caddy/validate", h.CaddyValidate)
+	protected.Post("/caddy/reload", edit, h.CaddyReload)
+	protected.Post("/caddy/reload-force", edit, h.CaddyReloadForce)
+	protected.Post("/caddy/validate", edit, h.CaddyValidate)
 
-	// API v1
-	api := app.Group("/api/v1")
+	// API v1 — uses the same session authentication as the UI
+	api := app.Group("/api/v1", middleware.Auth(authService))
 	api.Get("/sites", h.APISites)
 	api.Get("/status", h.APIStatus)
-	api.Post("/reload", h.APIReload)
+	api.Post("/reload", edit, h.APIReload)
 }
 
 func printBanner() {

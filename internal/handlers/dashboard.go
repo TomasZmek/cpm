@@ -76,7 +76,31 @@ func (h *Handler) Dashboard(c *fiber.Ctx) error {
 	stats["snippets"] = len(availableSnippets)
 	stats["caddy_status"] = caddyStatus
 
+	// Backend status counts (matches container targets against running containers)
+	allSites, _ := h.caddyService.GetAllSites()
+	var states map[string]string
+	if h.dockerService != nil && h.dockerService.IsAvailable() {
+		states, _ = h.dockerService.ContainerStates()
+	}
+	backendUp, backendDown, backendUnknown := 0, 0, 0
+	for _, st := range allSites {
+		if states != nil {
+			if cs, ok := states[st.TargetIP]; ok {
+				if cs == "running" {
+					backendUp++
+				} else {
+					backendDown++
+				}
+				continue
+			}
+		}
+		backendUnknown++
+	}
+
 	data := h.baseData(c, "Dashboard")
+	data["BackendUp"] = backendUp
+	data["BackendDown"] = backendDown
+	data["BackendUnknown"] = backendUnknown
 	data["Stats"] = stats
 	data["CertStats"] = certStats
 	data["RecentChanges"] = recentChanges

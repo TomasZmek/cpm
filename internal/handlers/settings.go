@@ -1,8 +1,11 @@
 package handlers
 
 import (
+	"io"
 	"strings"
 
+	"github.com/TomasZmek/cpm/internal/i18n"
+	"github.com/TomasZmek/cpm/internal/middleware"
 	"github.com/TomasZmek/cpm/internal/models"
 	"github.com/TomasZmek/cpm/internal/services"
 	"github.com/gofiber/fiber/v2"
@@ -57,25 +60,63 @@ func (h *Handler) SettingsDiscoveryHostsSave(c *fiber.Ctx) error {
 
 	settings, err := h.settingsService.Get()
 	if err != nil {
-		setFlash(c, "error", "Failed to load settings: "+err.Error())
+		setFlash(c, "error", tl(c, "msg_settings_load_failed")+": "+err.Error())
 		return c.Redirect("/settings/docker")
 	}
 
 	settings.DiscoveryHosts = hosts
 
 	if err := h.settingsService.Save(settings); err != nil {
-		setFlash(c, "error", "Failed to save settings: "+err.Error())
+		setFlash(c, "error", tl(c, "msg_settings_save_failed")+": "+err.Error())
 		return c.Redirect("/settings/docker")
 	}
 
-	setFlash(c, "success", "Discovery hosts saved")
+	setFlash(c, "success", tl(c, "msg_discovery_hosts_saved"))
 	return c.Redirect("/settings/docker")
 }
 
 // SettingsPage renders the settings page
 func (h *Handler) SettingsPage(c *fiber.Ctx) error {
-	tab := c.Query("tab", "general")
+	// Without ?tab= this is the settings index: wide screens show the
+	// General tab, phones show the section list (list–detail navigation).
+	tab := c.Query("tab")
+	if tab == "" {
+		return h.renderSettings(c, "general", true)
+	}
 	return h.renderSettingsTab(c, tab)
+}
+
+// SettingsSection is one entry of the settings navigation (tabs on wide
+// screens, section list on phones).
+type SettingsSection struct {
+	Key   string
+	URL   string
+	Icon  string
+	Title string // i18n key
+	Desc  string // i18n key
+}
+
+var settingsSections = []struct {
+	SettingsSection
+	Permission string
+}{
+	{SettingsSection{"general", "/settings/general", "⚙️", "settings_general", "settings_desc_general"}, "view"},
+	{SettingsSection{"backup", "/settings/backup", "💾", "settings_backup", "settings_desc_backup"}, "admin"},
+	{SettingsSection{"caddy", "/settings/caddy", "🔧", "settings_caddy", "settings_desc_caddy"}, "view"},
+	{SettingsSection{"wildcard", "/settings/wildcard", "🔐", "settings_wildcard", "settings_desc_wildcard"}, "admin"},
+	{SettingsSection{"docker", "/settings/docker", "🐳", "settings_docker", "settings_desc_docker"}, "admin"},
+	{SettingsSection{"users", "/settings/users", "👥", "settings_users", "settings_desc_users"}, "admin"},
+}
+
+// visibleSettingsSections returns the sections the current user may open.
+func (h *Handler) visibleSettingsSections(c *fiber.Ctx) []SettingsSection {
+	var out []SettingsSection
+	for _, s := range settingsSections {
+		if h.hasPermission(c, s.Permission) {
+			out = append(out, s.SettingsSection)
+		}
+	}
+	return out
 }
 
 // SettingsGeneral renders the general settings tab
@@ -99,6 +140,16 @@ func (h *Handler) SettingsUsers(c *fiber.Ctx) error {
 }
 
 func (h *Handler) renderSettingsTab(c *fiber.Ctx, tab string) error {
+	return h.renderSettings(c, tab, false)
+}
+
+func (h *Handler) renderSettings(c *fiber.Ctx, tab string, index bool) error {
+	// Users and backup tabs expose sensitive data (user list, configuration
+	// with API tokens) and are reachable via ?tab=, so check here as well.
+	if (tab == "users" || tab == "backup" || tab == "docker") && !h.hasPermission(c, "admin") {
+		return fiber.NewError(fiber.StatusForbidden, "You do not have permission to view this page")
+	}
+
 	flashType, flashMsg := getFlash(c)
 
 	data := h.baseData(c, "Settings")
@@ -107,20 +158,15 @@ func (h *Handler) renderSettingsTab(c *fiber.Ctx, tab string) error {
 	data["FlashMessage"] = flashMsg
 	data["Config"] = h.config
 	data["Active"] = "settings"
+	data["Sections"] = h.visibleSettingsSections(c)
+	data["IsSettingsIndex"] = index
 
 	// Tab-specific data
 	switch tab {
 	case "general":
 		// Language and theme settings
-		data["Languages"] = []map[string]string{
-			{"code": "en", "name": "English"},
-			{"code": "cs", "name": "Čeština"},
-			{"code": "ko", "name": "한국어"},
-		}
-		data["Themes"] = []map[string]string{
-			{"code": "classic", "name": "Classic"},
-			{"code": "modern", "name": "Modern (Coming Soon)"},
-		}
+		data["Languages"] = i18n.SelectableLanguages()
+		data["Themes"] = middleware.ThemeList()
 
 	case "backup":
 		sites, _ := h.caddyService.GetAllSites()
@@ -181,8 +227,8 @@ func (h *Handler) BackupRestore(c *fiber.Ctx) error {
 	}
 	defer f.Close()
 
-	data := make([]byte, file.Size)
-	if _, err := f.Read(data); err != nil {
+	data, err := io.ReadAll(f)
+	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).SendString("Failed to read file")
 	}
 
@@ -221,8 +267,8 @@ func (h *Handler) ImportRules(c *fiber.Ctx) error {
 	}
 	defer f.Close()
 
-	data := make([]byte, file.Size)
-	if _, err := f.Read(data); err != nil {
+	data, err := io.ReadAll(f)
+	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).SendString("Failed to read file")
 	}
 
@@ -268,4 +314,3 @@ func (h *Handler) ExportRules(c *fiber.Ctx) error {
 	c.Set("Content-Type", "application/json")
 	return c.Send(data)
 }
-

@@ -3,7 +3,26 @@
         <h1>📜 {{t .Lang "certs_title"}}</h1>
         <span class="badge">{{.Stats.total}} {{t .Lang "certs_count"}}</span>
     </div>
+    {{if .Certificates}}
+    <form class="page-header-actions" style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;" action="/certificates/renew-all" method="POST" onsubmit="return confirmBulkRenew(this)">
+        <input type="hidden" name="_csrf" value="{{.CSRFToken}}">
+        <select name="scope" style="width:auto;">
+            <option value="expiring" selected>{{t .Lang "certs_renew_expiring"}}</option>
+            <option value="expired">{{t .Lang "certs_renew_expired"}}</option>
+            <option value="all">{{t .Lang "certs_renew_all"}}</option>
+        </select>
+        <button type="submit" class="btn btn-primary">🔄 {{t .Lang "certs_bulk_renew"}}</button>
+    </form>
+    {{end}}
 </div>
+
+<script>
+function confirmBulkRenew(form) {
+    var question = {{t .Lang "certs_bulk_renew_confirm"}};
+    if (form.scope.value === 'all') { question += '\n\n⚠️ ' + {{t .Lang "certs_bulk_all_warning"}}; }
+    return confirm(question);
+}
+</script>
 
 <!-- Stats -->
 <div class="stats-bar">

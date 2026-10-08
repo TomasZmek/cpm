@@ -2,7 +2,8 @@
 
 # Variables
 APP_NAME := cpm
-VERSION := 3.2.0
+# Version comes from cmd/cpm/main.go (single source of truth)
+VERSION := $(shell sed -n 's/^[[:space:]]*Version[[:space:]]*= "\(.*\)"/\1/p' cmd/cpm/main.go)
 BUILD_DATE := $(shell date -u +%Y-%m-%d)
 DOCKER_REPO := perteus/caddy-ui
 GO_FILES := $(shell find . -name '*.go' -type f)

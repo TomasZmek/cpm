@@ -99,6 +99,15 @@ func (u *User) RoleDisplayName() string {
 	}
 }
 
+// IsValid reports whether r is one of the known roles
+func (r Role) IsValid() bool {
+	switch r {
+	case RoleAdmin, RoleEditor, RoleViewer:
+		return true
+	}
+	return false
+}
+
 // AllRoles returns all available roles
 func AllRoles() []Role {
 	return []Role{RoleAdmin, RoleEditor, RoleViewer}

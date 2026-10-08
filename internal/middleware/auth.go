@@ -1,6 +1,9 @@
 package middleware
 
 import (
+	"strings"
+
+	"github.com/TomasZmek/cpm/internal/models"
 	"github.com/TomasZmek/cpm/internal/services"
 	"github.com/TomasZmek/cpm/internal/utils"
 	"github.com/gofiber/fiber/v2"
@@ -33,30 +36,25 @@ func Auth(authService *services.AuthService) fiber.Handler {
 	}
 }
 
-// RequireRole middleware checks if user has required role
-func RequireRole(roles ...string) fiber.Handler {
+// RequirePermission middleware checks that the current user has the given
+// permission ("view", "edit" or "admin", see models.User.HasPermission).
+// Must be mounted after Auth. When authentication is disabled every request
+// is allowed, matching the behaviour of Auth.
+func RequirePermission(authService *services.AuthService, permission string) fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		user := c.Locals("user")
-		if user == nil {
+		if !authService.IsEnabled() {
+			return c.Next()
+		}
+
+		user, ok := c.Locals("user").(*models.User)
+		if !ok || user == nil {
 			return redirectToLogin(c)
 		}
 
-		// Check if user has any of the required roles
-		// This is a simplified check - you might want to implement proper role checking
-		return c.Next()
-	}
-}
-
-// RequirePermission middleware checks if user has required permission
-func RequirePermission(permission string) fiber.Handler {
-	return func(c *fiber.Ctx) error {
-		user := c.Locals("user")
-		if user == nil {
-			return redirectToLogin(c)
+		if !user.HasPermission(permission) {
+			return fiber.NewError(fiber.StatusForbidden, "You do not have permission to perform this action")
 		}
 
-		// For now, allow all authenticated users
-		// You can implement proper permission checking based on your User model
 		return c.Next()
 	}
 }
@@ -69,7 +67,7 @@ func redirectToLogin(c *fiber.Ctx) error {
 	}
 
 	// For API requests, return JSON error
-	if c.Get("Accept") == "application/json" {
+	if c.Get("Accept") == "application/json" || strings.HasPrefix(c.Path(), "/api/") {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 			"error": "Authentication required",
 		})

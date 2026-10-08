@@ -1,32 +1,41 @@
-<div class="page-header">
+<div class="page-header{{if not .IsSettingsIndex}} settings-detail{{end}}">
     <div class="page-header-title">
-        <h1>⚙️ {{t .Lang "settings_title"}}</h1>
+        <h1 class="settings-page-title">⚙️ {{t .Lang "settings_title"}}</h1>
+        {{if not .IsSettingsIndex}}{{range .Sections}}{{if eq .Key $.ActiveTab}}
+        <!-- Phones: back button + section title instead of the page title -->
+        <div class="settings-detail-header">
+            <a href="/settings" class="settings-back" aria-label="{{t $.Lang "settings_back"}}" title="{{t $.Lang "settings_back"}}"><span aria-hidden="true">‹</span></a>
+            <h1>{{.Icon}} {{t $.Lang .Title}}</h1>
+        </div>
+        {{end}}{{end}}{{end}}
     </div>
 </div>
 
-<!-- Settings Tabs -->
-<div class="tabs-container">
-    <nav class="tabs-nav">
-        <a href="/settings/general" class="tab {{if eq .ActiveTab "general"}}active{{end}}">
-            ⚙️ {{t .Lang "settings_general"}}
+<!-- Settings navigation: tabs on wide screens, list–detail on phones -->
+<div class="tabs-container{{if .IsSettingsIndex}} settings-is-index{{end}}">
+    <nav class="tabs-nav" aria-label="{{t .Lang "settings_title"}}">
+        {{range .Sections}}
+        <a href="{{.URL}}" class="tab {{if eq $.ActiveTab .Key}}active{{end}}"{{if eq $.ActiveTab .Key}} aria-current="page"{{end}}>
+            {{.Icon}} {{t $.Lang .Title}}
         </a>
-        <a href="/settings/backup" class="tab {{if eq .ActiveTab "backup"}}active{{end}}">
-            💾 {{t .Lang "settings_backup"}}
-        </a>
-        <a href="/settings/caddy" class="tab {{if eq .ActiveTab "caddy"}}active{{end}}">
-            🔧 {{t .Lang "settings_caddy"}}
-        </a>
-        <a href="/settings/wildcard" class="tab {{if eq .ActiveTab "wildcard"}}active{{end}}">
-            🔐 {{t .Lang "settings_wildcard"}}
-        </a>
-        <a href="/settings/docker" class="tab {{if eq .ActiveTab "docker"}}active{{end}}">
-            🐳 {{t .Lang "settings_docker"}}
-        </a>
-        <a href="/settings/users" class="tab {{if eq .ActiveTab "users"}}active{{end}}">
-            👥 {{t .Lang "settings_users"}}
-        </a>
+        {{end}}
     </nav>
-    
+
+    {{if .IsSettingsIndex}}
+    <nav class="settings-index" aria-label="{{t .Lang "settings_title"}}">
+        {{range .Sections}}
+        <a href="{{.URL}}" class="settings-index-item">
+            <span class="settings-index-icon" aria-hidden="true">{{.Icon}}</span>
+            <span class="settings-index-text">
+                <span class="settings-index-title">{{t $.Lang .Title}}</span>
+                <span class="settings-index-desc">{{t $.Lang .Desc}}</span>
+            </span>
+            <span class="settings-index-chevron" aria-hidden="true">›</span>
+        </a>
+        {{end}}
+    </nav>
+    {{end}}
+
     <div class="tab-content">
         {{if eq .ActiveTab "general"}}
         <!-- General Settings -->
@@ -35,7 +44,7 @@
             <div class="form-group">
                 <select id="language" name="language" onchange="changeLanguage(this.value)">
                     {{range .Languages}}
-                    <option value="{{.code}}" {{if eq $.Lang .code}}selected{{end}}>{{.name}}</option>
+                    <option value="{{.Code}}" {{if eq $.Lang .Code}}selected{{end}}>{{.Name}}</option>
                     {{end}}
                 </select>
             </div>
@@ -45,8 +54,9 @@
             <h2>🎨 {{t .Lang "settings_theme"}}</h2>
             <div class="form-group">
                 <select id="theme" name="theme" onchange="changeTheme(this.value)">
-                    <option value="classic">Classic</option>
-                    <option value="modern" disabled>Modern (coming soon)</option>
+                    {{range .Themes}}
+                    <option value="{{.Name}}" {{if eq $.theme .Name}}selected{{end}}>{{.DisplayName}}</option>
+                    {{end}}
                 </select>
             </div>
         </div>
@@ -538,7 +548,7 @@ subdomain.example.com {
                     
                     <div class="form-group">
                         <label for="new-password">{{t .Lang "password"}}</label>
-                        <input type="password" id="new-password" name="password" required minlength="6">
+                        <input type="password" id="new-password" name="password" required minlength="8">
                     </div>
                     
                     <div class="form-group">
@@ -567,22 +577,35 @@ function changeLanguage(lang) {
 }
 
 function changeTheme(theme) {
-    document.cookie = `cpm_theme=${theme};path=/;max-age=31536000`;
+    document.cookie = `cpm_theme=${theme};path=/;max-age=31536000;SameSite=Lax`;
     window.location.reload();
 }
 
 function showPasswordModal(username) {
     const newPassword = prompt(`Enter new password for ${username}:`);
-    if (newPassword && newPassword.length >= 6) {
+    if (newPassword === null) {
+        return;
+    }
+    if (newPassword.length < 8) {
+        alert('Password must be at least 8 characters');
+        return;
+    }
+    {
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
-        fetch(`/settings/users/${username}/password`, {
+        fetch(`/settings/users/${encodeURIComponent(username)}/password`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
                 'X-CSRF-Token': csrfToken
             },
             body: `password=${encodeURIComponent(newPassword)}`
-        }).then(() => window.location.reload());
+        }).then(async (resp) => {
+            if (!resp.ok) {
+                alert(await resp.text());
+                return;
+            }
+            window.location.reload();
+        });
     }
 }
 </script>

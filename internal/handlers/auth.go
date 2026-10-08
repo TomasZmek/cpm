@@ -1,10 +1,13 @@
 package handlers
 
 import (
+	"errors"
+	"net/url"
 	"sync"
 	"time"
 
 	"github.com/TomasZmek/cpm/internal/models"
+	"github.com/TomasZmek/cpm/internal/services"
 	"github.com/TomasZmek/cpm/internal/utils"
 	"github.com/gofiber/fiber/v2"
 )
@@ -63,7 +66,6 @@ func (l *rateLimiter) reset(ip string) {
 	delete(l.entries, ip)
 }
 
-
 // LoginPage renders the login page
 func (h *Handler) LoginPage(c *fiber.Ctx) error {
 	// If already logged in, redirect to dashboard
@@ -80,7 +82,7 @@ func (h *Handler) LoginPage(c *fiber.Ctx) error {
 		"NeedsSetup": needsSetup,
 		"Error":      c.Query("error"),
 		"Version":    h.config.Version,
-		"Lang":       "en",
+		"Lang":       getLang(c),
 		"CSRFToken":  c.Locals("csrf_token"),
 	}
 
@@ -94,10 +96,11 @@ func (h *Handler) Login(c *fiber.Ctx) error {
 
 	if !loginLimiter.isAllowed(ip) {
 		return c.Status(fiber.StatusTooManyRequests).Render("pages/login", fiber.Map{
-			"Error":      "Too many failed login attempts. Please try again in 15 minutes.",
+			"Error":      tl(c, "login_rate_limited"),
 			"NeedsSetup": !h.authService.HasUsers(),
 			"Version":    h.config.Version,
-			"Lang":       "en",
+			"Lang":       getLang(c),
+			"CSRFToken":  c.Locals("csrf_token"),
 		})
 	}
 
@@ -106,15 +109,10 @@ func (h *Handler) Login(c *fiber.Ctx) error {
 
 	// Check if this is first setup (creating admin)
 	if !h.authService.HasUsers() {
-		// Create first admin user
-		if err := h.authService.CreateUser(username, password, models.RoleAdmin); err != nil {
+		// Create first admin user and enable authentication
+		if err := h.authService.CreateInitialAdmin(username, password); err != nil {
 			loginLimiter.recordFailure(ip)
-			return c.Redirect("/login?error=Failed+to+create+user")
-		}
-
-		// Enable authentication
-		if err := h.authService.Enable(); err != nil {
-			return c.Redirect("/login?error=Failed+to+enable+auth")
+			return c.Redirect("/login?error=" + url.QueryEscape("Failed to create user: "+err.Error()))
 		}
 	}
 
@@ -132,8 +130,9 @@ func (h *Handler) Login(c *fiber.Ctx) error {
 		Name:     utils.SessionCookieName,
 		Value:    token,
 		HTTPOnly: true,
+		Secure:   c.Secure(),
 		SameSite: "Lax",
-		MaxAge:   86400 * 7, // 7 days
+		MaxAge:   int(h.authService.SessionTimeout().Seconds()),
 	})
 
 	return c.Redirect("/")
@@ -148,12 +147,23 @@ func (h *Handler) Logout(c *fiber.Ctx) error {
 
 	// Clear cookie
 	c.Cookie(&fiber.Cookie{
-		Name:   utils.SessionCookieName,
-		Value:  "",
-		MaxAge: -1,
+		Name:     utils.SessionCookieName,
+		Value:    "",
+		MaxAge:   -1,
+		HTTPOnly: true,
 	})
 
 	return c.Redirect("/login")
+}
+
+// redirectFlash sets a flash and redirects (HX-Redirect for HTMX requests).
+func redirectFlash(c *fiber.Ctx, typ, msg, to string) error {
+	setFlash(c, typ, msg)
+	if c.Get("HX-Request") == "true" {
+		c.Set("HX-Redirect", to)
+		return c.SendStatus(fiber.StatusOK)
+	}
+	return c.Redirect(to)
 }
 
 // UserCreate creates a new user (settings page)
@@ -161,14 +171,6 @@ func (h *Handler) UserCreate(c *fiber.Ctx) error {
 	username := c.FormValue("username")
 	password := c.FormValue("password")
 	role := models.Role(c.FormValue("role"))
-
-	if username == "" || password == "" {
-		return c.Status(fiber.StatusBadRequest).SendString("Username and password are required")
-	}
-
-	if len(password) < 6 {
-		return c.Status(fiber.StatusBadRequest).SendString("Password must be at least 6 characters")
-	}
 
 	if err := h.authService.CreateUser(username, password, role); err != nil {
 		return c.Status(fiber.StatusBadRequest).SendString(err.Error())
@@ -188,14 +190,18 @@ func (h *Handler) UserCreate(c *fiber.Ctx) error {
 func (h *Handler) UserDelete(c *fiber.Ctx) error {
 	username := c.Params("username")
 
-	// Can't delete yourself
+	// Can't delete yourself (only matters when auth is enabled).
 	currentUser := h.getCurrentUser(c)
 	if user, ok := currentUser.(*models.User); ok && user.Username == username {
-		return c.Status(fiber.StatusBadRequest).SendString("Cannot delete your own account")
+		return redirectFlash(c, "warning", tl(c, "msg_user_delete_self"), "/settings/users")
 	}
 
+	// AuthService refuses to delete the last admin
 	if err := h.authService.DeleteUser(username); err != nil {
-		return c.Status(fiber.StatusBadRequest).SendString(err.Error())
+		if errors.Is(err, services.ErrLastAdmin) {
+			return redirectFlash(c, "warning", tl(c, "msg_user_last_admin"), "/settings/users")
+		}
+		return redirectFlash(c, "error", err.Error(), "/settings/users")
 	}
 
 	setFlash(c, "success", tl(c, "msg_user_deleted_name", username))
@@ -214,13 +220,19 @@ func (h *Handler) UserUpdateRole(c *fiber.Ctx) error {
 	role := models.Role(c.FormValue("role"))
 
 	if err := h.authService.UpdateRole(username, role); err != nil {
+		if errors.Is(err, services.ErrLastAdmin) {
+			return redirectFlash(c, "warning", tl(c, "msg_user_last_admin"), "/settings/users")
+		}
 		return c.Status(fiber.StatusBadRequest).SendString(err.Error())
 	}
 
 	setFlash(c, "success", tl(c, "msg_role_updated"))
 
 	if c.Get("HX-Request") == "true" {
-		return c.SendString("OK")
+		// Reload the page so the flash message is shown (returning plain text
+		// would be swapped into the role <select>)
+		c.Set("HX-Redirect", "/settings/users")
+		return c.SendStatus(fiber.StatusOK)
 	}
 
 	return c.Redirect("/settings/users")
@@ -230,10 +242,6 @@ func (h *Handler) UserUpdateRole(c *fiber.Ctx) error {
 func (h *Handler) UserUpdatePassword(c *fiber.Ctx) error {
 	username := c.Params("username")
 	password := c.FormValue("password")
-
-	if len(password) < 6 {
-		return c.Status(fiber.StatusBadRequest).SendString("Password must be at least 6 characters")
-	}
 
 	if err := h.authService.UpdatePassword(username, password); err != nil {
 		return c.Status(fiber.StatusBadRequest).SendString(err.Error())

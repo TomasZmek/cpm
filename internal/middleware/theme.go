@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"github.com/TomasZmek/cpm/internal/config"
+	"github.com/TomasZmek/cpm/internal/views"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -26,6 +27,23 @@ var AvailableThemes = map[string]ThemeConfig{
 	},
 }
 
+// themeOrder is the order themes are offered in Settings.
+var themeOrder = []string{"classic", "modern"}
+
+// ThemeNames returns the available theme names in display order.
+func ThemeNames() []string {
+	return append([]string(nil), themeOrder...)
+}
+
+// ThemeList returns the available themes in display order.
+func ThemeList() []ThemeConfig {
+	list := make([]ThemeConfig, 0, len(themeOrder))
+	for _, name := range themeOrder {
+		list = append(list, AvailableThemes[name])
+	}
+	return list
+}
+
 // Theme middleware sets the current theme
 func Theme(cfg *config.Config) fiber.Handler {
 	return func(c *fiber.Ctx) error {
@@ -39,8 +57,9 @@ func Theme(cfg *config.Config) fiber.Handler {
 			themeName = "classic"
 		}
 
-		// Store theme in locals for templates
+		// Store theme in locals for templates and select the template set
 		c.Locals("theme", themeName)
+		c.Bind(fiber.Map{views.ThemeKey: themeName})
 		c.Locals("themeCSS", theme.CSSPath)
 		c.Locals("themeName", theme.DisplayName)
 
