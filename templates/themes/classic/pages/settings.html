@@ -1,6 +1,13 @@
-<div class="page-header">
+<div class="page-header{{if not .IsSettingsIndex}} settings-detail{{end}}">
     <div class="page-header-title">
-        <h1>⚙️ {{t .Lang "settings_title"}}</h1>
+        <h1 class="settings-page-title">⚙️ {{t .Lang "settings_title"}}</h1>
+        {{if not .IsSettingsIndex}}{{range .Sections}}{{if eq .Key $.ActiveTab}}
+        <!-- Phones: back button + section title instead of the page title -->
+        <div class="settings-detail-header">
+            <a href="/settings" class="settings-back" aria-label="{{t $.Lang "settings_back"}}" title="{{t $.Lang "settings_back"}}"><span aria-hidden="true">‹</span></a>
+            <h1>{{.Icon}} {{t $.Lang .Title}}</h1>
+        </div>
+        {{end}}{{end}}{{end}}
     </div>
 </div>
 
@@ -27,8 +34,6 @@
         </a>
         {{end}}
     </nav>
-    {{else}}
-    <a href="/settings" class="settings-back">← {{t .Lang "settings_title"}}</a>
     {{end}}
 
     <div class="tab-content">

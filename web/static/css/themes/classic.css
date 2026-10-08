@@ -1308,7 +1308,7 @@ details.mt-2 summary {
 }
 
 /* Settings: list–detail on phones */
-.settings-index, .settings-back { display: none; }
+.settings-index, .settings-detail-header { display: none; }
 @media (max-width: 767px) {
   .tabs-container > .tabs-nav { display: none; }
   .settings-is-index > .tab-content { display: none; }
@@ -1338,15 +1338,28 @@ details.mt-2 summary {
   .settings-index-title { font-weight: 600; }
   .settings-index-desc { color: var(--gray-500); font-size: 0.85rem; margin-top: 2px; }
   .settings-index-chevron { color: var(--gray-400); font-size: 1.4rem; flex: none; }
+  .settings-detail .settings-page-title { display: none; }
+  .settings-detail-header { display: flex; align-items: center; gap: var(--space-3); min-width: 0; }
+  .settings-detail-header h1 { margin: 0; min-width: 0; overflow-wrap: anywhere; }
   .settings-back {
     display: inline-flex;
     align-items: center;
-    min-height: 44px;
-    margin-bottom: var(--space-2);
-    color: var(--primary);
-    font-weight: 600;
+    justify-content: center;
+    flex: none;
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius);
+    background: white;
+    border: 1px solid var(--gray-200);
+    box-shadow: var(--shadow-sm);
+    color: var(--gray-700);
+    font-size: 1.7rem;
+    line-height: 1;
     text-decoration: none;
   }
+  .settings-back span { margin-top: -3px; }
+  .settings-back:hover, .settings-back:active { background: var(--gray-50); color: var(--primary); text-decoration: none; }
+  .settings-back:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
   .table-container { overflow-x: auto; }
   input[type="file"] { max-width: 100%; }
 }

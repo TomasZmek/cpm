@@ -1373,3 +1373,6 @@ msgstr "Docker auto-discovery hosts"
 
 msgid "settings_desc_users"
 msgstr "Users, roles and authentication"
+
+msgid "settings_back"
+msgstr "Back to Settings"

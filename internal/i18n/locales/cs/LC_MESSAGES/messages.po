@@ -1373,3 +1373,6 @@ msgstr "Hosty pro automatické vyhledávání Dockeru"
 
 msgid "settings_desc_users"
 msgstr "Uživatelé, role a přihlašování"
+
+msgid "settings_back"
+msgstr "Zpět na Nastavení"

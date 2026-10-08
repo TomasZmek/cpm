@@ -1375,3 +1375,6 @@ msgstr "Docker 자동 검색 호스트"
 
 msgid "settings_desc_users"
 msgstr "사용자, 역할 및 인증"
+
+msgid "settings_back"
+msgstr "설정으로 돌아가기"
