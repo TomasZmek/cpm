@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-**CPM - Caddy Proxy Manager** — a lightweight Go web UI for managing a Caddy reverse proxy. Distributed as a ~6 MB Docker image (`perteus/caddy-ui` on Docker Hub). Current released version: **3.3.1**. `develop` additionally contains unreleased security hardening (see the "Unreleased" section in `RELEASE_NOTES.md`).
+**CPM - Caddy Proxy Manager** — a lightweight Go web UI for managing a Caddy reverse proxy. Distributed as a ~6 MB Docker image (`perteus/caddy-ui` on Docker Hub). Current released version: **3.4.0**.
 
 - GitHub: https://github.com/TomasZmek/cpm
 - Docker Hub: `perteus/caddy-ui`
@@ -36,7 +36,7 @@ gofmt -s -w .
 # Docker build & push for release — see Release process section for multi-platform buildx command
 ```
 
-The Makefile `VERSION` variable is stale (still `3.2.0`). Version is authoritative in `cmd/cpm/main.go` constants `Version` and `BuildDate`.
+Version is authoritative in `cmd/cpm/main.go` constants `Version` and `BuildDate`; the Makefile reads `VERSION` from there.
 
 ## Tech stack
 

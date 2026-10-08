@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-3.3.1-blue" alt="Version">
+  <img src="https://img.shields.io/badge/version-3.4.0-blue" alt="Version">
   <img src="https://img.shields.io/badge/Go-1.26-00ADD8?logo=go" alt="Go">
   <img src="https://img.shields.io/badge/Docker-ready-2496ED?logo=docker" alt="Docker">
   <img src="https://img.shields.io/badge/platforms-amd64%20%7C%20arm64-lightgrey" alt="Platforms">
@@ -47,13 +47,17 @@
 
 | Feature | Description |
 |---------|-------------|
-| 📊 **Dashboard** | System overview, stats, alerts, quick actions |
-| 🔀 **Proxy Rules** | Visual editor for reverse proxy rules |
+| 📊 **Dashboard** | System overview, stats, alerts, backend status, quick actions |
+| 🔀 **Proxy Rules** | Visual editor for reverse proxy rules, container picker |
+| 📥 **Caddyfile Import** | Import existing site blocks (lossless, with backup and rollback) |
 | 🔐 **Wildcard SSL** | Manage wildcard certificates with DNS challenge |
 | ⚙️ **Snippets** | Cloudflare DNS, security headers, rate limiting |
-| 📜 **Certificates** | SSL overview with expiration warnings |
+| 📜 **Certificates** | SSL overview with expiration warnings, bulk renewal |
+| 📄 **Logs** | Parsed Caddy logs with level filter and search |
 | 👥 **Multi-User** | Role-based access (Admin, Editor, Viewer) |
 | 💾 **Backup** | Full config backup & restore |
+| 🏠 **Internal-only** | Restrict sites to internal network only |
+| 🎨 **Themes** | Classic or Modern (light/dark, accent colours); works on phones and tablets |
 | 🌐 **i18n** | English, Czech & Korean |
 | 📋 **Templates** | 17+ pre-configured service templates |
 | 🐳 **Docker Auto-Discovery** | Automatic container detection with one-click rule creation |
@@ -65,7 +69,7 @@
 ### Docker Hub
 
 ```bash
-docker pull perteus/caddy-ui:3.2.0
+docker pull perteus/caddy-ui:3.4.0
 docker pull perteus/caddy-ui:latest
 ```
 
@@ -86,7 +90,7 @@ services:
       - ./caddy-data:/data
 
   cpm:
-    image: perteus/caddy-ui:3.2.0
+    image: perteus/caddy-ui:3.4.0
     container_name: cpm
     ports:
       - "8501:8501"
@@ -116,7 +120,7 @@ services:
       - ./caddy-data:/data
 
   cpm:
-    image: perteus/caddy-ui:3.2.0
+    image: perteus/caddy-ui:3.4.0
     container_name: cpm
     privileged: true  # Required for Synology
     ports:
@@ -173,6 +177,7 @@ adguard.zrnek.cz {
 | `CADDY_CONFIG_PATH` | Path to Caddy config | `/caddy-config` |
 | `CADDY_DATA_PATH` | Path to Caddy data | `/caddy-data` |
 | `DEFAULT_IP` | Default target IP for new rules | `192.168.1.1` |
+| `THEME` | Default UI theme (`classic` or `modern`); users can switch in Settings | `classic` |
 | `CF_API_TOKEN` | Cloudflare API token (for wildcard SSL) | - |
 
 ---
@@ -205,7 +210,7 @@ For Synology Docker, use `privileged: true` to allow Docker socket access:
 
 ```yaml
 cpm:
-  image: perteus/caddy-ui:3.2.0
+  image: perteus/caddy-ui:3.4.0
   privileged: true
   volumes:
     - /volume1/docker/caddy-config:/caddy-config
@@ -216,6 +221,8 @@ cpm:
 ---
 
 ## 📚 API
+
+The API uses the same login session as the UI; POST requests also need the CSRF token (`X-CSRF-Token` header).
 
 ```bash
 GET  /api/v1/sites    # List all proxy rules
@@ -243,8 +250,8 @@ go build -o cpm ./cmd/cpm
 ### Docker Build
 
 ```bash
-docker build -t perteus/caddy-ui:3.2.0 --no-cache .
-docker push perteus/caddy-ui:3.2.0
+docker build -t perteus/caddy-ui:3.4.0 --no-cache .
+docker push perteus/caddy-ui:3.4.0
 docker push perteus/caddy-ui:latest
 ```
 
@@ -254,6 +261,7 @@ docker push perteus/caddy-ui:latest
 
 | Version | Date | Notes |
 |---------|------|-------|
+| **3.4.0** | 2026-10-08 | 🎨 Modern theme, Caddyfile import, logs viewer, mobile layout, role enforcement & security hardening |
 | **3.3.1** | 2026-06-17 | 🔒 Security patch — Go 1.26.4 (CVE-2026-42504, CVE-2026-27145, CVE-2026-42507) |
 | **3.3.0** | 2026-06-13 | 🌐 i18n refactor — PO/MO format, Korean language, plural support infrastructure |
 | **3.2.0** | 2026-05-31 | 🐳 Docker Auto-Discovery — automatic container detection, multi-host support |
@@ -265,6 +273,15 @@ docker push perteus/caddy-ui:latest
 | **3.0.1** | 2026-01 | 🔐 Wildcard SSL, migration tools, UI improvements |
 | **3.0.0** | 2026-01 | 🎉 Complete Go rewrite (794MB → 6MB) |
 | 2.2.1 | 2025-12 | Python version (deprecated) |
+
+### v3.4.0 - Modern theme, Caddyfile import & security hardening
+- ✅ **Modern theme** — optional redesign with light/dark mode and accent colours (Classic stays default)
+- ✅ **Caddyfile import** — lossless import of existing site blocks with backup and rollback
+- ✅ **Logs viewer, bulk certificate renewal, backend status, container picker**
+- ✅ **Phones & tablets** — off-canvas menu, list–detail settings
+- ✅ **Security** — roles enforced, API requires login + CSRF, import/restore path checks, Caddyfile injection checks
+- ⚠️ **Upgrade notes** — API scripts must log in; new passwords need 8+ characters; see [RELEASE_NOTES.md](RELEASE_NOTES.md)
+- 🙏 Thanks to [@redstar-programmer](https://github.com/redstar-programmer) for PR #19
 
 ### v3.2.0 - Docker Auto-Discovery
 - ✅ **Auto-Discovery** — automatic detection of running containers
@@ -318,7 +335,7 @@ MIT License - see [LICENSE](LICENSE) for details.
 - Interactivity: [HTMX](https://htmx.org/)
 - Dialogs: [SweetAlert2](https://sweetalert2.github.io/)
 - Developed with assistance from [Claude AI](https://claude.ai)
-- 🇰🇷 Korean translation: [@redstar-programmer](https://github.com/redstar-programmer)
+- 🇰🇷 Korean translation, Modern theme and Caddyfile import: [@redstar-programmer](https://github.com/redstar-programmer)
 
 ---
 
