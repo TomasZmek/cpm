@@ -106,6 +106,26 @@ func (b *BackupService) CreateBackup() ([]byte, string, error) {
 	return buf.Bytes(), filename, nil
 }
 
+// SaveBackupToDisk creates a backup and stores it in ConfigDir/backups so it
+// can be restored later from Settings → Backup. Used before risky operations
+// such as Caddyfile import or wildcard migration. Returns the file path.
+func (b *BackupService) SaveBackupToDisk() (string, error) {
+	data, filename, err := b.CreateBackup()
+	if err != nil {
+		return "", err
+	}
+	dir := filepath.Join(b.config.ConfigDir, "backups")
+	if err := os.MkdirAll(dir, 0700); err != nil {
+		return "", fmt.Errorf("failed to create backup directory: %w", err)
+	}
+	path := filepath.Join(dir, filename)
+	// 0600: the archive contains API tokens
+	if err := os.WriteFile(path, data, 0600); err != nil {
+		return "", fmt.Errorf("failed to write backup: %w", err)
+	}
+	return path, nil
+}
+
 // GetBackupInfo returns information about a backup
 func (b *BackupService) GetBackupInfo(data []byte) (*BackupInfo, error) {
 	reader, err := zip.NewReader(bytes.NewReader(data), int64(len(data)))

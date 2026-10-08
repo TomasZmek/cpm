@@ -78,12 +78,12 @@ func (h *Handler) CaddyReload(c *fiber.Ctx) error {
 
 	if c.Get("HX-Request") == "true" {
 		if result.Success {
-			return c.SendString(`<div class="alert alert-success">✅ Configuration reloaded successfully</div>`)
+			return c.SendString(`<div class="alert alert-success">✅ ` + escapeHTML(tl(c, "msg_reload_success")) + `</div>`)
 		}
 		// Show detailed error with logs
-		errorHTML := `<div class="alert alert-error">
-			<strong>❌ Reload failed:</strong> ` + escapeHTML(result.Error) + `
-		</div>`
+		errorHTML := `<div class="alert alert-error"><div>
+			<strong>❌ ` + escapeHTML(tl(c, "msg_reload_failed")) + `:</strong> ` + escapeHTML(result.Error) + `
+		</div></div>`
 		if result.ValidationLog != "" {
 			errorHTML += `<details class="mt-2">
 				<summary>📋 Validation Log</summary>
@@ -108,13 +108,22 @@ func (h *Handler) CaddyReload(c *fiber.Ctx) error {
 	return c.Redirect(safeRedirectTarget(c))
 }
 
+// CaddyReloadForce forces a Caddy config reload (re-issues missing certs).
+func (h *Handler) CaddyReloadForce(c *fiber.Ctx) error {
+	result := h.caddyService.ReloadForce()
+	if result.Success {
+		return c.JSON(fiber.Map{"ok": true})
+	}
+	return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"ok": false, "error": result.Error})
+}
+
 // CaddyValidate validates Caddy configuration
 func (h *Handler) CaddyValidate(c *fiber.Ctx) error {
 	result := h.caddyService.Validate()
 
 	if c.Get("HX-Request") == "true" {
 		if result.Success {
-			html := `<div class="alert alert-success">✅ Configuration is valid</div>`
+			html := `<div class="alert alert-success">✅ ` + escapeHTML(tl(c, "msg_validate_success")) + `</div>`
 			if result.ValidationLog != "" {
 				html += `<details class="mt-2">
 					<summary>📋 Validation Output</summary>
@@ -124,9 +133,9 @@ func (h *Handler) CaddyValidate(c *fiber.Ctx) error {
 			return c.SendString(html)
 		}
 		// Show detailed error with logs
-		errorHTML := `<div class="alert alert-error">
-			<strong>❌ Validation failed:</strong> ` + escapeHTML(result.Error) + `
-		</div>`
+		errorHTML := `<div class="alert alert-error"><div>
+			<strong>❌ ` + escapeHTML(tl(c, "msg_validate_failed")) + `:</strong> ` + escapeHTML(result.Error) + `
+		</div></div>`
 		if result.ValidationLog != "" {
 			errorHTML += `<details class="mt-2">
 				<summary>📋 Validation Log</summary>

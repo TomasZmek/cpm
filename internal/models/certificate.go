@@ -1,6 +1,7 @@
 package models
 
 import (
+	"strings"
 	"time"
 )
 
@@ -74,4 +75,10 @@ func (c *Certificate) StatusClass() string {
 	default:
 		return "text-gray-600"
 	}
+}
+
+// IsWildcard reports whether this is a wildcard certificate. Caddy stores
+// them in directories named "wildcard_.example.com".
+func (c *Certificate) IsWildcard() bool {
+	return strings.HasPrefix(c.Domain, "*.") || strings.HasPrefix(c.Domain, "wildcard_")
 }

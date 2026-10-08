@@ -28,9 +28,15 @@ func (h *Handler) WildcardSettings(c *fiber.Ctx) error {
 		domains = []models.WildcardDomain{}
 	}
 
+	flashType, flashMsg := getFlash(c)
+
 	data := h.baseData(c, "Settings - Wildcard SSL")
 	data["ActiveTab"] = "wildcard"
+	data["FlashType"] = flashType
+	data["FlashMessage"] = flashMsg
 	data["WildcardDomains"] = domains
+	data["Active"] = "settings"
+	data["Sections"] = h.visibleSettingsSections(c)
 
 	return c.Render("pages/settings", data, "layouts/base")
 }
@@ -83,6 +89,13 @@ func (h *Handler) WildcardAdd(c *fiber.Ctx) error {
 		return c.Redirect("/settings/wildcard")
 	}
 
+	// Warn early if the token is expected from an env var the Caddy container does not have
+	if useEnv {
+		if warning := h.cloudflareEnvWarning(c); warning != "" {
+			setFlash(c, "warning", warning)
+		}
+	}
+
 	// Redirect to migration page
 	return c.Redirect("/settings/wildcard/migrate/" + url.PathEscape(domain))
 }
@@ -108,7 +121,11 @@ func (h *Handler) WildcardMigratePage(c *fiber.Ctx) error {
 		return c.Redirect("/settings/wildcard")
 	}
 
+	flashType, flashMsg := getFlash(c)
+
 	data := h.baseData(c, "Migrate to Wildcard SSL")
+	data["FlashType"] = flashType
+	data["FlashMessage"] = flashMsg
 	data["ActiveTab"] = "wildcard"
 	data["MigrationInfo"] = info
 	data["Domain"] = domain
@@ -128,7 +145,7 @@ func (h *Handler) WildcardMigrateExecute(c *fiber.Ctx) error {
 	log.Printf("WildcardMigrateExecute: domain=%s, migrateSites=%v, deleteCerts=%v", domain, migrateSites, deleteCerts)
 
 	// 1. Create backup first
-	_, backupName, err := h.backupService.CreateBackup()
+	backupName, err := h.backupService.SaveBackupToDisk()
 	if err != nil {
 		log.Printf("Error creating backup: %v", err)
 		setFlash(c, "error", tl(c, "msg_wildcard_migrate_backup_failed")+": "+err.Error())
@@ -144,7 +161,7 @@ func (h *Handler) WildcardMigrateExecute(c *fiber.Ctx) error {
 	if migrateSites {
 		info, _ := h.wildcardService.GetMigrationInfo(domain, h.config.SitesDir, h.config.DataDir)
 		for _, siteFile := range info.MatchingSites {
-			sitePath := filepath.Join(h.config.SitesDir, siteFile)
+			sitePath := filepath.Join(h.config.SitesDir, "standard", siteFile)
 			if err := h.wildcardService.MigrateSiteConfig(sitePath, snippetName); err != nil {
 				log.Printf("Error migrating site %s: %v", siteFile, err)
 				errors = append(errors, "Site "+siteFile+": "+err.Error())

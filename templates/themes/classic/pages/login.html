@@ -110,29 +110,25 @@
             
             {{if .NeedsSetup}}
             <div class="alert alert-info">
-                <strong>First Time Setup</strong><br>
-                Create your administrator account to get started.
+                <strong>{{t .Lang "login_setup_title"}}</strong><br>
+                {{t .Lang "login_setup_desc"}}
             </div>
             {{end}}
             
             <form action="/login" method="POST" class="login-form">
                 <input type="hidden" name="_csrf" value="{{.CSRFToken}}">
                 <div class="form-group">
-                    <label for="username">Username</label>
+                    <label for="username">{{t .Lang "login_username"}}</label>
                     <input type="text" id="username" name="username" required autofocus>
                 </div>
                 
                 <div class="form-group">
-                    <label for="password">Password</label>
+                    <label for="password">{{t .Lang "login_password"}}</label>
                     <input type="password" id="password" name="password" required>
                 </div>
                 
                 <button type="submit" class="btn btn-primary btn-block">
-                    {{if .NeedsSetup}}
-                    Create Admin & Login
-                    {{else}}
-                    Login
-                    {{end}}
+                    {{if .NeedsSetup}}{{t .Lang "login_setup"}}{{else}}{{t .Lang "login_submit"}}{{end}}
                 </button>
             </form>
             

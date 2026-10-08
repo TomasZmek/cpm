@@ -68,9 +68,7 @@ func discoverHostSites(dockerSvc *DockerService, host models.DiscoveryHost, site
 			SuggestedName: SuggestContainerName(c.Name),
 		}
 
-		if port > 0 {
-			result.Paired, result.PairedDomain = findPairedSite(sites, host.IP, port, publicPort)
-		}
+		result.Paired, result.PairedDomain = findPairedSite(sites, host.IP, c.Name, port, publicPort)
 
 		results = append(results, result)
 	}
@@ -93,10 +91,18 @@ func SuggestContainerName(name string) string {
 	return strings.Trim(b.String(), "-")
 }
 
-func findPairedSite(sites []*models.Site, ip string, privatePort, publicPort uint16) (bool, string) {
+func findPairedSite(sites []*models.Site, ip, name string, privatePort, publicPort uint16) (bool, string) {
 	privStr := fmt.Sprintf("%d", privatePort)
 	pubStr := fmt.Sprintf("%d", publicPort)
 	for _, s := range sites {
+		// Rules created with a service-name target store the container name in
+		// TargetIP (e.g. "reverse_proxy jellyfin:8096"). The name uniquely
+		// identifies the container, so a name match counts as paired regardless of
+		// port (the container's first exposed port may differ from the rule's).
+		if name != "" && s.TargetIP == name {
+			return true, s.PrimaryDomain()
+		}
+		// IP-based rules: an IP can host many containers, so require a port match.
 		if s.TargetIP != ip {
 			continue
 		}

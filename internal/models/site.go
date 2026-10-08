@@ -301,6 +301,13 @@ func (s *Site) ToCaddyfileStandard() string {
 
 func (s *Site) generateReverseProxy() []string {
 	var lines []string
+
+	// No backend target (e.g. a file_server-only site imported from a Caddyfile):
+	// don't emit an empty "reverse_proxy :".
+	if strings.TrimSpace(s.TargetIP) == "" && len(s.AdditionalBackends) == 0 {
+		return nil
+	}
+
 	backends := s.AllBackends()
 
 	// Simple proxy without extra settings
@@ -360,6 +367,13 @@ func (s *Site) generateReverseProxy() []string {
 // Uses different indentation since it's inside a handle block
 func (s *Site) generateReverseProxyWildcard() []string {
 	var lines []string
+
+	// No backend target (e.g. a file_server-only site imported from a Caddyfile):
+	// don't emit an empty "reverse_proxy :".
+	if strings.TrimSpace(s.TargetIP) == "" && len(s.AdditionalBackends) == 0 {
+		return nil
+	}
+
 	backends := s.AllBackends()
 
 	// Simple proxy without extra settings

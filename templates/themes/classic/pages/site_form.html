@@ -39,6 +39,27 @@
         </div>
         {{end}}
 
+        {{if .Containers}}
+        <div class="form-group">
+            <label for="container-quick-select">🐳 {{t .Lang "sites_container_select"}}</label>
+            <select id="container-quick-select" onchange="selectContainer(this)">
+                <option value="">{{t .Lang "sites_container_select_ph"}}</option>
+                {{range .Containers}}
+                {{$name := .Name}}
+                {{$ip := .IP}}
+                {{if .Ports}}
+                {{range .Ports}}
+                <option value="{{$name}}|{{.PrivatePort}}">{{$name}}{{if $ip}} ({{$ip}}){{end}} : {{.PrivatePort}}{{if .PublicPort}} (&rarr; {{.PublicPort}}){{end}}</option>
+                {{end}}
+                {{else}}
+                <option value="{{$name}}|">{{$name}}{{if $ip}} ({{$ip}}){{end}}</option>
+                {{end}}
+                {{end}}
+            </select>
+            <div class="form-hint">{{t .Lang "help_container_picker"}}</div>
+        </div>
+        {{end}}
+
         <div class="form-row">
             <div class="form-group">
                 <label for="target_ip">{{t .Lang "sites_ip"}} *</label>
@@ -46,7 +67,7 @@
                        id="target_ip"
                        name="target_ip"
                        value="{{if .Site.TargetIP}}{{.Site.TargetIP}}{{else}}{{.DefaultIP}}{{end}}"
-                       placeholder="192.168.1.100"
+                       placeholder="192.168.1.100 / jellyfin"
                        required>
             </div>
             
@@ -261,6 +282,15 @@ document.addEventListener('DOMContentLoaded', function() {
     domainsInput.addEventListener('change', detectWildcard);
     {{end}}
 });
+
+// Fill the target from a running container: Caddy resolves the container
+// name on the shared Docker network.
+function selectContainer(sel) {
+    if (!sel.value) return;
+    var parts = sel.value.split('|');
+    document.getElementById('target_ip').value = parts[0];
+    if (parts[1]) document.getElementById('target_port').value = parts[1];
+}
 
 function selectDiscoveryHost(ip) {
     if (ip) {

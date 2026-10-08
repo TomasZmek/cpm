@@ -20,6 +20,9 @@ type ReloadResult struct {
 	Error         string
 	ValidationLog string // Output from caddy validate
 	ReloadLog     string // Output from caddy reload
+	// DockerUnreachable is set when Caddy could not be contacted at all, i.e.
+	// the configuration was neither validated nor rejected.
+	DockerUnreachable bool
 }
 
 // CaddyService handles Caddy configuration management
@@ -157,7 +160,13 @@ func (c *CaddyService) loadSite(filepath string) (*models.Site, error) {
 		return nil, fmt.Errorf("failed to read file: %w", err)
 	}
 
-	filename := strings.TrimSuffix(filepath[strings.LastIndex(filepath, "/")+1:], ".caddy")
+	// Strip the directory to get the base filename. Handle both "/" and "\\"
+	// so this works when CPM runs on Windows (e.g. `go run`) as well as Linux.
+	base := filepath
+	if i := strings.LastIndexAny(filepath, "/\\"); i >= 0 {
+		base = filepath[i+1:]
+	}
+	filename := strings.TrimSuffix(base, ".caddy")
 
 	site := c.parser.Parse(string(content), filename)
 	site.Filepath = filepath
@@ -403,14 +412,53 @@ func (c *CaddyService) Validate() *ReloadResult {
 	}
 }
 
+// caddyErrorLine extracts the human-readable error from caddy's output, which
+// is a mix of JSON info logs followed by an "Error: ..." line. Falls back to the
+// last non-empty line.
+func caddyErrorLine(output string) string {
+	lines := strings.Split(output, "\n")
+	for _, ln := range lines {
+		t := strings.TrimSpace(ln)
+		if strings.HasPrefix(t, "Error:") || strings.Contains(t, `"level":"error"`) || strings.Contains(t, `"level":"warn"`) {
+			return t
+		}
+	}
+	for i := len(lines) - 1; i >= 0; i-- {
+		if t := strings.TrimSpace(lines[i]); t != "" {
+			return t
+		}
+	}
+	return strings.TrimSpace(output)
+}
+
+// ReloadForce forces a config reload (even if unchanged) so Caddy re-provisions
+// and re-issues any missing certificates. Used after certificate renewal.
+func (c *CaddyService) ReloadForce() *ReloadResult {
+	output, err := c.dockerService.ReloadCaddyForceWithOutput()
+	if err != nil {
+		if isDockerUnreachable(err) {
+			return &ReloadResult{Success: false, DockerUnreachable: true, Error: "Docker unreachable — the change was saved, but Caddy could not be reloaded. Reload again once Docker is back.", ReloadLog: output}
+		}
+		return &ReloadResult{Success: false, Error: caddyErrorLine(output), ReloadLog: output}
+	}
+	return &ReloadResult{Success: true, Message: "Configuration reloaded (forced)", ReloadLog: output}
+}
+
 // ReloadWithValidation validates and then reloads
 func (c *CaddyService) ReloadWithValidation() *ReloadResult {
 	// First validate
 	validateOutput, validateErr := c.dockerService.ValidateConfigWithOutput()
 	if validateErr != nil {
+		if isDockerUnreachable(validateErr) {
+			return &ReloadResult{Success: false, DockerUnreachable: true, Error: "Docker unreachable — the change was saved, but Caddy could not be reloaded. Reload again once Docker is back.", ValidationLog: validateOutput}
+		}
+		detail := caddyErrorLine(validateOutput)
+		if detail == "" {
+			detail = validateErr.Error()
+		}
 		return &ReloadResult{
 			Success:       false,
-			Error:         fmt.Sprintf("Validation failed: %s", validateErr.Error()),
+			Error:         "Validation failed: " + detail,
 			ValidationLog: validateOutput,
 		}
 	}
@@ -418,9 +466,16 @@ func (c *CaddyService) ReloadWithValidation() *ReloadResult {
 	// Then reload
 	reloadOutput, reloadErr := c.dockerService.ReloadCaddyWithOutput()
 	if reloadErr != nil {
+		if isDockerUnreachable(reloadErr) {
+			return &ReloadResult{Success: false, DockerUnreachable: true, Error: "Docker unreachable — the change was saved, but Caddy could not be reloaded. Reload again once Docker is back.", ValidationLog: validateOutput, ReloadLog: reloadOutput}
+		}
+		detail := caddyErrorLine(reloadOutput)
+		if detail == "" {
+			detail = reloadErr.Error()
+		}
 		return &ReloadResult{
 			Success:       false,
-			Error:         fmt.Sprintf("Reload failed: %s", reloadErr.Error()),
+			Error:         "Reload failed: " + detail,
 			ValidationLog: validateOutput,
 			ReloadLog:     reloadOutput,
 		}
@@ -444,11 +499,58 @@ func (c *CaddyService) GetFallback() (string, error) {
 	return string(content), nil
 }
 
-// SaveFallback saves the fallback rule
-func (c *CaddyService) SaveFallback(content string) error {
-	filepath := filepath.Join(c.config.SitesDir, "fallback.caddy")
-	return os.WriteFile(filepath, []byte(content), 0644)
+// SaveFallback saves the fallback rule and makes sure the main Caddyfile
+// imports it. The returned function restores the previous state (used when
+// the new configuration fails validation).
+func (c *CaddyService) SaveFallback(content string) (rollback func() error, err error) {
+	fallbackPath := filepath.Join(c.config.SitesDir, "fallback.caddy")
+	mainPath := filepath.Join(c.config.ConfigDir, "Caddyfile")
+
+	oldFallback, fbErr := os.ReadFile(fallbackPath)
+	oldMain, mainErr := os.ReadFile(mainPath)
+
+	rollback = func() error {
+		if fbErr == nil {
+			if err := os.WriteFile(fallbackPath, oldFallback, 0644); err != nil {
+				return err
+			}
+		} else {
+			os.Remove(fallbackPath)
+		}
+		if mainErr == nil {
+			return os.WriteFile(mainPath, oldMain, 0644)
+		}
+		return nil
+	}
+
+	if err := os.MkdirAll(c.config.SitesDir, 0755); err != nil {
+		return nil, err
+	}
+	if err := os.WriteFile(fallbackPath, []byte(content), 0644); err != nil {
+		return nil, err
+	}
+
+	// Without this import the fallback has no effect (#32)
+	if mainErr == nil {
+		updated := ensureImportLine(string(oldMain), FallbackImport, "FALLBACK")
+		if updated != string(oldMain) {
+			if err := os.WriteFile(mainPath, []byte(updated), 0644); err != nil {
+				_ = rollback()
+				return nil, err
+			}
+		}
+	} else if c.caddyfileManager != nil {
+		if err := c.caddyfileManager.SaveCaddyfile(); err != nil {
+			_ = rollback()
+			return nil, err
+		}
+	}
+	return rollback, nil
 }
+
+// AllowedErrorPages are the status codes the generated configuration serves
+// custom pages for (see CaddyfileManager.generateWildcardBlock).
+var AllowedErrorPages = map[int]bool{403: true, 404: true}
 
 // FallbackExists checks if fallback.caddy exists
 func (c *CaddyService) FallbackExists() bool {
@@ -469,6 +571,9 @@ func (c *CaddyService) GetErrorPage(code int) (string, error) {
 
 // SaveErrorPage saves an error page
 func (c *CaddyService) SaveErrorPage(code int, content string) error {
+	if !AllowedErrorPages[code] {
+		return fmt.Errorf("unsupported error page: %d", code)
+	}
 	dir := filepath.Join(c.config.ConfigDir, "pages")
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		return err

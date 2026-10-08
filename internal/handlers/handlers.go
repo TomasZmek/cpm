@@ -76,12 +76,17 @@ func ErrorHandler(c *fiber.Ctx, err error) error {
 		lang = l
 	}
 
+	themeCSS := "/static/css/themes/classic.css"
+	if css, ok := c.Locals("themeCSS").(string); ok && css != "" {
+		themeCSS = css
+	}
+
 	return c.Status(code).Render("pages/error", fiber.Map{
 		"Code":     code,
 		"Message":  err.Error(),
 		"Title":    "Error",
 		"Lang":     lang,
-		"ThemeCSS": "/static/css/themes/classic.css",
+		"ThemeCSS": themeCSS,
 		"Version":  c.Locals("version"),
 	}, "layouts/base")
 }

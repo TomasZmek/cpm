@@ -14,12 +14,12 @@ import (
 	"github.com/TomasZmek/cpm/internal/i18n"
 	"github.com/TomasZmek/cpm/internal/middleware"
 	"github.com/TomasZmek/cpm/internal/services"
+	"github.com/TomasZmek/cpm/internal/views"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/compress"
 	"github.com/gofiber/fiber/v2/middleware/csrf"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
-	"github.com/gofiber/template/html/v2"
 )
 
 const (
@@ -64,26 +64,35 @@ func main() {
 		log.Printf("Warning: Failed to create directory structure: %v", err)
 	}
 
-	// Initialize template engine
-	engine := html.New("./templates/themes/classic", ".html")
-	engine.AddFunc("t", i18n.T)
-	engine.AddFunc("tn", i18n.TN)
-	engine.AddFunc("timeAgo", services.TimeAgo)
-	engine.AddFunc("contains", func(slice []string, item string) bool {
-		for _, s := range slice {
-			if s == item {
-				return true
-			}
+	// Auto-register the local machine as a Docker discovery host when a local
+	// Docker daemon is reachable. Runs in the background so a slow/unreachable
+	// Docker socket never delays startup.
+	go func() {
+		if added, err := settingsService.EnsureLocalDockerHost(dockerService); err != nil {
+			log.Printf("Local Docker auto-detect skipped: %v", err)
+		} else if added {
+			log.Printf("Local Docker host auto-registered for discovery")
 		}
-		return false
-	})
-	engine.AddFunc("join", strings.Join)
-	engine.AddFunc("replace", strings.ReplaceAll)
-	engine.AddFunc("sub", func(a, b int) int { return a - b })
-	engine.AddFunc("eq", func(a, b interface{}) bool { return a == b })
+	}()
 
-	// Reload templates in development
-	engine.Reload(true)
+	// Initialize template engines, one per UI theme (templates/themes/<name>)
+	engine := views.New("./templates/themes", middleware.ThemeNames(), "classic", map[string]interface{}{
+		"t":       i18n.T,
+		"tn":      i18n.TN,
+		"timeAgo": services.TimeAgo,
+		"contains": func(slice []string, item string) bool {
+			for _, s := range slice {
+				if s == item {
+					return true
+				}
+			}
+			return false
+		},
+		"join":    strings.Join,
+		"replace": strings.ReplaceAll,
+		"sub":     func(a, b int) int { return a - b },
+		"eq":      func(a, b interface{}) bool { return a == b },
+	}, true) // reload templates from disk (development convenience)
 
 	// Create Fiber app
 	app := fiber.New(fiber.Config{
@@ -91,6 +100,11 @@ func main() {
 		ServerHeader: "CPM",
 		ErrorHandler: handlers.ErrorHandler,
 		Views:        engine,
+		// Values returned by Ctx (FormValue, Params, Cookies, ...) are copies,
+		// not views into the request buffer. Services keep some of them beyond
+		// the request (e.g. the username in a session); without this, a later
+		// request reusing the buffer silently changed them and logged users out.
+		Immutable: true,
 	})
 
 	// Global middleware
@@ -201,6 +215,8 @@ func setupRoutes(app *fiber.App, h *handlers.Handler, authService *services.Auth
 	// Sites
 	protected.Get("/sites", h.SitesList)
 	protected.Get("/sites/new", edit, h.SiteNew)
+	protected.Post("/sites/import-preview", admin, h.SitesImportPreview)
+	protected.Post("/sites/import", admin, h.SitesImport)
 	protected.Post("/sites", edit, h.SiteCreate)
 	protected.Get("/sites/:id", h.SiteDetail)
 	protected.Get("/sites/:id/edit", edit, h.SiteEdit)
@@ -210,6 +226,7 @@ func setupRoutes(app *fiber.App, h *handlers.Handler, authService *services.Auth
 
 	// HTMX partials for sites
 	protected.Get("/htmx/sites/list", h.HTMXSitesList)
+	protected.Get("/htmx/sites/status", h.SitesStatus)
 	protected.Get("/htmx/sites/:id/card", h.HTMXSiteCard)
 	protected.Get("/htmx/sites/:id/preview", h.HTMXSitePreview)
 
@@ -221,7 +238,10 @@ func setupRoutes(app *fiber.App, h *handlers.Handler, authService *services.Auth
 	// Certificates
 	protected.Get("/certificates", h.CertificatesList)
 	protected.Post("/certificates/:domain/delete", edit, h.CertificateDelete)
+	protected.Post("/certificates/renew-all", edit, h.CertificatesRenewAll)
 	protected.Post("/certificates/:domain/renew", edit, h.CertificateRenew)
+	protected.Post("/certificates/:domain/renew-step", edit, h.CertificateRenewStep)
+	protected.Get("/certificates/count", h.CertificatesCount)
 	protected.Get("/htmx/certificates/list", h.HTMXCertificatesList)
 
 	// Logs
@@ -248,6 +268,9 @@ func setupRoutes(app *fiber.App, h *handlers.Handler, authService *services.Auth
 	protected.Get("/discovery", h.DiscoveryPage)
 	protected.Post("/discovery/create", edit, h.DiscoveryCreate)
 	protected.Get("/settings/docker", admin, h.SettingsDocker)
+	protected.Post("/settings/fallback", admin, h.FallbackSave)
+	protected.Post("/settings/fallback/create", admin, h.FallbackCreate)
+	protected.Post("/settings/error-page/:code", admin, h.ErrorPageSave)
 	protected.Post("/settings/discovery-hosts", admin, h.SettingsDiscoveryHostsSave)
 	protected.Get("/settings/discovery-detect", admin, h.SettingsDiscoveryDetect)
 
@@ -260,6 +283,7 @@ func setupRoutes(app *fiber.App, h *handlers.Handler, authService *services.Auth
 
 	// Caddy actions
 	protected.Post("/caddy/reload", edit, h.CaddyReload)
+	protected.Post("/caddy/reload-force", edit, h.CaddyReloadForce)
 	protected.Post("/caddy/validate", edit, h.CaddyValidate)
 
 	// API v1 — uses the same session authentication as the UI

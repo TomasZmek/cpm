@@ -5,7 +5,9 @@ import (
 	"bytes"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
+	"unsafe"
 
 	"github.com/TomasZmek/cpm/internal/config"
 	"github.com/TomasZmek/cpm/internal/models"
@@ -169,5 +171,40 @@ func TestDemuxDockerStream(t *testing.T) {
 	}
 	if got := demuxDockerStream([]byte("raw tty output\n")); got != "raw tty output\n" {
 		t.Errorf("raw stream altered: %q", got)
+	}
+}
+
+// Tags are written as the first line, so the regex must work per line;
+// before the fix editing a rule silently dropped its tags.
+func TestParseTagsFromGeneratedSite(t *testing.T) {
+	p := NewParserService()
+	for _, site := range []*models.Site{
+		{Domains: []string{"app.example.com"}, TargetIP: "10.0.0.1", TargetPort: "80", Tags: []string{"media", "home"}},
+		{Domains: []string{"app.example.com"}, TargetIP: "10.0.0.1", TargetPort: "80", Tags: []string{"media"}, TLSMode: "wildcard:example.com"},
+	} {
+		parsed := p.Parse(site.ToCaddyfile(), "app.example.com")
+		if strings.Join(parsed.Tags, ",") != strings.Join(site.Tags, ",") {
+			t.Errorf("tags lost (wildcard=%v): got %v, want %v", site.IsWildcard(), parsed.Tags, site.Tags)
+		}
+	}
+}
+
+// Fiber (without Immutable) hands out strings that alias the request buffer.
+// The session must not keep such a string: once the buffer was reused by the
+// next request, the stored username changed and the user was logged out.
+func TestSessionSurvivesReusedRequestBuffer(t *testing.T) {
+	a := NewAuthService(t.TempDir())
+	if err := a.CreateInitialAdmin("admin", "password123"); err != nil {
+		t.Fatal(err)
+	}
+	buf := []byte("admin")
+	username := unsafe.String(&buf[0], len(buf)) // aliases buf, like a Fiber FormValue
+	token, err := a.Authenticate(username, "password123")
+	if err != nil {
+		t.Fatal(err)
+	}
+	copy(buf, "xxxxx") // next request overwrites the buffer
+	if a.ValidateSession(token) == nil {
+		t.Fatal("session was invalidated by reuse of the request buffer")
 	}
 }

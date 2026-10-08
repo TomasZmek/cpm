@@ -37,3 +37,15 @@ func TestSiteValidate(t *testing.T) {
 		}
 	}
 }
+
+func TestCertificateIsWildcard(t *testing.T) {
+	for domain, want := range map[string]bool{
+		"wildcard_.example.com": true,
+		"*.example.com":         true,
+		"app.example.com":       false,
+	} {
+		if got := (&Certificate{Domain: domain}).IsWildcard(); got != want {
+			t.Errorf("%s: got %v, want %v", domain, got, want)
+		}
+	}
+}

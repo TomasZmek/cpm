@@ -1,11 +1,13 @@
 package handlers
 
 import (
+	"errors"
 	"net/url"
 	"sync"
 	"time"
 
 	"github.com/TomasZmek/cpm/internal/models"
+	"github.com/TomasZmek/cpm/internal/services"
 	"github.com/TomasZmek/cpm/internal/utils"
 	"github.com/gofiber/fiber/v2"
 )
@@ -80,7 +82,7 @@ func (h *Handler) LoginPage(c *fiber.Ctx) error {
 		"NeedsSetup": needsSetup,
 		"Error":      c.Query("error"),
 		"Version":    h.config.Version,
-		"Lang":       "en",
+		"Lang":       getLang(c),
 		"CSRFToken":  c.Locals("csrf_token"),
 	}
 
@@ -94,10 +96,10 @@ func (h *Handler) Login(c *fiber.Ctx) error {
 
 	if !loginLimiter.isAllowed(ip) {
 		return c.Status(fiber.StatusTooManyRequests).Render("pages/login", fiber.Map{
-			"Error":      "Too many failed login attempts. Please try again in 15 minutes.",
+			"Error":      tl(c, "login_rate_limited"),
 			"NeedsSetup": !h.authService.HasUsers(),
 			"Version":    h.config.Version,
-			"Lang":       "en",
+			"Lang":       getLang(c),
 			"CSRFToken":  c.Locals("csrf_token"),
 		})
 	}
@@ -154,6 +156,16 @@ func (h *Handler) Logout(c *fiber.Ctx) error {
 	return c.Redirect("/login")
 }
 
+// redirectFlash sets a flash and redirects (HX-Redirect for HTMX requests).
+func redirectFlash(c *fiber.Ctx, typ, msg, to string) error {
+	setFlash(c, typ, msg)
+	if c.Get("HX-Request") == "true" {
+		c.Set("HX-Redirect", to)
+		return c.SendStatus(fiber.StatusOK)
+	}
+	return c.Redirect(to)
+}
+
 // UserCreate creates a new user (settings page)
 func (h *Handler) UserCreate(c *fiber.Ctx) error {
 	username := c.FormValue("username")
@@ -178,14 +190,18 @@ func (h *Handler) UserCreate(c *fiber.Ctx) error {
 func (h *Handler) UserDelete(c *fiber.Ctx) error {
 	username := c.Params("username")
 
-	// Can't delete yourself
+	// Can't delete yourself (only matters when auth is enabled).
 	currentUser := h.getCurrentUser(c)
 	if user, ok := currentUser.(*models.User); ok && user.Username == username {
-		return c.Status(fiber.StatusBadRequest).SendString("Cannot delete your own account")
+		return redirectFlash(c, "warning", tl(c, "msg_user_delete_self"), "/settings/users")
 	}
 
+	// AuthService refuses to delete the last admin
 	if err := h.authService.DeleteUser(username); err != nil {
-		return c.Status(fiber.StatusBadRequest).SendString(err.Error())
+		if errors.Is(err, services.ErrLastAdmin) {
+			return redirectFlash(c, "warning", tl(c, "msg_user_last_admin"), "/settings/users")
+		}
+		return redirectFlash(c, "error", err.Error(), "/settings/users")
 	}
 
 	setFlash(c, "success", tl(c, "msg_user_deleted_name", username))
@@ -204,13 +220,19 @@ func (h *Handler) UserUpdateRole(c *fiber.Ctx) error {
 	role := models.Role(c.FormValue("role"))
 
 	if err := h.authService.UpdateRole(username, role); err != nil {
+		if errors.Is(err, services.ErrLastAdmin) {
+			return redirectFlash(c, "warning", tl(c, "msg_user_last_admin"), "/settings/users")
+		}
 		return c.Status(fiber.StatusBadRequest).SendString(err.Error())
 	}
 
 	setFlash(c, "success", tl(c, "msg_role_updated"))
 
 	if c.Get("HX-Request") == "true" {
-		return c.SendString("OK")
+		// Reload the page so the flash message is shown (returning plain text
+		// would be swapped into the role <select>)
+		c.Set("HX-Redirect", "/settings/users")
+		return c.SendStatus(fiber.StatusOK)
 	}
 
 	return c.Redirect("/settings/users")

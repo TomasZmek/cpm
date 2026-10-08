@@ -4,11 +4,13 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 	"sync"
 	"time"
 
@@ -142,6 +144,9 @@ func (a *AuthService) GetUser(username string) *models.User {
 	return nil
 }
 
+// ErrLastAdmin is returned when an operation would remove the last admin
+var ErrLastAdmin = errors.New("the last admin user cannot be deleted or demoted")
+
 // MinPasswordLength is the minimum accepted password length
 const MinPasswordLength = 8
 
@@ -201,7 +206,7 @@ func (a *AuthService) CreateUser(username, password string, role models.Role) er
 		}
 	}
 
-	user, err := models.NewUser(username, password, role)
+	user, err := models.NewUser(strings.Clone(username), password, role)
 	if err != nil {
 		return fmt.Errorf("failed to create user: %w", err)
 	}
@@ -224,7 +229,7 @@ func (a *AuthService) CreateInitialAdmin(username, password string) error {
 		return fmt.Errorf("initial setup already completed")
 	}
 
-	user, err := models.NewUser(username, password, models.RoleAdmin)
+	user, err := models.NewUser(strings.Clone(username), password, models.RoleAdmin)
 	if err != nil {
 		return fmt.Errorf("failed to create user: %w", err)
 	}
@@ -242,7 +247,7 @@ func (a *AuthService) DeleteUser(username string) error {
 	for i, user := range a.config.Users {
 		if user.Username == username {
 			if user.Role == models.RoleAdmin && a.countAdmins() <= 1 {
-				return fmt.Errorf("cannot delete the last admin user")
+				return ErrLastAdmin
 			}
 			a.config.Users = append(a.config.Users[:i], a.config.Users[i+1:]...)
 			a.invalidateUserSessions(username)
@@ -287,7 +292,7 @@ func (a *AuthService) UpdateRole(username string, role models.Role) error {
 	for _, user := range a.config.Users {
 		if user.Username == username {
 			if user.Role == models.RoleAdmin && role != models.RoleAdmin && a.countAdmins() <= 1 {
-				return fmt.Errorf("cannot demote the last admin user")
+				return ErrLastAdmin
 			}
 			user.Role = role
 			return a.saveConfig()
@@ -312,10 +317,11 @@ func (a *AuthService) Authenticate(username, password string) (string, error) {
 			user.LastLogin = time.Now()
 			a.saveConfig()
 
-			// Create session
+			// Create session (store the user's own name, never a string that
+			// may alias a request buffer)
 			token := generateToken()
 			a.sessions[token] = &Session{
-				Username:  username,
+				Username:  user.Username,
 				ExpiresAt: time.Now().Add(time.Duration(a.config.SessionTimeoutHours) * time.Hour),
 			}
 

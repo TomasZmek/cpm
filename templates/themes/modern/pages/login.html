@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="{{.Lang}}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - CPM</title>
+    <link rel="stylesheet" href="/static/css/themes/modern.css">
+    <script>
+    (function(){try{var c=localStorage.getItem('cpm-theme')||'system';var d=c==='dark'||(c==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.setAttribute('data-theme',d?'dark':'light');var a=localStorage.getItem('cpm-accent');if(a&&a!=='indigo'){document.documentElement.setAttribute('data-accent',a);}}catch(e){}})();
+    </script>
+    <link rel="icon" type="image/svg+xml" href="/static/img/logo.svg">
+</head>
+<body class="login-page">
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <img src="/static/img/logo.svg" alt="CPM" class="login-logo">
+                <h1>CPM</h1>
+                <p>Caddy Proxy Manager</p>
+            </div>
+            
+            {{if .Error}}
+            <div class="alert alert-error">
+                {{.Error}}
+            </div>
+            {{end}}
+            
+            {{if .NeedsSetup}}
+            <div class="alert alert-info">
+                <strong>{{t .Lang "login_setup_title"}}</strong><br>
+                {{t .Lang "login_setup_desc"}}
+            </div>
+            {{end}}
+
+            <form action="/login" method="POST" class="login-form">
+                <input type="hidden" name="_csrf" value="{{.CSRFToken}}">
+                <div class="form-group">
+                    <label for="username">{{t .Lang "login_username"}}</label>
+                    <input type="text" id="username" name="username" required autofocus>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">{{t .Lang "login_password"}}</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block">
+                    {{if .NeedsSetup}}{{t .Lang "login_setup"}}{{else}}{{t .Lang "login_submit"}}{{end}}
+                </button>
+            </form>
+            
+            <div class="login-footer">
+                <small>v{{.Version}}</small>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

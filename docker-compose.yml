@@ -1,6 +1,11 @@
 services:
   caddy:
-    image: caddy:2-alpine
+    # Caddy with the Cloudflare DNS module (needed for wildcard certificates
+    # and the cloudflare_dns snippet). Alternatively build it yourself:
+    #   build:
+    #     context: .
+    #     dockerfile: Dockerfile.caddy
+    image: serfriz/caddy-cloudflare:latest
     container_name: caddy
     restart: unless-stopped
     ports:
@@ -8,6 +13,7 @@ services:
       - "443:443/tcp"
       - "443:443/udp"
     environment:
+      # Required when "Use CF_API_TOKEN environment variable" is enabled in CPM
       - CF_API_TOKEN=${CF_API_TOKEN}
     volumes:
       - ./caddy-config/Caddyfile:/etc/caddy/Caddyfile
@@ -17,13 +23,13 @@ services:
       - ./caddy-config/pages:/usr/share/caddy/pages
 
   cpm:
-    image: ghcr.io/tomaszmek/cpm:latest
+    image: perteus/caddy-ui:latest
     # Or build locally:
     # build: .
     container_name: cpm
     restart: unless-stopped
     ports:
-      - "8080:8080"
+      - "8501:8501"
     environment:
       - CONTAINER_NAME=caddy
       - CADDY_CONFIG_PATH=/caddy-config

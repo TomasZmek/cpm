@@ -46,8 +46,8 @@ The Makefile `VERSION` variable is stale (still `3.2.0`). Version is authoritati
 - **HTMX** — frontend interactivity (no build step, CDN)
 - **SweetAlert2** — dialogs
 - **github.com/leonelquinteros/gotext** — i18n library
-- Templates live in `templates/themes/classic/`, static assets in `web/static/`
-- i18n: English, Czech & Korean — PO/MO format via `github.com/leonelquinteros/gotext`, files in `internal/i18n/locales/{en,cs,ko}/LC_MESSAGES/messages.po`, embedded via `embed.FS`
+- Templates live in `templates/themes/<theme>/` (`classic` = default, `modern` = optional redesign with dark mode), stylesheets in `web/static/css/themes/<theme>.css`, other static assets in `web/static/`
+- i18n: English, Czech & Korean (ja, zh, es, de, fr exist but are hidden until complete) — PO/MO format via `github.com/leonelquinteros/gotext`, files in `internal/i18n/locales/{en,cs,ko}/LC_MESSAGES/messages.po`, embedded via `embed.FS`
 - **github.com/moby/moby/client** — Docker API client (`api/pkg/stdcopy` for demultiplexing exec/log streams)
 
 ## Architecture
@@ -145,6 +145,14 @@ Roles are enforced per route in `setupRoutes` (`cmd/cpm/main.go`) via `middlewar
 - **Secrets**: files containing tokens or password hashes are written with `0600`.
 - **CSRF**: forms include `<input type="hidden" name="_csrf" value="{{.CSRFToken}}">`; HTMX/fetch requests send the `X-CSRF-Token` header (set globally in `layouts/base.html`).
 
+### UI themes
+
+Two complete template sets: **Classic** (default) and **Modern** (optional, from PR #19: light/dark mode, accent colours). `internal/views.Themed` holds one template engine per theme; `middleware.Theme` reads the `cpm_theme` cookie (default: `THEME` env) and binds it via `c.Bind`, so every `c.Render(...)` picks the right set. Users switch in Settings → General.
+
+On narrow screens both layouts switch the sidebar to an off-canvas drawer opened from `.mobile-topbar` (Modern below 1024 px, Classic below 768 px; behaviour in `web/static/js/app.js`). Check new pages at phone width (~390 px) — the page must not scroll horizontally. Settings uses list–detail navigation on phones (≤767 px): `/settings` shows the section list, `/settings/<section>` shows one section with a back button and the section title in the header; wider screens show tabs. Sections come from `settingsSections` in `handlers/settings.go` (with the permission each needs), so a new settings section is added there, not in the templates.
+
+**A UI feature must be implemented in both themes.** Handlers pass the same data to both; only the markup differs. Themes are registered in `middleware/theme.go` (`AvailableThemes`, `themeOrder`).
+
 ### Flash messages
 
 Handlers call `setFlash(c, type, msg)` (`handlers/handlers.go`), which stores the message in `flash_type` / `flash_message` cookies; page handlers read them with `getFlash(c)`, pass them as `FlashType` / `FlashMessage`, and `layouts/base.html` renders them. Use `tl(c, key, args...)` for translated messages.
@@ -190,7 +198,9 @@ Translations use gettext PO format via `github.com/leonelquinteros/gotext`.
 **Adding a new language:**
 1. Create `locales/{lang}/LC_MESSAGES/messages.po` with correct plural forms header
 2. Copy all msgid keys from `locales/en/LC_MESSAGES/messages.po`
-3. Add `"{lang}": "Language Name"` to `AvailableLanguages` in `internal/i18n/i18n.go`
-4. Run `go build ./...` to verify embed compiles correctly
+3. Add `"{lang}": "Language Name"` to `AvailableLanguages`, the code to `languageOrder` and a plural rule to `pluralRules` in `internal/i18n/i18n.go`
+4. Run `go test ./internal/i18n/` — it lists missing keys and checks that the `Plural-Forms` header matches `pluralRules`
+
+A language is only offered in the UI (and accepted from cookie / `Accept-Language`) once it translates at least `MinCoverage` (95 %) of the English keys; incomplete languages stay hidden. Every new UI key must be added to en, cs and ko.
 
 **Plural strings** use `i18n.TN(lang, singular, plural, n)` in Go and `{{tn .Lang "singular" "plural" .Count}}` in templates.

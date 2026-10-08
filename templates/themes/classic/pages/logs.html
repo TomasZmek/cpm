@@ -10,17 +10,26 @@
 </div>
 
 <!-- Filters -->
-<div class="filters-bar">
+<div class="filters-bar clog-filters">
     <div class="form-group">
         <label for="log-filter">{{t .Lang "filter"}}:</label>
-        <input type="search" 
-               id="log-filter" 
+        <input type="search"
+               id="log-filter"
                name="filter"
-               value="{{.Filter}}"
                placeholder="{{t .Lang "logs_search"}}"
-               onkeyup="filterLogs(this.value)">
+               oninput="renderLogs()">
     </div>
-    
+
+    <div class="form-group">
+        <label for="log-level">{{t .Lang "logs_level"}}:</label>
+        <select id="log-level" onchange="renderLogs()">
+            <option value="">{{t .Lang "logs_level_all"}}</option>
+            <option value="error">{{t .Lang "logs_level_error"}}</option>
+            <option value="warn">{{t .Lang "logs_level_warn"}}</option>
+            <option value="info">{{t .Lang "logs_level_info"}}</option>
+        </select>
+    </div>
+
     <div class="form-group">
         <label for="log-lines">{{t .Lang "logs_lines"}}:</label>
         <select id="log-lines" name="lines" onchange="changeLinesCount(this.value)">
@@ -30,7 +39,14 @@
             <option value="500" {{if eq .Lines 500}}selected{{end}}>500</option>
         </select>
     </div>
-    
+
+    <div class="form-group">
+        <label class="checkbox-label">
+            <input type="checkbox" id="log-wrap" onchange="renderLogs()">
+            {{t .Lang "logs_wrap"}}
+        </label>
+    </div>
+
     <div class="form-group">
         <label class="checkbox-label">
             <input type="checkbox" id="auto-scroll" checked>
@@ -40,45 +56,103 @@
 </div>
 
 <!-- Log Viewer -->
-<div class="log-viewer" id="log-viewer">
-    <pre id="log-content">{{range .Logs}}{{.}}
-{{end}}</pre>
-</div>
+<div class="clog-viewer" id="log-viewer"><div id="log-rows"></div></div>
+<div class="text-muted clog-count" id="log-count"></div>
+<div id="log-raw" hidden>{{range .Logs}}<i>{{.}}</i>{{end}}</div>
+
+<style>
+.clog-filters { display: flex; flex-wrap: wrap; gap: var(--space-3) var(--space-4); align-items: flex-end; margin-bottom: var(--space-4); }
+.clog-filters .form-group { margin: 0; flex: 0 1 auto; }
+.clog-filters .form-group:first-child { flex: 1 1 16rem; }
+.clog-filters .checkbox-label { padding-bottom: var(--space-2); white-space: nowrap; }
+.clog-viewer { background: var(--gray-900); color: var(--gray-100); border-radius: var(--radius); padding: var(--space-3); max-height: 70vh; overflow: auto; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.8rem; line-height: 1.5; }
+.clog-row { display: flex; gap: var(--space-3); padding: 1px var(--space-2); border-left: 3px solid transparent; white-space: pre; }
+.clog-row.wrap { white-space: pre-wrap; word-break: break-word; }
+.clog-row.lvl-error { border-left-color: var(--error); background: rgb(239 68 68 / 0.12); }
+.clog-row.lvl-warn { border-left-color: var(--warning); background: rgb(245 158 11 / 0.10); }
+.clog-lvl { flex: none; width: 3.5rem; font-weight: 600; text-transform: uppercase; }
+.clog-row.lvl-error .clog-lvl { color: #FCA5A5; }
+.clog-row.lvl-warn .clog-lvl { color: #FCD34D; }
+.clog-row.lvl-info .clog-lvl { color: var(--primary-light); }
+.clog-time { flex: none; color: var(--gray-400); }
+.clog-logger { color: var(--primary-light); }
+.clog-extra { color: var(--gray-400); }
+.clog-count { margin-top: var(--space-2); font-size: 0.85rem; text-align: right; }
+</style>
 
 <script>
-let autoScroll = true;
-const logViewer = document.getElementById('log-viewer');
-const logContent = document.getElementById('log-content');
+// Caddy writes JSON logs; Docker prefixes each line with an RFC3339 timestamp.
+var parsedLogs = [];
 
-document.getElementById('auto-scroll').addEventListener('change', function() {
-    autoScroll = this.checked;
-    if (autoScroll) {
-        logViewer.scrollTop = logViewer.scrollHeight;
+function normLevel(l) {
+    l = String(l || '').toLowerCase();
+    if (l === 'error' || l === 'fatal' || l === 'panic') return 'error';
+    if (l === 'warn' || l === 'warning') return 'warn';
+    return 'info';
+}
+
+function parseLogLine(raw) {
+    raw = raw.replace(/\s+$/, '');
+    if (!raw.trim()) return null;
+    var time = '', rest = raw;
+    var m = raw.match(/^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2}:\d{2})[0-9.]*(?:Z|[+-]\d{2}:?\d{2})\s+([\s\S]*)$/);
+    if (m) { time = m[2]; rest = m[3]; }
+    if (rest.charAt(0) === '{') {
+        try {
+            var o = JSON.parse(rest);
+            var extras = [];
+            Object.keys(o).forEach(function (k) {
+                if (['level', 'ts', 'logger', 'msg'].indexOf(k) === -1) {
+                    var v = o[k];
+                    extras.push(k + '=' + (typeof v === 'object' ? JSON.stringify(v) : String(v)));
+                }
+            });
+            return { level: normLevel(o.level), time: time, logger: o.logger || '', msg: o.msg || '', extra: extras.join(' '), raw: raw };
+        } catch (e) {}
     }
-});
+    var low = rest.toLowerCase();
+    var lvl = /^error|error:|\bfatal\b|panic/.test(low) ? 'error' : (/\bwarn/.test(low) ? 'warn' : 'info');
+    return { level: lvl, time: time, logger: '', msg: rest, extra: '', raw: raw };
+}
+
+function esc(s) {
+    return String(s).replace(/[&<>]/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]; });
+}
+
+function renderLogs() {
+    var q = (document.getElementById('log-filter').value || '').toLowerCase();
+    var level = document.getElementById('log-level').value;
+    var wrap = document.getElementById('log-wrap').checked ? ' wrap' : '';
+    var html = [], shown = 0;
+    parsedLogs.forEach(function (p) {
+        if (level && p.level !== level) return;
+        if (q && p.raw.toLowerCase().indexOf(q) === -1) return;
+        shown++;
+        html.push('<div class="clog-row lvl-' + p.level + wrap + '">'
+            + '<span class="clog-lvl">' + p.level + '</span>'
+            + '<span class="clog-time">' + esc(p.time) + '</span>'
+            + '<span>' + (p.logger ? '<span class="clog-logger">' + esc(p.logger) + '</span> ' : '')
+            + esc(p.msg) + (p.extra ? ' <span class="clog-extra">' + esc(p.extra) + '</span>' : '') + '</span></div>');
+    });
+    document.getElementById('log-rows').innerHTML = html.length ? html.join('') : '<div>{{t .Lang "logs_empty"}}</div>';
+    document.getElementById('log-count').textContent = shown + ' / ' + parsedLogs.length;
+    if (document.getElementById('auto-scroll').checked) {
+        var v = document.getElementById('log-viewer');
+        v.scrollTop = v.scrollHeight;
+    }
+}
 
 function refreshLogs() {
-    const lines = document.getElementById('log-lines').value;
-    const filter = document.getElementById('log-filter').value;
-    window.location.href = `/logs?lines=${lines}&filter=${encodeURIComponent(filter)}`;
+    window.location.href = '/logs?lines=' + document.getElementById('log-lines').value;
 }
 
 function changeLinesCount(lines) {
-    const filter = document.getElementById('log-filter').value;
-    window.location.href = `/logs?lines=${lines}&filter=${encodeURIComponent(filter)}`;
+    window.location.href = '/logs?lines=' + lines;
 }
 
-function filterLogs(query) {
-    // Client-side filtering
-    const lines = logContent.innerText.split('\n');
-    const filtered = query ? lines.filter(line => 
-        line.toLowerCase().includes(query.toLowerCase())
-    ) : lines;
-    logContent.innerText = filtered.join('\n');
-}
-
-// Auto-scroll on load
-if (autoScroll) {
-    logViewer.scrollTop = logViewer.scrollHeight;
-}
+document.querySelectorAll('#log-raw i').forEach(function (el) {
+    var p = parseLogLine(el.textContent);
+    if (p) parsedLogs.push(p);
+});
+renderLogs();
 </script>
