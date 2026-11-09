@@ -2,8 +2,8 @@ package handlers
 
 import (
 	"net/url"
+	"strings"
 
-	"github.com/TomasZmek/cpm/internal/models"
 	"github.com/TomasZmek/cpm/internal/services"
 	"github.com/gofiber/fiber/v2"
 )
@@ -20,28 +20,30 @@ func (h *Handler) DiscoveryPage(c *fiber.Ctx) error {
 
 	appSettings, _ := h.settingsService.Get()
 
-	// Find the host marked as the local Docker host.
-	var localHost *models.DiscoveryHost
-	for i := range appSettings.DiscoveryHosts {
-		if appSettings.DiscoveryHosts[i].IsLocalDocker {
-			localHost = &appSettings.DiscoveryHosts[i]
-			break
+	// Containers come from the inventory (enabled module sources). Each
+	// container belongs to the Docker host its source reports, so hosts are
+	// never mixed up.
+	hasSource := false
+	if h.modules != nil {
+		hasSource = len(h.modules.Active()) > 0
+	}
+	data["HasLocalHost"] = hasSource
+	if !hasSource || h.inventory == nil {
+		return c.Render("pages/discovery", data, "layouts/base")
+	}
+
+	var errs []string
+	for _, st := range h.inventory.Sources() {
+		if st.Err != "" {
+			errs = append(errs, st.Name.In(getLang(c))+": "+st.Err)
 		}
 	}
-
-	data["HasLocalHost"] = localHost != nil
-
-	if localHost == nil {
-		return c.Render("pages/discovery", data, "layouts/base")
+	if len(errs) > 0 {
+		data["DiscoveryError"] = strings.Join(errs, "; ")
 	}
 
-	results, err := services.DiscoverContainers(h.dockerService, h.caddyService, *localHost)
-	if err != nil {
-		data["DiscoveryError"] = err.Error()
-		return c.Render("pages/discovery", data, "layouts/base")
-	}
-
-	data["Results"] = results
+	sites, _ := h.caddyService.GetAllSites()
+	data["Results"] = services.Discover(h.inventory.Containers(), sites, appSettings.DiscoveryHosts, h.dockerService.IsSelfOrCaddy)
 	return c.Render("pages/discovery", data, "layouts/base")
 }
 

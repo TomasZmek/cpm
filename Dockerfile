@@ -6,12 +6,24 @@ WORKDIR /app
 # Install build dependencies
 RUN apk add --no-cache git ca-certificates tzdata
 
-# Copy go mod files
+# Copy go mod files (the module SDK is a separate Go module, replaced locally)
 COPY go.mod go.sum ./
+COPY sdk/go.mod ./sdk/
 RUN go mod download
 
 # Copy source code
 COPY . .
+
+# Optional extra modules, e.g. --build-arg CPM_MODULES="github.com/you/cpm-module@v0.1.0"
+# (space-separated). Each is fetched and blank-imported into the binary.
+ARG CPM_MODULES=""
+RUN if [ -n "$CPM_MODULES" ]; then \
+      printf 'package main\n\nimport (\n' > cmd/cpm/modules_extra.go && \
+      for m in $CPM_MODULES; do \
+        go get "$m" && printf '\t_ "%s"\n' "${m%@*}" >> cmd/cpm/modules_extra.go || exit 1; \
+      done && \
+      printf ')\n' >> cmd/cpm/modules_extra.go; \
+    fi
 
 # Build binary - static linking
 RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s -extldflags '-static'" -o cpm ./cmd/cpm

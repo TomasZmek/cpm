@@ -106,6 +106,7 @@ var settingsSections = []struct {
 	{SettingsSection{"wildcard", "/settings/wildcard", "🔐", "settings_wildcard", "settings_desc_wildcard"}, "admin"},
 	{SettingsSection{"docker", "/settings/docker", "🐳", "settings_docker", "settings_desc_docker"}, "admin"},
 	{SettingsSection{"users", "/settings/users", "👥", "settings_users", "settings_desc_users"}, "admin"},
+	{SettingsSection{"modules", "/settings/modules", "🧩", "settings_modules", "settings_desc_modules"}, "admin"},
 }
 
 // visibleSettingsSections returns the sections the current user may open.
@@ -146,7 +147,7 @@ func (h *Handler) renderSettingsTab(c *fiber.Ctx, tab string) error {
 func (h *Handler) renderSettings(c *fiber.Ctx, tab string, index bool) error {
 	// Users and backup tabs expose sensitive data (user list, configuration
 	// with API tokens) and are reachable via ?tab=, so check here as well.
-	if (tab == "users" || tab == "backup" || tab == "docker") && !h.hasPermission(c, "admin") {
+	if (tab == "users" || tab == "backup" || tab == "docker" || tab == "modules") && !h.hasPermission(c, "admin") {
 		return fiber.NewError(fiber.StatusForbidden, "You do not have permission to view this page")
 	}
 
@@ -197,6 +198,9 @@ func (h *Handler) renderSettings(c *fiber.Ctx, tab string, index bool) error {
 				break
 			}
 		}
+
+	case "modules":
+		data["Modules"] = h.moduleViews(getLang(c))
 	}
 
 	return c.Render("pages/settings", data, "layouts/base")

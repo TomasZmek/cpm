@@ -1030,10 +1030,10 @@ msgid "discovery_use_ip"
 msgstr "Use this IP"
 
 msgid "discovery_no_local_host"
-msgstr "No local Docker host configured."
+msgstr "No container source is enabled."
 
 msgid "discovery_no_local_host_desc"
-msgstr "Mark one host as \"Local Docker\" in"
+msgstr "Enable a module such as Docker (local) in"
 
 msgid "sites_quick_host"
 msgstr "Host (Docker)"
@@ -1096,7 +1096,7 @@ msgid "help_quick_host"
 msgstr "Quickly fill the IP from a configured Docker host."
 
 msgid "help_container_picker"
-msgstr "Fills the service name and internal port from a container running on the local Docker host."
+msgstr "Fills the target from a running container: Docker host IP + published port, or container name + internal port in service-name mode."
 
 msgid "help_https_backend"
 msgstr "Enable if the backend itself speaks HTTPS. Certificate verification is skipped for self-signed backends."
@@ -1150,10 +1150,10 @@ msgid "sites_import_file_btn"
 msgstr "Choose file"
 
 msgid "status_up"
-msgstr "Backend running"
+msgstr "Backend available"
 
 msgid "status_down"
-msgstr "Backend stopped"
+msgstr "Backend unavailable"
 
 msgid "status_unknown"
 msgstr "Status unknown"
@@ -1436,3 +1436,69 @@ msgstr "Caddy was not restarted because the configuration is invalid (it would n
 
 msgid "msg_restart_not_running"
 msgstr "Caddy was restarted but is not running — check the Caddy log"
+
+msgid "settings_modules"
+msgstr "Modules"
+
+msgid "settings_desc_modules"
+msgstr "Container sources and other extensions"
+
+msgid "modules_intro"
+msgstr "Modules extend CPM, e.g. with sources of containers for backend status and Docker discovery. Enabling a module saves its settings to caddy-config/modules.json; disabling it removes them again."
+
+msgid "modules_enabled"
+msgstr "Enabled"
+
+msgid "modules_disabled"
+msgstr "Disabled"
+
+msgid "modules_containers"
+msgstr "Containers found:"
+
+msgid "modules_secret_keep"
+msgstr "Saved — leave empty to keep"
+
+msgid "modules_save"
+msgstr "Save"
+
+msgid "modules_enable"
+msgstr "Enable"
+
+msgid "modules_disable"
+msgstr "Disable"
+
+msgid "modules_disable_confirm"
+msgstr "Disable the module and remove its settings?"
+
+msgid "modules_none"
+msgstr "No modules are available in this build."
+
+msgid "msg_module_error"
+msgstr "Module '{0}' could not be saved"
+
+msgid "msg_module_saved_error"
+msgstr "Module '{0}' was saved, but it does not work yet"
+
+msgid "msg_module_saved"
+msgstr "Settings of module '{0}' were saved."
+
+msgid "msg_module_enabled"
+msgstr "Module '{0}' was enabled."
+
+msgid "msg_module_disabled"
+msgstr "Module '{0}' was disabled and its settings removed."
+
+msgid "status_running"
+msgstr "Running"
+
+msgid "status_stopped"
+msgstr "Stopped"
+
+msgid "status_reachable"
+msgstr "Reachable (port responds)"
+
+msgid "status_unreachable"
+msgstr "Unreachable (port does not respond)"
+
+msgid "dashboard_backend_hint"
+msgstr "Containers from modules (Settings → Modules) are matched by container name or by Docker host IP and published port; other targets are checked by connecting to the port."

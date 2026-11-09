@@ -2,10 +2,14 @@
 
 ## ✨ New Features
 
+- **Modules** — new Settings → Modules (admin): modules are enabled, configured and disabled in the UI; their settings are written to `caddy-config/modules.json` and removed again when disabled, no restart needed. Modules are separate Go modules built against the dependency-free `sdk` package and compiled in via `--build-arg CPM_MODULES=...` without code changes (see `docs/modules.md`). Built-in module: **Docker (local)**.
+- **Backend status that works with IP rules** — rules are matched to containers by container name *or* by Docker host IP + published port (e.g. `192.168.1.10:8080` → `anki-sync`), the rest is checked with a TCP connect. States: running / stopped (with container name and host), reachable / unreachable, unknown. Containers are refreshed in the background every 30 s, so pages never wait for Docker.
 - **Restart Caddy** button on the dashboard (next to Reload). A restart clears Caddy's memory (e.g. it obtains missing certificates again); the configuration is validated first and an invalid one is never restarted into, since Caddy would not start again. Websites are unavailable for a few seconds.
 
 ## 🐛 Bug Fixes
 
+- **Docker discovery mixed up hosts** — every configured host showed the containers of the local Docker daemon. Discovery now lists containers under the host they really run on, pairs rules by published port (not the container's inner port) and offers "Create rule" with host IP + published port. The rule form's container picker groups containers by host and fills host IP + published port (or name + inner port in service-name mode).
+- Classic theme: coloured badges (success/warning/…) were rendered grey.
 - **Certificate "Renew" did not renew anything and the old certificate was lost** — renewing deleted the certificate files and only reloaded Caddy, but Caddy keeps certificates in memory across reloads, so it kept serving the old one and obtained no new certificate until its next restart. The deleted files could not be recovered.
   - Renew, Delete and bulk renewal now **move** certificates to `caddy-data/cpm-cert-backups/` instead of deleting them
   - Renew and bulk renewal **restart the Caddy container**, so a new certificate is really obtained

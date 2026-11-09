@@ -1363,3 +1363,12 @@ details.mt-2 summary {
   .table-container { overflow-x: auto; }
   input[type="file"] { max-width: 100%; }
 }
+
+/* Settings → Modules */
+.module-card h2 { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+.module-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+/* The second .badge rule above overrides the colour variants; restore them. */
+.badge.badge-success { background: #D1FAE5; color: #065F46; }
+.badge.badge-warning { background: #FEF3C7; color: #92400E; }
+.badge.badge-error { background: #FEE2E2; color: #991B1B; }
+.badge.badge-info { background: #DBEAFE; color: #1E40AF; }

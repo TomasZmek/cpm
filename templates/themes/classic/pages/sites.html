@@ -261,18 +261,30 @@ document.getElementById('import-modal').addEventListener('click', function (e) {
 </style>
 
 <script>
-// Backend status per rule: "up"/"down" when the target is a known container
+// Backend status per rule from the container inventory (see /htmx/sites/status)
 function loadSiteStatus() {
     fetch('/htmx/sites/status', { headers: { 'X-Requested-With': 'fetch' } })
         .then(function (r) { return r.json(); })
         .then(function (map) {
+            var labels = {
+                running: {{t .Lang "status_running"}},
+                stopped: {{t .Lang "status_stopped"}},
+                reachable: {{t .Lang "status_reachable"}},
+                unreachable: {{t .Lang "status_unreachable"}},
+                unknown: {{t .Lang "status_unknown"}}
+            };
             document.querySelectorAll('.site-card[data-site]').forEach(function (card) {
                 var dot = card.querySelector('.status-dot');
                 if (!dot) return;
-                var st = map[card.getAttribute('data-site')] || 'unknown';
+                var st = map[card.getAttribute('data-site')] || { state: 'unknown' };
+                var cls = (st.state === 'running' || st.state === 'reachable') ? 'up'
+                        : (st.state === 'stopped' || st.state === 'unreachable') ? 'down' : 'unknown';
                 dot.classList.remove('up', 'down', 'unknown');
-                dot.classList.add(st);
-                dot.title = st === 'up' ? {{t .Lang "status_up"}} : st === 'down' ? {{t .Lang "status_down"}} : {{t .Lang "status_unknown"}};
+                dot.classList.add(cls);
+                var title = labels[st.state] || labels.unknown;
+                if (st.container) { title += ' · ' + st.container + (st.host ? ' @ ' + st.host : ''); }
+                dot.title = title;
+                dot.setAttribute('aria-label', title);
             });
         })
         .catch(function () {});

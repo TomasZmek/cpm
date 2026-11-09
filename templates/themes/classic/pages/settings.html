@@ -462,6 +462,54 @@ subdomain.example.com {
         }
         </script>
 
+        {{else if eq .ActiveTab "modules"}}
+        <!-- Modules: enable/configure/disable at runtime (caddy-config/modules.json) -->
+        <div class="settings-section">
+            <h2>🧩 {{t .Lang "settings_modules"}}</h2>
+            <p class="text-muted">{{t .Lang "modules_intro"}}</p>
+        </div>
+        {{range .Modules}}
+        <div class="settings-section module-card" id="module-{{.ID}}">
+            <h2>{{.Icon}} {{.Name}}
+                {{if .Enabled}}<span class="badge badge-success">{{t $.Lang "modules_enabled"}}</span>{{else}}<span class="badge badge-gray">{{t $.Lang "modules_disabled"}}</span>{{end}}
+            </h2>
+            {{if .Description}}<p class="text-muted">{{.Description}}</p>{{end}}
+            {{if .Enabled}}
+                {{if .Error}}
+                <div class="alert alert-error mt-2">❌ {{.Error}}</div>
+                {{else if .SourceError}}
+                <div class="alert alert-warning mt-2">⚠️ {{.SourceError}}</div>
+                {{else if .Refreshed}}
+                <p class="text-success mt-2">✅ {{t $.Lang "modules_containers"}} {{.Containers}}</p>
+                {{end}}
+            {{end}}
+            <form action="/settings/modules/{{.ID}}" method="POST" class="mt-4">
+                <input type="hidden" name="_csrf" value="{{$.CSRFToken}}">
+                {{$mid := .ID}}
+                {{range .Fields}}
+                <div class="form-group">
+                    <label for="mod-{{$mid}}-{{.Key}}">{{.Label}}{{if .Required}} *{{end}}</label>
+                    <input type="{{.InputType}}" id="mod-{{$mid}}-{{.Key}}" name="f_{{.Key}}"
+                           value="{{.Value}}"
+                           placeholder="{{if .HasSecret}}{{t $.Lang "modules_secret_keep"}}{{else}}{{.Placeholder}}{{end}}"
+                           {{if .Secret}}autocomplete="new-password"{{else}}autocomplete="off"{{end}}
+                           {{if .Required}}required{{end}}>
+                    {{if .Help}}<div class="form-hint">{{.Help}}</div>{{end}}
+                </div>
+                {{end}}
+                <div class="module-actions">
+                    <button type="submit" class="btn btn-primary">{{if .Enabled}}💾 {{t $.Lang "modules_save"}}{{else}}▶️ {{t $.Lang "modules_enable"}}{{end}}</button>
+                    {{if .Enabled}}
+                    <button type="submit" class="btn btn-danger" formaction="/settings/modules/{{.ID}}/disable" formnovalidate
+                            onclick="return confirm({{t $.Lang "modules_disable_confirm"}})">⏹️ {{t $.Lang "modules_disable"}}</button>
+                    {{end}}
+                </div>
+            </form>
+        </div>
+        {{else}}
+        <div class="settings-section"><p class="text-muted">{{t .Lang "modules_none"}}</p></div>
+        {{end}}
+
         {{else if eq .ActiveTab "users"}}
         <!-- Users Settings -->
         <div class="settings-section">

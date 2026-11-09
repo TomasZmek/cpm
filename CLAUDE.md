@@ -74,7 +74,13 @@ All services are constructed in `main.go` and injected into `handlers.Handler` a
 | `BackupService` | `services/backup.go` | ZIP backup/restore, JSON import/export of rules |
 | `CertificateService` | `services/certificates.go` | Reads/deletes certificates from Caddy data dir |
 | `SettingsService` | `services/settings.go` | App settings (`settings.json`), Docker discovery hosts |
-| Discovery | `services/discovery.go` | Docker Auto-Discovery — matches running containers to proxy rules |
+| Discovery | `services/discovery.go` | Docker Auto-Discovery — turns inventory containers into rows paired with proxy rules |
+| `modules.Manager` | `modules/manager.go` | Registered modules, enable/configure/disable at runtime, `caddy-config/modules.json` (0600) |
+| `inventory.Service` | `inventory/inventory.go` | Background refresh (30 s) of containers from active modules + TCP probe; backend status of rules |
+
+### Modules (`sdk/`, `internal/modules`, `internal/inventory`)
+
+`sdk/` is a separate, dependency-free Go module (`github.com/TomasZmek/cpm/sdk`, `replace`d locally in `go.mod`) — the public interface for modules: `sdk.Register(sdk.Module{...})` from `init`, `Source.Containers(ctx)`, `Field` (settings form is generated from it), `Text` (per-module translations). Modules are compiled in (blank import in `cmd/cpm/modules.go` or `--build-arg CPM_MODULES=...`) and enabled at runtime in Settings → Modules. The built-in `docker` module (`internal/modules/dockerlocal`) wraps `DockerService.ListContainers`. Dashboard backend status, the rules list dots (`/htmx/sites/status`), Docker discovery and the rule form's container picker read **only** the inventory, never Docker directly — `DockerService` itself is for controlling Caddy (reload/validate/restart/logs). Matching: container name, or Docker host IP + **published** port. See `docs/modules.md`.
 
 `CaddyfileManager` depends on both `WildcardService` and `SnippetsService`; to avoid circular imports it is created after them and injected into `CaddyService` via `SetCaddyfileManager()`.
 
@@ -115,6 +121,7 @@ caddy-config/
 ├── wildcard.json          # wildcard domains + DNS API tokens (0600)
 ├── .auth_config.json      # users (bcrypt hashes) + auth enabled flag (0600)
 ├── settings.json          # app settings, Docker discovery hosts
+├── modules.json           # enabled modules + their settings (may contain tokens, 0600)
 ├── pages/                 # custom 403/404 error pages
 └── sites/
     ├── wildcard/          # handle blocks for wildcard sites

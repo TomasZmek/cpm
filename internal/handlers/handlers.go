@@ -6,7 +6,9 @@ import (
 
 	"github.com/TomasZmek/cpm/internal/config"
 	"github.com/TomasZmek/cpm/internal/i18n"
+	"github.com/TomasZmek/cpm/internal/inventory"
 	"github.com/TomasZmek/cpm/internal/models"
+	"github.com/TomasZmek/cpm/internal/modules"
 	"github.com/TomasZmek/cpm/internal/services"
 	"github.com/gofiber/fiber/v2"
 )
@@ -22,6 +24,14 @@ type Handler struct {
 	dockerService   *services.DockerService
 	wildcardService *services.WildcardService
 	settingsService *services.SettingsService
+	modules         *modules.Manager
+	inventory       *inventory.Service
+}
+
+// SetModules attaches the module manager and the container inventory.
+func (h *Handler) SetModules(m *modules.Manager, inv *inventory.Service) {
+	h.modules = m
+	h.inventory = inv
 }
 
 // New creates a new Handler instance

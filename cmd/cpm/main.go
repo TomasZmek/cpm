@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
@@ -12,7 +13,11 @@ import (
 	"github.com/TomasZmek/cpm/internal/config"
 	"github.com/TomasZmek/cpm/internal/handlers"
 	"github.com/TomasZmek/cpm/internal/i18n"
+	"github.com/TomasZmek/cpm/internal/inventory"
 	"github.com/TomasZmek/cpm/internal/middleware"
+	"github.com/TomasZmek/cpm/internal/models"
+	"github.com/TomasZmek/cpm/internal/modules"
+	"github.com/TomasZmek/cpm/internal/modules/dockerlocal"
 	"github.com/TomasZmek/cpm/internal/services"
 	"github.com/TomasZmek/cpm/internal/views"
 	"github.com/gofiber/fiber/v2"
@@ -74,6 +79,29 @@ func main() {
 			log.Printf("Local Docker host auto-registered for discovery")
 		}
 	}()
+
+	// Modules: built-in container source for the local Docker daemon; modules
+	// compiled in via modules.go register themselves from init(). Which ones
+	// are active is decided at runtime in Settings → Modules (modules.json).
+	dockerlocal.Register(dockerService, func() (string, string) {
+		if st, err := settingsService.Get(); err == nil {
+			for _, dh := range st.DiscoveryHosts {
+				if dh.IsLocalDocker {
+					return dh.IP, dh.Label
+				}
+			}
+		}
+		return "", ""
+	})
+	moduleManager, err := modules.NewManager(cfg.ConfigDir)
+	if err != nil {
+		log.Printf("Warning: %v (modules disabled until fixed in Settings → Modules)", err)
+	}
+	inv := inventory.New(moduleManager, func() []*models.Site {
+		sites, _ := caddyService.GetAllSites()
+		return sites
+	})
+	inv.Start(context.Background())
 
 	// Initialize template engines, one per UI theme (templates/themes/<name>)
 	engine := views.New("./templates/themes", middleware.ThemeNames(), "classic", map[string]interface{}{
@@ -164,6 +192,8 @@ func main() {
 		wildcardService,
 		settingsService,
 	)
+
+	h.SetModules(moduleManager, inv)
 
 	// Setup routes
 	setupRoutes(app, h, authService)
@@ -271,6 +301,9 @@ func setupRoutes(app *fiber.App, h *handlers.Handler, authService *services.Auth
 	protected.Get("/discovery", h.DiscoveryPage)
 	protected.Post("/discovery/create", edit, h.DiscoveryCreate)
 	protected.Get("/settings/docker", admin, h.SettingsDocker)
+	protected.Get("/settings/modules", admin, h.SettingsModules)
+	protected.Post("/settings/modules/:id", admin, h.ModuleSave)
+	protected.Post("/settings/modules/:id/disable", admin, h.ModuleDisable)
 	protected.Post("/settings/fallback", admin, h.FallbackSave)
 	protected.Post("/settings/fallback/create", admin, h.FallbackCreate)
 	protected.Post("/settings/error-page/:code", admin, h.ErrorPageSave)

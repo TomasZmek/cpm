@@ -1,6 +1,9 @@
 package handlers
 
 import (
+	"github.com/TomasZmek/cpm/internal/inventory"
+	"github.com/TomasZmek/cpm/sdk"
+	"sort"
 	"strings"
 
 	"github.com/TomasZmek/cpm/internal/models"
@@ -387,41 +390,59 @@ func splitList(v string) []string {
 // IP targets (or names without a matching container) are reported as "unknown".
 func (h *Handler) SitesStatus(c *fiber.Ctx) error {
 	sites, _ := h.caddyService.GetAllSites()
-
-	var states map[string]string
-	if h.dockerService != nil && h.dockerService.IsAvailable() {
-		states, _ = h.dockerService.ContainerStates()
-	}
-
-	out := make(map[string]string, len(sites))
+	out := make(map[string]inventory.Status, len(sites))
 	for _, s := range sites {
-		status := "unknown"
-		if states != nil {
-			if st, ok := states[s.TargetIP]; ok {
-				if st == "running" {
-					status = "up"
-				} else {
-					status = "down"
-				}
-			}
-		}
-		out[s.Filename] = status
+		out[s.Filename] = h.backendStatus(s)
 	}
 	return c.JSON(out)
 }
 
-// discoverableContainers returns running containers for the rule form's
-// service-name picker. Returns nil when Docker is unavailable so the template
-// simply omits the picker.
-func (h *Handler) discoverableContainers() []services.DiscoveredContainer {
-	if h.dockerService == nil || !h.dockerService.IsAvailable() {
+// backendStatus returns a rule's backend status from the inventory.
+func (h *Handler) backendStatus(s *models.Site) inventory.Status {
+	if h.inventory == nil {
+		return inventory.Status{State: inventory.Unknown}
+	}
+	return h.inventory.StatusFor(s)
+}
+
+// PickerContainer is a container offered by the rule form's picker.
+type PickerContainer struct {
+	Name   string
+	HostIP string
+	Host   string
+	Ports  []sdk.Port
+}
+
+// discoverableContainers returns running containers from the inventory for
+// the rule form's container picker (Caddy and CPM itself excluded).
+func (h *Handler) discoverableContainers() []PickerContainer {
+	if h.inventory == nil {
 		return nil
 	}
-	containers, err := h.dockerService.ListDiscoverableContainers()
-	if err != nil {
-		return nil
+	labels := map[string]string{}
+	if st, err := h.settingsService.Get(); err == nil {
+		for _, dh := range st.DiscoveryHosts {
+			labels[dh.IP] = dh.Label
+		}
 	}
-	return containers
+	var out []PickerContainer
+	for _, c := range h.inventory.Containers() {
+		if !c.Running() || (h.dockerService != nil && h.dockerService.IsSelfOrCaddy(c)) {
+			continue
+		}
+		host := labels[c.HostIP]
+		if host == "" {
+			host = c.Host
+		}
+		out = append(out, PickerContainer{Name: c.Name, HostIP: c.HostIP, Host: host, Ports: c.Ports})
+	}
+	sort.SliceStable(out, func(i, j int) bool {
+		if out[i].HostIP != out[j].HostIP {
+			return out[i].HostIP < out[j].HostIP
+		}
+		return strings.ToLower(out[i].Name) < strings.ToLower(out[j].Name)
+	})
+	return out
 }
 
 // filterSites filters sites by search query and tag

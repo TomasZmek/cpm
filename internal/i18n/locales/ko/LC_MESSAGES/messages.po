@@ -1032,10 +1032,10 @@ msgid "discovery_use_ip"
 msgstr "이 IP 사용"
 
 msgid "discovery_no_local_host"
-msgstr "로컬 도커 호스트가 설정되지 않았습니다."
+msgstr "활성화된 컨테이너 소스가 없습니다."
 
 msgid "discovery_no_local_host_desc"
-msgstr "다음에서 하나의 호스트를 \"로컬 도커\"로 표시하세요:"
+msgstr "다음에서 Docker (로컬) 같은 모듈을 켜세요:"
 
 msgid "sites_quick_host"
 msgstr "호스트 선택 (Docker)"
@@ -1098,7 +1098,7 @@ msgid "help_quick_host"
 msgstr "등록된 Docker 호스트에서 IP를 빠르게 채웁니다."
 
 msgid "help_container_picker"
-msgstr "로컬 Docker 호스트에서 실행 중인 컨테이너의 서비스명과 내부 포트를 자동으로 채웁니다."
+msgstr "실행 중인 컨테이너로 대상을 채웁니다: Docker 호스트 IP + 게시 포트, 서비스 이름 모드에서는 컨테이너 이름 + 내부 포트."
 
 msgid "help_https_backend"
 msgstr "백엔드 자체가 HTTPS로 통신하면 켜세요. 자체 서명 인증서는 검증을 건너뜁니다."
@@ -1152,10 +1152,10 @@ msgid "sites_import_file_btn"
 msgstr "파일 선택"
 
 msgid "status_up"
-msgstr "백엔드 실행 중"
+msgstr "백엔드 사용 가능"
 
 msgid "status_down"
-msgstr "백엔드 중지됨"
+msgstr "백엔드 사용 불가"
 
 msgid "status_unknown"
 msgstr "상태 알 수 없음"
@@ -1438,3 +1438,69 @@ msgstr "구성이 잘못되어 Caddy를 재시작하지 않았습니다 (다시 
 
 msgid "msg_restart_not_running"
 msgstr "Caddy를 재시작했지만 실행 중이 아닙니다 — Caddy 로그를 확인하세요"
+
+msgid "settings_modules"
+msgstr "모듈"
+
+msgid "settings_desc_modules"
+msgstr "컨테이너 소스 및 기타 확장"
+
+msgid "modules_intro"
+msgstr "모듈은 CPM을 확장합니다. 예: 백엔드 상태와 Docker 검색을 위한 컨테이너 소스. 모듈을 켜면 설정이 caddy-config/modules.json에 저장되고, 끄면 다시 제거됩니다."
+
+msgid "modules_enabled"
+msgstr "사용 중"
+
+msgid "modules_disabled"
+msgstr "사용 안 함"
+
+msgid "modules_containers"
+msgstr "발견된 컨테이너:"
+
+msgid "modules_secret_keep"
+msgstr "저장됨 — 유지하려면 비워 두세요"
+
+msgid "modules_save"
+msgstr "저장"
+
+msgid "modules_enable"
+msgstr "사용"
+
+msgid "modules_disable"
+msgstr "사용 안 함"
+
+msgid "modules_disable_confirm"
+msgstr "모듈을 끄고 설정을 삭제할까요?"
+
+msgid "modules_none"
+msgstr "이 빌드에는 사용 가능한 모듈이 없습니다."
+
+msgid "msg_module_error"
+msgstr "'{0}' 모듈을 저장하지 못했습니다"
+
+msgid "msg_module_saved_error"
+msgstr "'{0}' 모듈을 저장했지만 아직 작동하지 않습니다"
+
+msgid "msg_module_saved"
+msgstr "'{0}' 모듈 설정을 저장했습니다."
+
+msgid "msg_module_enabled"
+msgstr "'{0}' 모듈을 켰습니다."
+
+msgid "msg_module_disabled"
+msgstr "'{0}' 모듈을 끄고 설정을 삭제했습니다."
+
+msgid "status_running"
+msgstr "실행 중"
+
+msgid "status_stopped"
+msgstr "중지됨"
+
+msgid "status_reachable"
+msgstr "접속 가능 (포트 응답)"
+
+msgid "status_unreachable"
+msgstr "접속 불가 (포트 응답 없음)"
+
+msgid "dashboard_backend_hint"
+msgstr "모듈(설정 → 모듈)의 컨테이너는 컨테이너 이름 또는 Docker 호스트 IP와 게시된 포트로 매칭되며, 다른 대상은 포트 연결로 확인합니다."

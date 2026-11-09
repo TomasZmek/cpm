@@ -26,7 +26,7 @@
     </div>
 </div>
 
-<!-- Backend status (containers matched by target name) -->
+<!-- Backend status (container inventory + TCP probe) -->
 <div class="card mb-4">
     <div class="card-header">
         <h2 class="card-title">🐳 {{t .Lang "dashboard_backend_status"}}</h2>
@@ -36,6 +36,7 @@
         <span><span class="bs-dot bs-down"></span>{{t .Lang "status_down"}}: <strong>{{.BackendDown}}</strong></span>
         <span><span class="bs-dot bs-unknown"></span>{{t .Lang "status_unknown"}}: <strong>{{.BackendUnknown}}</strong></span>
     </div>
+    <p class="text-muted text-sm mt-2">{{t .Lang "dashboard_backend_hint"}}</p>
 </div>
 <style>
 .backend-status { display: flex; flex-wrap: wrap; gap: var(--space-6); }
