@@ -287,6 +287,7 @@ func setupRoutes(app *fiber.App, h *handlers.Handler, authService *services.Auth
 	// Caddy actions
 	protected.Post("/caddy/reload", edit, h.CaddyReload)
 	protected.Post("/caddy/reload-force", edit, h.CaddyReloadForce)
+	protected.Post("/caddy/restart", edit, h.CaddyRestart)
 	protected.Post("/caddy/validate", edit, h.CaddyValidate)
 
 	// API v1 — uses the same session authentication as the UI

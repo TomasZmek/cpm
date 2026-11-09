@@ -1418,3 +1418,21 @@ msgstr "replaced by restore"
 
 msgid "msg_caddy_restarted"
 msgstr "Caddy was restarted."
+
+msgid "dashboard_restart"
+msgstr "Restart Caddy"
+
+msgid "dashboard_restart_confirm"
+msgstr "Restart the Caddy container? Websites are unavailable for a few seconds. Unlike a reload, a restart clears Caddy's memory, so for example it obtains missing certificates again."
+
+msgid "msg_restart_success"
+msgstr "Caddy was restarted."
+
+msgid "msg_restart_failed"
+msgstr "Caddy restart failed"
+
+msgid "msg_restart_invalid_config"
+msgstr "Caddy was not restarted because the configuration is invalid (it would not start again)"
+
+msgid "msg_restart_not_running"
+msgstr "Caddy was restarted but is not running — check the Caddy log"

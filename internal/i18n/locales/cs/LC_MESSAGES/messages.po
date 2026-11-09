@@ -1418,3 +1418,21 @@ msgstr "nahrazen obnovou"
 
 msgid "msg_caddy_restarted"
 msgstr "Caddy byl restartován."
+
+msgid "dashboard_restart"
+msgstr "Restartovat Caddy"
+
+msgid "dashboard_restart_confirm"
+msgstr "Restartovat kontejner Caddy? Weby budou na pár sekund nedostupné. Na rozdíl od reloadu restart vyprázdní paměť Caddy, takže si například znovu stáhne chybějící certifikáty."
+
+msgid "msg_restart_success"
+msgstr "Caddy byl restartován."
+
+msgid "msg_restart_failed"
+msgstr "Restart Caddy selhal"
+
+msgid "msg_restart_invalid_config"
+msgstr "Caddy nebyl restartován, protože konfigurace je neplatná (znovu by nenastartoval)"
+
+msgid "msg_restart_not_running"
+msgstr "Caddy byl restartován, ale neběží — zkontrolujte log Caddy"

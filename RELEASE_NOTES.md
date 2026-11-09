@@ -1,5 +1,9 @@
 # CPM - Unreleased
 
+## ✨ New Features
+
+- **Restart Caddy** button on the dashboard (next to Reload). A restart clears Caddy's memory (e.g. it obtains missing certificates again); the configuration is validated first and an invalid one is never restarted into, since Caddy would not start again. Websites are unavailable for a few seconds.
+
 ## 🐛 Bug Fixes
 
 - **Certificate "Renew" did not renew anything and the old certificate was lost** — renewing deleted the certificate files and only reloaded Caddy, but Caddy keeps certificates in memory across reloads, so it kept serving the old one and obtained no new certificate until its next restart. The deleted files could not be recovered.

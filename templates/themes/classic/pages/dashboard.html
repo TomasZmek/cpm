@@ -83,6 +83,16 @@
             </button>
             <button 
                 class="btn btn-secondary"
+                hx-post="/caddy/restart"
+                hx-target="#caddy-action-result"
+                hx-swap="innerHTML"
+                hx-disabled-elt="this"
+                hx-confirm="{{t .Lang "dashboard_restart_confirm"}}"
+            >
+                ♻️ {{t .Lang "dashboard_restart"}}
+            </button>
+            <button 
+                class="btn btn-secondary"
                 hx-post="/caddy/validate"
                 hx-target="#caddy-action-result"
                 hx-swap="innerHTML"
@@ -93,7 +103,7 @@
                 💾 {{t .Lang "dashboard_backup"}}
             </a>
         </div>
-        <!-- Result of reload / validate (filled by HTMX) -->
+        <!-- Result of reload / restart / validate (filled by HTMX) -->
         <div id="caddy-action-result" class="mt-2" aria-live="polite"></div>
     </div>
 </div>

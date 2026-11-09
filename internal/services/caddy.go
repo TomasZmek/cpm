@@ -399,9 +399,10 @@ func (c *CaddyService) Validate() *ReloadResult {
 	output, err := c.dockerService.ValidateConfigWithOutput()
 	if err != nil {
 		return &ReloadResult{
-			Success:       false,
-			Error:         err.Error(),
-			ValidationLog: output,
+			Success:           false,
+			DockerUnreachable: isDockerUnreachable(err),
+			Error:             err.Error(),
+			ValidationLog:     output,
 		}
 	}
 

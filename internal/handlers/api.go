@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"strings"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -106,6 +107,51 @@ func (h *Handler) CaddyReload(c *fiber.Ctx) error {
 	}
 
 	return c.Redirect(safeRedirectTarget(c))
+}
+
+// CaddyRestart validates the configuration and restarts the Caddy
+// container. Unlike a reload this clears Caddy's in-memory state (e.g.
+// cached certificates). An invalid configuration is never restarted into,
+// since Caddy would not come back up and every site would be down.
+func (h *Handler) CaddyRestart(c *fiber.Ctx) error {
+	msgType, msg, detail := "success", tl(c, "msg_restart_success"), ""
+
+	validation := h.caddyService.Validate()
+	switch {
+	case !validation.Success && validation.DockerUnreachable:
+		msgType, msg = "error", tl(c, "msg_restart_failed")+": "+validation.Error
+	case !validation.Success:
+		msgType, msg, detail = "error", tl(c, "msg_restart_invalid_config")+": "+validation.Error, validation.ValidationLog
+	default:
+		result := h.caddyService.RestartForCertificates()
+		switch {
+		case !result.Success:
+			msgType, msg = "error", tl(c, "msg_restart_failed")+": "+result.Error
+		case !h.waitCaddyRunning():
+			msgType, msg = "error", tl(c, "msg_restart_not_running")
+		}
+	}
+
+	if c.Get("HX-Request") == "true" {
+		icon := "✅"
+		if msgType == "error" {
+			icon = "❌"
+		}
+		out := `<div class="alert alert-` + msgType + `">` + icon + ` ` + escapeHTML(msg) + `</div>`
+		if detail != "" {
+			out += `<details class="mt-2"><summary>📋 Validation Log</summary><pre class="code-block">` + escapeHTML(detail) + `</pre></details>`
+		}
+		return c.SendString(out)
+	}
+	setFlash(c, msgType, msg)
+	return c.Redirect(safeRedirectTarget(c))
+}
+
+// waitCaddyRunning reports whether the Caddy container is still running a
+// few seconds after a restart (it exits right away on a startup error).
+func (h *Handler) waitCaddyRunning() bool {
+	time.Sleep(3 * time.Second)
+	return h.dockerService.IsContainerRunning()
 }
 
 // CaddyReloadForce forces a Caddy config reload (re-issues missing certs).

@@ -1420,3 +1420,21 @@ msgstr "복원으로 대체됨"
 
 msgid "msg_caddy_restarted"
 msgstr "Caddy를 재시작했습니다."
+
+msgid "dashboard_restart"
+msgstr "Caddy 재시작"
+
+msgid "dashboard_restart_confirm"
+msgstr "Caddy 컨테이너를 재시작할까요? 몇 초 동안 웹사이트에 접속할 수 없습니다. 재로드와 달리 재시작은 Caddy의 메모리를 비우므로 누락된 인증서를 다시 받습니다."
+
+msgid "msg_restart_success"
+msgstr "Caddy를 재시작했습니다."
+
+msgid "msg_restart_failed"
+msgstr "Caddy 재시작 실패"
+
+msgid "msg_restart_invalid_config"
+msgstr "구성이 잘못되어 Caddy를 재시작하지 않았습니다 (다시 시작되지 않습니다)"
+
+msgid "msg_restart_not_running"
+msgstr "Caddy를 재시작했지만 실행 중이 아닙니다 — Caddy 로그를 확인하세요"
