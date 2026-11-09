@@ -1,4 +1,11 @@
-# CPM - Unreleased
+# CPM v3.5.0 - Modules & backend status
+
+Released 2026-11-09. Docker images: `perteus/caddy-ui:3.5.0` (Docker Hub), `ghcr.io/tomaszmek/cpm:3.5.0`; offline packages for amd64 and arm64 are attached to the GitHub release.
+
+## ⚠️ Upgrade notes
+
+- After the upgrade open **Settings → Modules** and set the **Docker host IP** of the *Docker (local)* module to the LAN address of the machine Docker runs on (e.g. your NAS, as used in proxy rules). Without it, rules targeting `IP:port` cannot be matched to containers.
+- If an earlier version auto-registered a container address (`172.x`) as the local Docker host in Settings → Docker, delete that entry.
 
 ## ✨ New Features
 

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-**CPM - Caddy Proxy Manager** — a lightweight Go web UI for managing a Caddy reverse proxy. Distributed as a ~6 MB Docker image (`perteus/caddy-ui` on Docker Hub). Current released version: **3.4.1**.
+**CPM - Caddy Proxy Manager** — a lightweight Go web UI for managing a Caddy reverse proxy. Distributed as a ~6 MB Docker image (`perteus/caddy-ui` on Docker Hub). Current released version: **3.5.0**.
 
 - GitHub: https://github.com/TomasZmek/cpm
 - Docker Hub: `perteus/caddy-ui`
@@ -199,7 +199,7 @@ Types: `feat`, `fix`, `docs`, `refactor`, `chore`
 
    POZNÁMKA: `buildx --push` pushuje přímo během buildu. `make docker-push` není potřeba volat zvlášť.
 5. Commit with `chore: bump version to vVERSION`, merge into `main`, then `main` back into `develop`
-6. Run the **Release** workflow (GitHub → Actions → Release → Run workflow, version without `v`, on `main`). It checks that `cmd/cpm/main.go` has that version, pushes the multi-arch image to `ghcr.io/tomaszmek/cpm:VERSION` and `:latest`, and creates the GitHub release `vVERSION` (tag included) with the notes from `RELEASE_NOTES.md` and offline packages `cpm-VERSION-amd64.tar` / `-arm64.tar` (`docker load`, tagged `perteus/caddy-ui:VERSION`). Pushing a `v*` tag runs it too.
+6. Run the **Release** workflow (GitHub → Actions → Release → Run workflow, version without `v`, on `main`). It checks that `cmd/cpm/main.go` has that version, pushes the multi-arch image to `ghcr.io/tomaszmek/cpm:VERSION` and `:latest`, and creates the GitHub release `vVERSION` (tag included) with the notes from `RELEASE_NOTES.md` and offline packages `cpm-VERSION-amd64.tar` / `-arm64.tar` (`docker load`, tagged `perteus/caddy-ui:VERSION`). Pushing a `v*` tag runs it too. With the repository secrets `DOCKERHUB_USERNAME` / `DOCKERHUB_TOKEN` it also pushes `perteus/caddy-ui:VERSION` + `:latest` (multi-arch) and updates the Docker Hub description from `DOCKERHUB.md` — then step 4 is not needed.
 
 ## i18n
 
