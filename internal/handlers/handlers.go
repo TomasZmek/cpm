@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"net"
 	"net/url"
 	"strings"
 
@@ -159,13 +160,37 @@ func (h *Handler) baseData(c *fiber.Ctx, title string) fiber.Map {
 	}
 
 	return fiber.Map{
-		"Title":     title,
-		"Lang":      lang,
-		"ThemeCSS":  themeCSS,
-		"Version":   h.config.Version,
-		"User":      c.Locals("user"),
-		"CSRFToken": c.Locals("csrf_token"),
+		"Title":              title,
+		"Lang":               lang,
+		"ThemeCSS":           themeCSS,
+		"Version":            h.config.Version,
+		"User":               c.Locals("user"),
+		"CSRFToken":          c.Locals("csrf_token"),
+		"HasContainerSource": h.hasContainerSource(),
 	}
+}
+
+// hasContainerSource reports whether a module that lists containers is
+// enabled. Docker discovery and its settings are hidden otherwise.
+func (h *Handler) hasContainerSource() bool {
+	return h.modules != nil && len(h.modules.Active()) > 0
+}
+
+// requestHostIP returns the IP address the browser used to reach CPM (Host
+// header) when it is a usable LAN address — inside a container that is the
+// best hint for the Docker host's IP. Host names, loopback and Docker
+// bridge addresses are ignored.
+func requestHostIP(c *fiber.Ctx) string {
+	host := c.Get(fiber.HeaderHost)
+	if h, _, err := net.SplitHostPort(host); err == nil {
+		host = h
+	}
+	host = strings.Trim(host, "[]")
+	ip := net.ParseIP(host)
+	if ip == nil || ip.IsLoopback() || ip.IsUnspecified() || services.IsDockerBridgeIP(ip) {
+		return ""
+	}
+	return ip.String()
 }
 
 // getLang extracts the current language code from the request context.

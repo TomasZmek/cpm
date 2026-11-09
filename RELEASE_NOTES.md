@@ -9,6 +9,8 @@
 
 - **Docker discovery mixed up hosts** — every configured host showed the containers of the local Docker daemon. Discovery now lists containers under the host they really run on, pairs rules by published port (not the container's inner port) and offers "Create rule" with host IP + published port. The rule form's container picker groups containers by host and fills host IP + published port (or name + inner port in service-name mode).
 - Classic theme: coloured badges (success/warning/…) were rendered grey.
+- **"Detect local IP" returned the container's address** (e.g. 172.23.0.2) instead of the host's: the Docker-network filter compared the 16-byte form of the address and never matched. Inside a container the host's LAN IP is not visible, so CPM now suggests the address the browser opened CPM on, and no longer auto-registers a container address as the local Docker host.
+- With no container source enabled, **Docker** disappears from the menu and Settings → Docker redirects to Settings → Modules.
 
 ---
 

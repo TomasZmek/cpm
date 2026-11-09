@@ -64,6 +64,9 @@ const (
 	FieldText     FieldType = "text"
 	FieldURL      FieldType = "url"
 	FieldPassword FieldType = "password" // secret: never shown again after saving
+	// FieldHostIP is the IPv4/IPv6 address of a host as used in proxy rules.
+	// The settings page suggests the address the browser reached CPM on.
+	FieldHostIP FieldType = "hostip"
 )
 
 // Field describes one configuration value of a module.

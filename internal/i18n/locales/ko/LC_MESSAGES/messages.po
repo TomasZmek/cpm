@@ -1504,3 +1504,9 @@ msgstr "접속 불가 (포트 응답 없음)"
 
 msgid "dashboard_backend_hint"
 msgstr "모듈(설정 → 모듈)의 컨테이너는 컨테이너 이름 또는 Docker 호스트 IP와 게시된 포트로 매칭되며, 다른 대상은 포트 연결로 확인합니다."
+
+msgid "modules_suggest"
+msgstr "제안된 호스트 IP (CPM에 접속한 주소):"
+
+msgid "msg_host_ip_not_detected"
+msgstr "컨테이너 내부에서는 호스트 IP를 확인할 수 없습니다. Docker가 실행되는 머신(예: NAS)의 LAN 주소를 입력하세요."

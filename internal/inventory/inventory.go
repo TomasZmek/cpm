@@ -126,10 +126,10 @@ func (s *Service) Refresh(ctx context.Context) {
 			defer wg.Done()
 			sctx, cancel := context.WithTimeout(ctx, sourceTimeout)
 			defer cancel()
+			// A source may return containers together with a warning.
 			list, err := src.Containers(sctx)
 			if err != nil {
 				states[i].Err = err.Error()
-				return
 			}
 			lists[i] = list
 			states[i].Count = len(list)

@@ -3,6 +3,7 @@ package services
 import (
 	"archive/zip"
 	"bytes"
+	"net"
 	"os"
 	"path/filepath"
 	"strings"
@@ -206,5 +207,19 @@ func TestSessionSurvivesReusedRequestBuffer(t *testing.T) {
 	copy(buf, "xxxxx") // next request overwrites the buffer
 	if a.ValidateSession(token) == nil {
 		t.Fatal("session was invalidated by reuse of the request buffer")
+	}
+}
+
+func TestIsDockerBridgeIP(t *testing.T) {
+	for ip, want := range map[string]bool{
+		"172.23.0.2":     true, // 16-byte form from net.Interfaces must be handled
+		"172.16.0.1":     true,
+		"172.32.0.1":     false,
+		"192.168.50.222": false,
+		"10.0.0.5":       false,
+	} {
+		if got := IsDockerBridgeIP(net.ParseIP(ip)); got != want {
+			t.Errorf("IsDockerBridgeIP(%s) = %v, want %v", ip, got, want)
+		}
 	}
 }

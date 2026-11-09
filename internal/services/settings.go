@@ -90,18 +90,16 @@ func DetectLocalIP() (string, error) {
 			case *net.IPAddr:
 				ip = v.IP
 			}
-			if ip == nil || ip.To4() == nil || ip.IsLoopback() {
+			if ip == nil || ip.To4() == nil || ip.IsLoopback() || IsDockerBridgeIP(ip) {
 				continue
 			}
-			// Skip 172.16.0.0/12
-			if ip[0] == 172 && ip[1] >= 16 && ip[1] <= 31 {
-				continue
-			}
-			candidates = append(candidates, ip.String())
+			candidates = append(candidates, ip.To4().String())
 		}
 	}
 
 	if len(candidates) == 0 {
+		// Typical inside a container on a Docker bridge network: the host's
+		// LAN address is not visible from here.
 		return "", fmt.Errorf("no suitable local IP address found")
 	}
 	for _, ip := range candidates {
@@ -176,4 +174,11 @@ func (s *SettingsService) EnsureLocalDockerHost(docker *DockerService) (bool, er
 		IsLocalDocker: true,
 	})
 	return true, s.Save(settings)
+}
+
+// IsDockerBridgeIP reports whether ip is in 172.16.0.0/12, the range Docker
+// uses for bridge networks (container addresses, not the host's LAN IP).
+func IsDockerBridgeIP(ip net.IP) bool {
+	ip4 := ip.To4()
+	return ip4 != nil && ip4[0] == 172 && ip4[1] >= 16 && ip4[1] <= 31
 }

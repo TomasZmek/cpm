@@ -495,6 +495,11 @@ subdomain.example.com {
                            {{if .Secret}}autocomplete="new-password"{{else}}autocomplete="off"{{end}}
                            {{if .Required}}required{{end}}>
                     {{if .Help}}<div class="form-hint">{{.Help}}</div>{{end}}
+                    {{if .Suggest}}
+                    <div class="form-hint">💡 {{t $.Lang "modules_suggest"}} <code>{{.Suggest}}</code>
+                        <button type="button" class="btn btn-sm btn-secondary" onclick="document.getElementById('mod-{{$mid}}-{{.Key}}').value = '{{.Suggest}}'">{{t $.Lang "discovery_use_ip"}}</button>
+                    </div>
+                    {{end}}
                 </div>
                 {{end}}
                 <div class="module-actions">

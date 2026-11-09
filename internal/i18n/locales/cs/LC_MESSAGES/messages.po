@@ -1502,3 +1502,9 @@ msgstr "Nedostupný (port neodpovídá)"
 
 msgid "dashboard_backend_hint"
 msgstr "Kontejnery z modulů (Nastavení → Moduly) se párují podle jména kontejneru nebo podle IP Docker hosta a publikovaného portu; ostatní cíle se ověřují připojením na port."
+
+msgid "modules_suggest"
+msgstr "Navrhovaná IP hosta (adresa, přes kterou máte CPM otevřené):"
+
+msgid "msg_host_ip_not_detected"
+msgstr "IP adresu hosta nejde zevnitř kontejneru zjistit. Zadejte adresu stroje v síti, na kterém běží Docker (např. NAS)."

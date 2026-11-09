@@ -16,13 +16,17 @@ func (h *Handler) SettingsDocker(c *fiber.Ctx) error {
 	return h.renderSettingsTab(c, "docker")
 }
 
-// SettingsDiscoveryDetect detects the local machine's IP and returns it as JSON.
+// SettingsDiscoveryDetect suggests this Docker host's LAN IP as JSON. Inside a
+// container on a bridge network the host's address is not visible, so the
+// address the browser used to reach CPM is the fallback.
 func (h *Handler) SettingsDiscoveryDetect(c *fiber.Ctx) error {
-	ip, err := services.DetectLocalIP()
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	if ip, err := services.DetectLocalIP(); err == nil {
+		return c.JSON(fiber.Map{"ip": ip})
 	}
-	return c.JSON(fiber.Map{"ip": ip})
+	if ip := requestHostIP(c); ip != "" {
+		return c.JSON(fiber.Map{"ip": ip, "source": "browser"})
+	}
+	return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": tl(c, "msg_host_ip_not_detected")})
 }
 
 // SettingsDiscoveryHostsSave saves the list of Docker discovery hosts.
@@ -113,6 +117,9 @@ var settingsSections = []struct {
 func (h *Handler) visibleSettingsSections(c *fiber.Ctx) []SettingsSection {
 	var out []SettingsSection
 	for _, s := range settingsSections {
+		if s.Key == "docker" && !h.hasContainerSource() {
+			continue
+		}
 		if h.hasPermission(c, s.Permission) {
 			out = append(out, s.SettingsSection)
 		}
@@ -149,6 +156,11 @@ func (h *Handler) renderSettings(c *fiber.Ctx, tab string, index bool) error {
 	// with API tokens) and are reachable via ?tab=, so check here as well.
 	if (tab == "users" || tab == "backup" || tab == "docker" || tab == "modules") && !h.hasPermission(c, "admin") {
 		return fiber.NewError(fiber.StatusForbidden, "You do not have permission to view this page")
+	}
+
+	// Docker discovery hosts belong to the container-source modules.
+	if tab == "docker" && !h.hasContainerSource() {
+		return c.Redirect("/settings/modules")
 	}
 
 	flashType, flashMsg := getFlash(c)
@@ -200,7 +212,7 @@ func (h *Handler) renderSettings(c *fiber.Ctx, tab string, index bool) error {
 		}
 
 	case "modules":
-		data["Modules"] = h.moduleViews(getLang(c))
+		data["Modules"] = h.moduleViews(c)
 	}
 
 	return c.Render("pages/settings", data, "layouts/base")

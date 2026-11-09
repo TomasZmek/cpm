@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -275,6 +276,9 @@ func validate(f sdk.Field, v string) error {
 	}
 	if len(v) > maxValueLen || strings.ContainsAny(v, "\r\n\x00") {
 		return fmt.Errorf("%s: invalid value", name)
+	}
+	if f.Type == sdk.FieldHostIP && net.ParseIP(v) == nil {
+		return fmt.Errorf("%s: expected an IP address", name)
 	}
 	if f.Type == sdk.FieldURL {
 		u, err := url.Parse(v)

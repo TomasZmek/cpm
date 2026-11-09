@@ -50,9 +50,11 @@
                 <a href="/logs" class="{{if eq .Active "logs"}}active{{end}}">
                     📝 {{t .Lang "nav_logs"}}
                 </a>
+                {{if .HasContainerSource}}
                 <a href="/discovery" class="{{if eq .Active "discovery"}}active{{end}}">
                     🐳 Docker
                 </a>
+                {{end}}
                 <a href="/settings" class="{{if eq .Active "settings"}}active{{end}}">
                     ⚙️ {{t .Lang "nav_settings"}}
                 </a>

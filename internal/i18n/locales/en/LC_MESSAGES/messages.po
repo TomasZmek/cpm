@@ -1502,3 +1502,9 @@ msgstr "Unreachable (port does not respond)"
 
 msgid "dashboard_backend_hint"
 msgstr "Containers from modules (Settings → Modules) are matched by container name or by Docker host IP and published port; other targets are checked by connecting to the port."
+
+msgid "modules_suggest"
+msgstr "Suggested host IP (address CPM was opened on):"
+
+msgid "msg_host_ip_not_detected"
+msgstr "The host's IP cannot be detected from inside the container. Enter the LAN address of the machine Docker runs on (e.g. your NAS)."

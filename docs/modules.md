@@ -79,6 +79,9 @@ Rules for modules:
 - `Containers` returns *all* containers (running and stopped) with
   `HostIP` set to the Docker host address that proxy rules use, and `Ports`
   with `Public` = the port published on that host.
+- Fields of type `FieldHostIP` take a host's IP; the settings page suggests
+  the address the browser opened CPM on (inside a container the host's LAN
+  IP is not visible otherwise).
 - Fields of type `FieldPassword` are secrets: CPM never shows them again
   and keeps the stored value when the field is left empty.
 - Texts are `sdk.Text` maps (language → text, `en` is the fallback), so a

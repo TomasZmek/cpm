@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/TomasZmek/cpm/internal/services"
 	"github.com/TomasZmek/cpm/sdk"
 	"github.com/gofiber/fiber/v2"
 )
@@ -19,7 +20,8 @@ type moduleFieldView struct {
 	Placeholder string
 	Value       string // empty for secrets
 	Secret      bool
-	HasSecret   bool // a secret value is stored
+	HasSecret   bool   // a secret value is stored
+	Suggest     string // suggested value (host IP fields)
 }
 
 // moduleView is one module as rendered by Settings → Modules.
@@ -41,9 +43,14 @@ func (h *Handler) SettingsModules(c *fiber.Ctx) error {
 	return h.renderSettingsTab(c, "modules")
 }
 
-func (h *Handler) moduleViews(lang string) []moduleView {
+func (h *Handler) moduleViews(c *fiber.Ctx) []moduleView {
 	if h.modules == nil {
 		return nil
+	}
+	lang := getLang(c)
+	hostIP := requestHostIP(c)
+	if ip, err := services.DetectLocalIP(); err == nil {
+		hostIP = ip
 	}
 	type srcState struct {
 		count int
@@ -95,6 +102,9 @@ func (h *Handler) moduleViews(lang string) []moduleView {
 			}
 			if fv.Label == "" {
 				fv.Label = f.Key
+			}
+			if f.Type == sdk.FieldHostIP && hostIP != "" && hostIP != info.Config[f.Key] {
+				fv.Suggest = hostIP
 			}
 			if info.Enabled {
 				if fv.Secret {

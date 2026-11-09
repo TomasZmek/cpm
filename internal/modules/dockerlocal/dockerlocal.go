@@ -4,6 +4,7 @@ package dockerlocal
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 
@@ -29,13 +30,13 @@ func Register(docker *services.DockerService, defaultHostIP func() (ip, label st
 		DefaultEnabled: true,
 		Fields: []sdk.Field{{
 			Key:         "host_ip",
-			Type:        sdk.FieldText,
+			Type:        sdk.FieldHostIP,
 			Placeholder: "192.168.1.10",
 			Label:       sdk.Text{"en": "Docker host IP", "cs": "IP adresa Docker hosta", "ko": "Docker 호스트 IP"},
 			Help: sdk.Text{
-				"en": "Address of this host as used in proxy rules. Empty: the host marked as local in Settings → Docker.",
-				"cs": "Adresa tohoto hosta, jak ji používají proxy pravidla. Prázdné: host označený jako lokální v Nastavení → Docker.",
-				"ko": "프록시 규칙에서 사용하는 이 호스트의 주소. 비어 있으면 설정 → Docker에서 로컬로 표시된 호스트.",
+				"en": "LAN address of the machine Docker runs on (e.g. your NAS), as used in proxy rules — not a container address (172.x). Empty: the host marked as local in Settings → Docker.",
+				"cs": "Adresa stroje v síti, na kterém běží Docker (např. NAS), jak ji používají proxy pravidla – ne adresa kontejneru (172.x). Prázdné: host označený jako lokální v Nastavení → Docker.",
+				"ko": "Docker가 실행되는 머신(예: NAS)의 LAN 주소로, 프록시 규칙에서 사용하는 주소입니다 — 컨테이너 주소(172.x)가 아닙니다. 비어 있으면 설정 → Docker에서 로컬로 표시된 호스트.",
 			},
 		}},
 		New: func(cfg sdk.Config) (sdk.Source, error) {
@@ -62,5 +63,12 @@ func (s *source) Containers(ctx context.Context) ([]sdk.Container, error) {
 		}
 		label = defLabel
 	}
-	return s.docker.ListContainers(ctx, ip, label)
+	containers, err := s.docker.ListContainers(ctx, ip, label)
+	if err == nil && ip == "" {
+		// Containers are listed, but rules on IP:port cannot be matched.
+		return containers, errNoHostIP
+	}
+	return containers, err
 }
+
+var errNoHostIP = errors.New("the Docker host IP is not set: rules targeting IP:port cannot be matched to containers")
