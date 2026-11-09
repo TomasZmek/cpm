@@ -466,10 +466,10 @@ msgid "certs_renew"
 msgstr "Obnovit"
 
 msgid "certs_confirm_renew"
-msgstr "Smazat certifikát a vynutit obnovu pro"
+msgstr "Přesunout certifikát do záloh a restartovat Caddy, aby získal nový, pro"
 
 msgid "certs_confirm_delete"
-msgstr "Smazat certifikát pro"
+msgstr "Přesunout certifikát do záloh (Caddy získá nový po příštím restartu) pro"
 
 msgid "certs_empty"
 msgstr "Žádné certifikáty nenalezeny"
@@ -487,10 +487,10 @@ msgid "certs_about_desc"
 msgstr "Caddy automaticky obnovuje certifikáty před vypršením."
 
 msgid "certs_renew_desc"
-msgstr "Smaže certifikát a restartuje Caddy pro automatickou obnovu (pro aktivní domény)"
+msgstr "Přesune certifikát do záloh a restartuje Caddy, který získá nový. Caddy obnovuje certifikáty sám zhruba 30 dní před expirací, takže to obvykle není potřeba."
 
 msgid "certs_delete_desc"
-msgstr "Pouze smaže certifikát bez obnovy (pro nepoužívané domény)"
+msgstr "Přesune certifikát do záloh bez restartu Caddy (pro nepoužívané domény)"
 
 # Logs
 msgid "logs_title"
@@ -735,13 +735,13 @@ msgid "msg_auth_disabled"
 msgstr "Autentizace zakázána"
 
 msgid "msg_cert_deleted"
-msgstr "Certifikát pro '{0}' byl smazán."
+msgstr "Certifikát pro '{0}' byl přesunut do záloh."
 
 msgid "msg_cert_reload_failed"
 msgstr "Certifikát smazán, ale reload selhal"
 
 msgid "msg_cert_renewed"
-msgstr "Certifikát pro '{0}' smazán. Bude spuštěna obnova."
+msgstr "Certifikát pro '{0}' byl přesunut do záloh a Caddy byl restartován, aby získal nový. Ten by se tu měl objevit během pár minut; pokud ne, podívejte se do logu Caddy a obnovte zálohu níže."
 
 msgid "msg_snippet_updated"
 msgstr "Snippet '{0}' byl úspěšně aktualizován"
@@ -1213,10 +1213,10 @@ msgid "msg_certs_bulk_done"
 msgstr "{0} certifikátů zařazeno k obnově"
 
 msgid "msg_certs_bulk_reload_failed"
-msgstr "Obnoveno, ale reload selhal"
+msgstr "Certifikáty přesunuty do záloh, ale Caddy se nepodařilo restartovat"
 
 msgid "certs_bulk_reloading"
-msgstr "Načítání Caddy…"
+msgstr "Restartuji Caddy…"
 
 msgid "certs_bulk_waiting"
 msgstr "Čekání na opětovné vydání certifikátů…"
@@ -1376,3 +1376,63 @@ msgstr "Uživatelé, role a přihlašování"
 
 msgid "settings_back"
 msgstr "Zpět na Nastavení"
+
+msgid "msg_cert_restart_failed"
+msgstr "Caddy se nepodařilo restartovat — restartujte kontejner Caddy ručně, aby se změna projevila"
+
+msgid "msg_cert_restored"
+msgstr "Certifikát pro '{0}' byl obnoven ze zálohy."
+
+msgid "msg_cert_restore_failed"
+msgstr "Certifikát se nepodařilo obnovit"
+
+msgid "msg_cert_backup_deleted"
+msgstr "Záloha certifikátu pro '{0}' byla smazána."
+
+msgid "certs_backups_title"
+msgstr "Zálohy certifikátů"
+
+msgid "certs_backups_desc"
+msgstr "Certifikáty obnovené nebo smazané v CPM se ukládají sem. Obnovení vrátí certifikát zpět a restartuje Caddy; certifikát, který nahradí, se také zazálohuje."
+
+msgid "certs_backed_up"
+msgstr "Zazálohováno"
+
+msgid "certs_backup_restore"
+msgstr "Vrátit"
+
+msgid "certs_backup_confirm_restore"
+msgstr "Vrátit certifikát ze zálohy a restartovat Caddy pro"
+
+msgid "certs_backup_confirm_delete"
+msgstr "Trvale smazat zálohu certifikátu pro"
+
+msgid "certs_reason_renew"
+msgstr "obnova"
+
+msgid "certs_reason_delete"
+msgstr "smazání"
+
+msgid "certs_reason_restore"
+msgstr "nahrazen obnovou"
+
+msgid "msg_caddy_restarted"
+msgstr "Caddy byl restartován."
+
+msgid "dashboard_restart"
+msgstr "Restartovat Caddy"
+
+msgid "dashboard_restart_confirm"
+msgstr "Restartovat kontejner Caddy? Weby budou na pár sekund nedostupné. Na rozdíl od reloadu restart vyprázdní paměť Caddy, takže si například znovu stáhne chybějící certifikáty."
+
+msgid "msg_restart_success"
+msgstr "Caddy byl restartován."
+
+msgid "msg_restart_failed"
+msgstr "Restart Caddy selhal"
+
+msgid "msg_restart_invalid_config"
+msgstr "Caddy nebyl restartován, protože konfigurace je neplatná (znovu by nenastartoval)"
+
+msgid "msg_restart_not_running"
+msgstr "Caddy byl restartován, ale neběží — zkontrolujte log Caddy"

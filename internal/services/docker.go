@@ -190,6 +190,25 @@ func (d *DockerService) ReloadCaddyForceWithOutput() (string, error) {
 	return d.ExecCommandWithOutput("caddy", "reload", "--config", "/etc/caddy/Caddyfile", "--force")
 }
 
+// RestartCaddy restarts the Caddy container. Unlike a reload it clears
+// Caddy's in-memory certificate cache, so certificates removed from storage
+// are obtained again and restored ones are loaded.
+func (d *DockerService) RestartCaddy() error {
+	if d.cli() == nil {
+		return errDockerUnavailable
+	}
+	containerID, err := d.GetContainerID()
+	if err != nil {
+		return err
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+	if _, err := d.cli().ContainerRestart(ctx, containerID, client.ContainerRestartOptions{}); err != nil {
+		return fmt.Errorf("failed to restart container: %w", err)
+	}
+	return nil
+}
+
 // ValidateConfig validates Caddy configuration
 func (d *DockerService) ValidateConfig() error {
 	output, err := d.ExecCommandWithOutput("caddy", "validate", "--config", "/etc/caddy/Caddyfile")

@@ -111,6 +111,55 @@ function confirmBulkRenew(form) {
     </table>
 </div>
 
+<!-- Certificate backups -->
+{{if .CertBackups}}
+<h2 class="mt-4" id="cert-backups">🗄️ {{t .Lang "certs_backups_title"}}</h2>
+<p class="text-muted">{{t .Lang "certs_backups_desc"}}</p>
+<div class="table-container">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>{{t .Lang "certs_domain"}}</th>
+                <th>{{t .Lang "certs_issuer"}}</th>
+                <th>{{t .Lang "certs_expires"}}</th>
+                <th>{{t .Lang "certs_backed_up"}}</th>
+                <th>{{t .Lang "actions"}}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{range .CertBackups}}
+            <tr>
+                <td><strong>{{.Domain}}</strong></td>
+                <td>{{.Issuer}}</td>
+                <td>
+                    {{.NotAfter.Format "2006-01-02"}}
+                    <span class="text-muted">({{if .IsExpired}}{{t $.Lang "certs_expired"}}{{else}}{{.DaysLeft}} {{t $.Lang "days"}}{{end}})</span>
+                </td>
+                <td>
+                    {{.BackedUpAt.Local.Format "2006-01-02 15:04"}}
+                    <span class="text-muted">· {{if eq .Reason "renew"}}{{t $.Lang "certs_reason_renew"}}{{else if eq .Reason "restore"}}{{t $.Lang "certs_reason_restore"}}{{else}}{{t $.Lang "certs_reason_delete"}}{{end}}</span>
+                </td>
+                <td>
+                    {{if not .IsExpired}}
+                    <button class="btn btn-sm btn-secondary"
+                            hx-post="/certificates/backups/{{.ID}}/restore"
+                            hx-confirm="{{t $.Lang "certs_backup_confirm_restore"}} {{.Domain}}?">
+                        ↩️ {{t $.Lang "certs_backup_restore"}}
+                    </button>
+                    {{end}}
+                    <button class="btn btn-sm btn-danger"
+                            hx-post="/certificates/backups/{{.ID}}/delete"
+                            hx-confirm="{{t $.Lang "certs_backup_confirm_delete"}} {{.Domain}}?">
+                        🗑️ {{t $.Lang "delete"}}
+                    </button>
+                </td>
+            </tr>
+            {{end}}
+        </tbody>
+    </table>
+</div>
+{{end}}
+
 <div class="info-box mt-4">
     <h4>ℹ️ {{t .Lang "certs_about_title"}}</h4>
     <p>{{t .Lang "certs_about_desc"}}</p>

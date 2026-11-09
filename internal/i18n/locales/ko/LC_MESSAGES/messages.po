@@ -468,10 +468,10 @@ msgid "certs_renew"
 msgstr "갱신"
 
 msgid "certs_confirm_renew"
-msgstr "인증서를 삭제하고 다음 도메인의 갱신을 트리거합니다:"
+msgstr "인증서를 백업으로 옮기고 Caddy를 재시작하여 새 인증서를 받습니다:"
 
 msgid "certs_confirm_delete"
-msgstr "다음 도메인의 인증서를 삭제합니다:"
+msgstr "인증서를 백업으로 옮깁니다 (Caddy는 다음 재시작 후 새 인증서를 받습니다):"
 
 msgid "certs_empty"
 msgstr "인증서를 찾을 수 없습니다"
@@ -489,10 +489,10 @@ msgid "certs_about_desc"
 msgstr "Caddy는 만료되기 전에 인증서를 자동으로 갱신합니다."
 
 msgid "certs_renew_desc"
-msgstr "인증서를 삭제하고 Caddy를 재로드하여 자동 갱신을 트리거합니다. (활성 도메인에 사용)"
+msgstr "인증서를 백업으로 옮기고 Caddy를 재시작하여 새 인증서를 받습니다. Caddy는 만료 약 30일 전에 자동으로 갱신하므로 보통 필요하지 않습니다."
 
 msgid "certs_delete_desc"
-msgstr "갱신 없이 인증서만 삭제합니다. (더 이상 사용하지 않는 도메인에 사용)"
+msgstr "Caddy를 재시작하지 않고 인증서를 백업으로 옮깁니다 (더 이상 사용하지 않는 도메인에 사용)"
 
 # Logs
 msgid "logs_title"
@@ -737,13 +737,13 @@ msgid "msg_auth_disabled"
 msgstr "인증이 비활성화되었습니다"
 
 msgid "msg_cert_deleted"
-msgstr "'{0}'의 인증서가 삭제되었습니다."
+msgstr "'{0}'의 인증서를 백업으로 옮겼습니다."
 
 msgid "msg_cert_reload_failed"
 msgstr "인증서가 삭제되었지만 재로드에 실패했습니다"
 
 msgid "msg_cert_renewed"
-msgstr "'{0}'의 인증서가 삭제되었습니다. 갱신이 시작됩니다."
+msgstr "'{0}'의 인증서를 백업으로 옮기고 새 인증서를 받기 위해 Caddy를 재시작했습니다. 몇 분 안에 여기에 표시됩니다. 표시되지 않으면 Caddy 로그를 확인하고 아래 백업을 복원하세요."
 
 msgid "msg_snippet_updated"
 msgstr "코드 조각 '{0}'이(가) 성공적으로 업데이트되었습니다"
@@ -1215,10 +1215,10 @@ msgid "msg_certs_bulk_done"
 msgstr "{0}개 인증서를 갱신 대기열에 넣었습니다"
 
 msgid "msg_certs_bulk_reload_failed"
-msgstr "갱신했으나 재로드 실패"
+msgstr "인증서를 백업으로 옮겼지만 Caddy를 재시작하지 못했습니다"
 
 msgid "certs_bulk_reloading"
-msgstr "Caddy 재로드 중…"
+msgstr "Caddy 재시작 중…"
 
 msgid "certs_bulk_waiting"
 msgstr "Caddy가 인증서를 재발급하는 중…"
@@ -1378,3 +1378,63 @@ msgstr "사용자, 역할 및 인증"
 
 msgid "settings_back"
 msgstr "설정으로 돌아가기"
+
+msgid "msg_cert_restart_failed"
+msgstr "Caddy를 재시작하지 못했습니다 — 변경 사항을 적용하려면 Caddy 컨테이너를 직접 재시작하세요"
+
+msgid "msg_cert_restored"
+msgstr "'{0}'의 인증서를 백업에서 복원했습니다."
+
+msgid "msg_cert_restore_failed"
+msgstr "인증서를 복원하지 못했습니다"
+
+msgid "msg_cert_backup_deleted"
+msgstr "'{0}' 인증서 백업을 삭제했습니다."
+
+msgid "certs_backups_title"
+msgstr "인증서 백업"
+
+msgid "certs_backups_desc"
+msgstr "CPM에서 갱신하거나 삭제한 인증서가 여기에 보관됩니다. 복원하면 인증서를 되돌리고 Caddy를 재시작하며, 대체되는 인증서도 백업됩니다."
+
+msgid "certs_backed_up"
+msgstr "백업됨"
+
+msgid "certs_backup_restore"
+msgstr "복원"
+
+msgid "certs_backup_confirm_restore"
+msgstr "백업된 인증서를 복원하고 Caddy를 재시작합니다:"
+
+msgid "certs_backup_confirm_delete"
+msgstr "다음 인증서 백업을 영구 삭제합니다:"
+
+msgid "certs_reason_renew"
+msgstr "갱신"
+
+msgid "certs_reason_delete"
+msgstr "삭제"
+
+msgid "certs_reason_restore"
+msgstr "복원으로 대체됨"
+
+msgid "msg_caddy_restarted"
+msgstr "Caddy를 재시작했습니다."
+
+msgid "dashboard_restart"
+msgstr "Caddy 재시작"
+
+msgid "dashboard_restart_confirm"
+msgstr "Caddy 컨테이너를 재시작할까요? 몇 초 동안 웹사이트에 접속할 수 없습니다. 재로드와 달리 재시작은 Caddy의 메모리를 비우므로 누락된 인증서를 다시 받습니다."
+
+msgid "msg_restart_success"
+msgstr "Caddy를 재시작했습니다."
+
+msgid "msg_restart_failed"
+msgstr "Caddy 재시작 실패"
+
+msgid "msg_restart_invalid_config"
+msgstr "구성이 잘못되어 Caddy를 재시작하지 않았습니다 (다시 시작되지 않습니다)"
+
+msgid "msg_restart_not_running"
+msgstr "Caddy를 재시작했지만 실행 중이 아닙니다 — Caddy 로그를 확인하세요"

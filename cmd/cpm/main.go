@@ -23,8 +23,8 @@ import (
 )
 
 const (
-	Version   = "3.4.0"
-	BuildDate = "2026-10-08"
+	Version   = "3.4.1"
+	BuildDate = "2026-11-09"
 )
 
 func main() {
@@ -241,6 +241,9 @@ func setupRoutes(app *fiber.App, h *handlers.Handler, authService *services.Auth
 	protected.Post("/certificates/renew-all", edit, h.CertificatesRenewAll)
 	protected.Post("/certificates/:domain/renew", edit, h.CertificateRenew)
 	protected.Post("/certificates/:domain/renew-step", edit, h.CertificateRenewStep)
+	protected.Post("/certificates/restart-caddy", edit, h.CertificatesRestartCaddy)
+	protected.Post("/certificates/backups/:id/restore", edit, h.CertificateBackupRestore)
+	protected.Post("/certificates/backups/:id/delete", edit, h.CertificateBackupDelete)
 	protected.Get("/certificates/count", h.CertificatesCount)
 	protected.Get("/htmx/certificates/list", h.HTMXCertificatesList)
 
@@ -284,6 +287,7 @@ func setupRoutes(app *fiber.App, h *handlers.Handler, authService *services.Auth
 	// Caddy actions
 	protected.Post("/caddy/reload", edit, h.CaddyReload)
 	protected.Post("/caddy/reload-force", edit, h.CaddyReloadForce)
+	protected.Post("/caddy/restart", edit, h.CaddyRestart)
 	protected.Post("/caddy/validate", edit, h.CaddyValidate)
 
 	// API v1 — uses the same session authentication as the UI
