@@ -67,13 +67,14 @@ jobs:
             org.opencontainers.image.title=CPM - Caddy Proxy Manager
 
       - name: Export offline packages
+        # One docker-archive per platform, written by buildx (layers come from
+        # the cache of the previous step). `docker save` of a single platform
+        # of a multi-arch image fails with the containerd image store.
         run: |
           mkdir -p dist
           for arch in amd64 arm64; do
-            docker pull --platform "linux/$arch" "$IMAGE:$VERSION"
-            docker tag "$IMAGE:$VERSION" "perteus/caddy-ui:$VERSION"
-            docker save -o "dist/cpm-$VERSION-$arch.tar" "perteus/caddy-ui:$VERSION"
-            docker rmi "perteus/caddy-ui:$VERSION" "$IMAGE:$VERSION"
+            docker buildx build --platform "linux/$arch" \
+              --output "type=docker,dest=dist/cpm-$VERSION-$arch.tar,name=perteus/caddy-ui:$VERSION" .
           done
           (cd dist && sha256sum *.tar > SHA256SUMS)
           ls -la dist
