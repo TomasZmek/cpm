@@ -1,0 +1,111 @@
+# Builds a release: multi-arch image on GitHub Container Registry plus a
+# GitHub release (with tag) carrying offline image packages for amd64/arm64.
+#
+# Run it from GitHub → Actions → Release → Run workflow on main (version
+# without "v"), or push a tag v<version>. cmd/cpm/main.go must already have
+# that version (see "Release process" in CLAUDE.md).
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version without v, e.g. 3.4.1 (must match cmd/cpm/main.go)"
+        required: true
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write   # create the release and its tag
+  packages: write   # push to ghcr.io
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve version
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          V="${INPUT_VERSION:-${GITHUB_REF_NAME#v}}"
+          if ! printf '%s' "$V" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$'; then
+            echo "::error::Invalid version '$V'"; exit 1
+          fi
+          if ! grep -Eq "Version[[:space:]]+= \"$V\"" cmd/cpm/main.go; then
+            echo "::error::cmd/cpm/main.go does not contain Version = \"$V\""; exit 1
+          fi
+          echo "VERSION=$V" >> "$GITHUB_ENV"
+          echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
+
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push multi-arch image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:${{ env.VERSION }}
+            ${{ env.IMAGE }}:latest
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.version=${{ env.VERSION }}
+            org.opencontainers.image.title=CPM - Caddy Proxy Manager
+
+      - name: Export offline packages
+        run: |
+          mkdir -p dist
+          for arch in amd64 arm64; do
+            docker pull --platform "linux/$arch" "$IMAGE:$VERSION"
+            docker tag "$IMAGE:$VERSION" "perteus/caddy-ui:$VERSION"
+            docker save -o "dist/cpm-$VERSION-$arch.tar" "perteus/caddy-ui:$VERSION"
+            docker rmi "perteus/caddy-ui:$VERSION" "$IMAGE:$VERSION"
+          done
+          (cd dist && sha256sum *.tar > SHA256SUMS)
+          ls -la dist
+
+      - name: Release notes
+        run: |
+          # Section of RELEASE_NOTES.md from "# CPM v<version>" up to the next "---".
+          awk -v v="# CPM v$VERSION" '
+            index($0, v) == 1 { on = 1; title = $0; next }
+            on && /^---/ { exit }
+            on { print }
+            END { if (!on) exit 1 }
+          ' RELEASE_NOTES.md > notes.md || { echo "::error::No section for v$VERSION in RELEASE_NOTES.md"; exit 1; }
+          title=$(grep -m1 "^# CPM v$VERSION" RELEASE_NOTES.md | sed 's/^# //')
+          echo "TITLE=$title" >> "$GITHUB_ENV"
+          cat >> notes.md <<NOTES
+
+          ## 📦 Install
+
+          - **Docker Hub:** \`perteus/caddy-ui:$VERSION\`
+          - **GitHub Container Registry (multi-arch):** \`$IMAGE:$VERSION\`
+          - **Offline:** download \`cpm-$VERSION-amd64.tar\` (Intel/AMD) or \`cpm-$VERSION-arm64.tar\` (ARM64) below and run \`docker load -i <file>\`; the image is tagged \`perteus/caddy-ui:$VERSION\`. Check with \`sha256sum -c SHA256SUMS\`.
+          NOTES
+
+      - name: Create or update GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="v$VERSION"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release edit "$tag" --title "$TITLE" --notes-file notes.md
+            gh release upload "$tag" dist/* --clobber
+          else
+            gh release create "$tag" dist/* --target "$GITHUB_SHA" --title "$TITLE" --notes-file notes.md
+          fi
