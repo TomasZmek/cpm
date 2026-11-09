@@ -121,6 +121,8 @@ caddy-config/
     └── standard/          # standard domain blocks
 ```
 
+In the Caddy data dir CPM only touches `caddy/certificates/` and `cpm-cert-backups/`: renewing or deleting a certificate moves its files (incl. private key, 0600) into a backup there (`services/cert_backups.go`), and renewal/restore restart the Caddy container — a reload keeps certificates cached in memory.
+
 ### Authentication
 
 Session-based, managed by `AuthService` (`services/auth.go`). Users stored in `caddy-config/.auth_config.json`; sessions are in memory only (lost on restart). When auth is disabled, everything is open. The first POST to `/login` with no users creates the initial admin (`CreateInitialAdmin`) and enables auth.

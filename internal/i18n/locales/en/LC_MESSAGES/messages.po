@@ -466,10 +466,10 @@ msgid "certs_renew"
 msgstr "Renew"
 
 msgid "certs_confirm_renew"
-msgstr "Delete certificate and trigger renewal for"
+msgstr "Move the certificate to backups and restart Caddy to obtain a new one for"
 
 msgid "certs_confirm_delete"
-msgstr "Delete certificate for"
+msgstr "Move the certificate to backups (Caddy obtains a new one after its next restart) for"
 
 msgid "certs_empty"
 msgstr "No certificates found"
@@ -487,10 +487,10 @@ msgid "certs_about_desc"
 msgstr "Caddy automatically renews certificates before they expire."
 
 msgid "certs_renew_desc"
-msgstr "Delete certificate and reload Caddy to trigger automatic renewal (use for active domains)"
+msgstr "Moves the certificate to backups and restarts Caddy, which obtains a new one. Caddy renews certificates on its own about 30 days before expiry, so this is rarely needed."
 
 msgid "certs_delete_desc"
-msgstr "Only delete certificate without renewal (use for unused domains)"
+msgstr "Moves the certificate to backups without restarting Caddy (use for unused domains)"
 
 # Logs
 msgid "logs_title"
@@ -735,13 +735,13 @@ msgid "msg_auth_disabled"
 msgstr "Authentication disabled"
 
 msgid "msg_cert_deleted"
-msgstr "Certificate for '{0}' deleted."
+msgstr "Certificate for '{0}' was moved to backups."
 
 msgid "msg_cert_reload_failed"
 msgstr "Certificate deleted but reload failed"
 
 msgid "msg_cert_renewed"
-msgstr "Certificate for '{0}' deleted. Renewal will be triggered."
+msgstr "Certificate for '{0}' was moved to backups and Caddy was restarted to obtain a new one. It should appear here within a few minutes; if it does not, check the Caddy log and restore the backup below."
 
 msgid "msg_snippet_updated"
 msgstr "Snippet '{0}' updated successfully"
@@ -1213,10 +1213,10 @@ msgid "msg_certs_bulk_done"
 msgstr "{0} certificate(s) queued for renewal"
 
 msgid "msg_certs_bulk_reload_failed"
-msgstr "Renewed but reload failed"
+msgstr "Certificates moved to backups, but Caddy could not be restarted"
 
 msgid "certs_bulk_reloading"
-msgstr "Reloading Caddy…"
+msgstr "Restarting Caddy…"
 
 msgid "certs_bulk_waiting"
 msgstr "Waiting for Caddy to re-issue certificates…"
@@ -1376,3 +1376,45 @@ msgstr "Users, roles and authentication"
 
 msgid "settings_back"
 msgstr "Back to Settings"
+
+msgid "msg_cert_restart_failed"
+msgstr "Caddy could not be restarted — restart the Caddy container manually so the change takes effect"
+
+msgid "msg_cert_restored"
+msgstr "Certificate for '{0}' was restored from backup."
+
+msgid "msg_cert_restore_failed"
+msgstr "Certificate could not be restored"
+
+msgid "msg_cert_backup_deleted"
+msgstr "Backup of the certificate for '{0}' was deleted."
+
+msgid "certs_backups_title"
+msgstr "Certificate backups"
+
+msgid "certs_backups_desc"
+msgstr "Certificates renewed or deleted in CPM are kept here. Restore puts the certificate back and restarts Caddy; the certificate it replaces is backed up as well."
+
+msgid "certs_backed_up"
+msgstr "Backed up"
+
+msgid "certs_backup_restore"
+msgstr "Restore"
+
+msgid "certs_backup_confirm_restore"
+msgstr "Restore the backed-up certificate and restart Caddy for"
+
+msgid "certs_backup_confirm_delete"
+msgstr "Permanently delete the backup of the certificate for"
+
+msgid "certs_reason_renew"
+msgstr "renewal"
+
+msgid "certs_reason_delete"
+msgstr "deletion"
+
+msgid "certs_reason_restore"
+msgstr "replaced by restore"
+
+msgid "msg_caddy_restarted"
+msgstr "Caddy was restarted."

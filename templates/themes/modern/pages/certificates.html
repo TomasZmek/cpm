@@ -78,6 +78,44 @@
 </div>
 {{end}}
 
+<!-- Certificate backups -->
+{{if .CertBackups}}
+<h2 class="mt-4" id="cert-backups">🗄️ {{t .Lang "certs_backups_title"}}</h2>
+<p class="text-muted">{{t .Lang "certs_backups_desc"}}</p>
+<div class="cert-list">
+    {{range .CertBackups}}
+    <div class="cert-item cert-{{.Status}}">
+        <span class="status-dot"></span>
+        <div class="cert-item-info">
+            <div class="cert-item-domain">{{.Domain}}</div>
+            <div class="cert-item-issuer">{{.Issuer}}</div>
+        </div>
+        <div class="cert-item-dates">
+            <div class="text-muted">{{t $.Lang "certs_backed_up"}} {{.BackedUpAt.Local.Format "2006-01-02 15:04"}} · {{if eq .Reason "renew"}}{{t $.Lang "certs_reason_renew"}}{{else if eq .Reason "restore"}}{{t $.Lang "certs_reason_restore"}}{{else}}{{t $.Lang "certs_reason_delete"}}{{end}}</div>
+            <div class="cert-item-daysleft">
+                {{t $.Lang "certs_expires"}} {{.NotAfter.Format "2006-01-02"}}
+                ({{if .IsExpired}}{{t $.Lang "certs_expired"}}{{else}}{{.DaysLeft}} {{t $.Lang "days"}}{{end}})
+            </div>
+        </div>
+        <div class="cert-item-actions">
+            {{if not .IsExpired}}
+            <button class="btn btn-sm btn-secondary"
+                    hx-post="/certificates/backups/{{.ID}}/restore"
+                    hx-confirm="{{t $.Lang "certs_backup_confirm_restore"}} {{.Domain}}?">
+                ↩️ {{t $.Lang "certs_backup_restore"}}
+            </button>
+            {{end}}
+            <button class="btn btn-sm btn-danger"
+                    hx-post="/certificates/backups/{{.ID}}/delete"
+                    hx-confirm="{{t $.Lang "certs_backup_confirm_delete"}} {{.Domain}}?">
+                🗑️ {{t $.Lang "delete"}}
+            </button>
+        </div>
+    </div>
+    {{end}}
+</div>
+{{end}}
+
 <div class="info-box mt-4">
     <h4>ℹ️ {{t .Lang "certs_about_title"}}</h4>
     <p>{{t .Lang "certs_about_desc"}}</p>
@@ -162,7 +200,7 @@ function runBulkRenew(domains) {
 
     function finish() {
         label.textContent = '{{t .Lang "certs_bulk_reloading"}}';
-        fetch('/caddy/reload-force', { method: 'POST', headers: { 'X-CSRF-Token': cpmCsrf2() } })
+        fetch('/certificates/restart-caddy', { method: 'POST', headers: { 'X-CSRF-Token': cpmCsrf2() } })
             .finally(function () {
                 label.textContent = '{{t .Lang "certs_bulk_waiting"}}';
                 bar.style.width = '0%'; // Reset for reissue progress

@@ -88,37 +88,16 @@ func (c *CertificateService) GetCertificate(domain string) (*models.Certificate,
 	return nil, fmt.Errorf("certificate not found for domain: %s", domain)
 }
 
-// DeleteCertificate deletes a certificate to force renewal
-func (c *CertificateService) DeleteCertificate(domain string) error {
-	certs, err := c.GetAllCertificates()
+// DeleteCertificate removes a certificate from Caddy's storage by moving its
+// files (.crt, .key, .json) into the certificate backup directory, so it can
+// be restored if Caddy fails to obtain a new one. Caddy keeps serving the
+// certificate from memory until it is restarted.
+func (c *CertificateService) DeleteCertificate(domain, reason string) (*CertBackup, error) {
+	cert, err := c.GetCertificate(domain)
 	if err != nil {
-		return err
+		return nil, err
 	}
-
-	for _, cert := range certs {
-		if cert.Domain == domain {
-			// Delete the certificate file
-			if err := os.Remove(cert.FilePath); err != nil {
-				return fmt.Errorf("failed to delete certificate: %w", err)
-			}
-
-			// Also delete the key file if it exists
-			keyPath := strings.TrimSuffix(cert.FilePath, ".crt") + ".key"
-			if _, err := os.Stat(keyPath); err == nil {
-				os.Remove(keyPath)
-			}
-
-			// Delete the meta file if it exists
-			metaPath := strings.TrimSuffix(cert.FilePath, ".crt") + ".json"
-			if _, err := os.Stat(metaPath); err == nil {
-				os.Remove(metaPath)
-			}
-
-			return nil
-		}
-	}
-
-	return fmt.Errorf("certificate not found for domain: %s", domain)
+	return c.backupCertificate(cert, reason)
 }
 
 // parseCertificate parses a certificate file

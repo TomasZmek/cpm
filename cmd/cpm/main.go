@@ -241,6 +241,9 @@ func setupRoutes(app *fiber.App, h *handlers.Handler, authService *services.Auth
 	protected.Post("/certificates/renew-all", edit, h.CertificatesRenewAll)
 	protected.Post("/certificates/:domain/renew", edit, h.CertificateRenew)
 	protected.Post("/certificates/:domain/renew-step", edit, h.CertificateRenewStep)
+	protected.Post("/certificates/restart-caddy", edit, h.CertificatesRestartCaddy)
+	protected.Post("/certificates/backups/:id/restore", edit, h.CertificateBackupRestore)
+	protected.Post("/certificates/backups/:id/delete", edit, h.CertificateBackupDelete)
 	protected.Get("/certificates/count", h.CertificatesCount)
 	protected.Get("/htmx/certificates/list", h.HTMXCertificatesList)
 

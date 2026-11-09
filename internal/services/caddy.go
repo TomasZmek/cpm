@@ -444,6 +444,18 @@ func (c *CaddyService) ReloadForce() *ReloadResult {
 	return &ReloadResult{Success: true, Message: "Configuration reloaded (forced)", ReloadLog: output}
 }
 
+// RestartForCertificates restarts the Caddy container so it obtains
+// certificates missing from storage (a reload keeps them cached in memory).
+func (c *CaddyService) RestartForCertificates() *ReloadResult {
+	if err := c.dockerService.RestartCaddy(); err != nil {
+		if isDockerUnreachable(err) {
+			return &ReloadResult{Success: false, DockerUnreachable: true, Error: "Docker unreachable — restart the Caddy container manually."}
+		}
+		return &ReloadResult{Success: false, Error: err.Error()}
+	}
+	return &ReloadResult{Success: true, Message: "Caddy restarted"}
+}
+
 // ReloadWithValidation validates and then reloads
 func (c *CaddyService) ReloadWithValidation() *ReloadResult {
 	// First validate

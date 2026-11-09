@@ -175,7 +175,7 @@ func (h *Handler) WildcardMigrateExecute(c *fiber.Ctx) error {
 	if deleteCerts {
 		info, _ := h.wildcardService.GetMigrationInfo(domain, h.config.SitesDir, h.config.DataDir)
 		for _, certDomain := range info.Certificates {
-			if err := h.certService.DeleteCertificate(certDomain); err != nil {
+			if _, err := h.certService.DeleteCertificate(certDomain, services.CertBackupReasonDelete); err != nil {
 				log.Printf("Error deleting cert %s: %v", certDomain, err)
 				errors = append(errors, "Cert "+certDomain+": "+err.Error())
 			} else {

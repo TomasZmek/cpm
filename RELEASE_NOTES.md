@@ -1,3 +1,15 @@
+# CPM - Unreleased
+
+## 🐛 Bug Fixes
+
+- **Certificate "Renew" did not renew anything and the old certificate was lost** — renewing deleted the certificate files and only reloaded Caddy, but Caddy keeps certificates in memory across reloads, so it kept serving the old one and obtained no new certificate until its next restart. The deleted files could not be recovered.
+  - Renew, Delete and bulk renewal now **move** certificates to `caddy-data/cpm-cert-backups/` instead of deleting them
+  - Renew and bulk renewal **restart the Caddy container**, so a new certificate is really obtained
+  - New **Certificate backups** section on the Certificates page: see backed-up certificates (expiry, when and why they were backed up), **restore** one (Caddy is restarted; the certificate it replaces is backed up too) or delete it
+  - Clearer confirmations and help text (Caddy renews certificates on its own about 30 days before expiry)
+
+---
+
 # CPM v3.4.0 - Modern theme, Caddyfile import & security hardening
 
 Released 2026-10-08. Includes PR #19 by [@redstar-programmer](https://github.com/redstar-programmer) together with a security review and follow-up fixes.
