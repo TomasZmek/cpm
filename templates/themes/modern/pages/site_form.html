@@ -60,17 +60,19 @@
             <label for="container-quick-select">🐳 {{t .Lang "sites_container_select"}} <span class="help" tabindex="0" data-tip="{{t .Lang "help_container_picker"}}">?</span></label>
             <select id="container-quick-select" onchange="selectContainer(this)">
                 <option value="">{{t .Lang "sites_container_select_ph"}}</option>
+                {{$lastHost := "__none__"}}
                 {{range .Containers}}
-                {{$name := .Name}}
-                {{$ip := .IP}}
+                {{if ne .HostIP $lastHost}}{{if ne $lastHost "__none__"}}</optgroup>{{end}}<optgroup data-host="{{.HostIP}}" label="{{if .Host}}{{.Host}} ({{.HostIP}}){{else if .HostIP}}{{.HostIP}}{{else}}Docker{{end}}">{{$lastHost = .HostIP}}{{end}}
+                {{$c := .}}
                 {{if .Ports}}
                 {{range .Ports}}
-                <option value="{{$name}}|{{.PrivatePort}}">{{$name}}{{if $ip}} ({{$ip}}){{end}} : {{.PrivatePort}}{{if .PublicPort}} (&rarr; {{.PublicPort}}){{end}}</option>
+                <option value="{{$c.Name}}|{{.Private}}|{{$c.HostIP}}|{{.Public}}">{{$c.Name}} : {{if .Public}}{{.Public}} &rarr; {{end}}{{.Private}}</option>
                 {{end}}
                 {{else}}
-                <option value="{{$name}}|">{{$name}}{{if $ip}} ({{$ip}}){{end}}</option>
+                <option value="{{$c.Name}}|||">{{$c.Name}}</option>
                 {{end}}
                 {{end}}
+                {{if ne $lastHost "__none__"}}</optgroup>{{end}}
             </select>
         </div>
         {{end}}
@@ -317,23 +319,44 @@ function cpmApplyTargetType() {
     }
 }
 
+// Container picker. A container with a port published on its Docker host
+// is targeted as host IP + published port (works across Docker networks);
+// in "service name" mode, or without a published port, as name + inner port
+// (requires Caddy to share a Docker network with the container).
+var cpmPicked = null;
+function cpmApplyPicked() {
+    if (!cpmPicked) return;
+    var checked = document.querySelector('input[name="target_type"]:checked');
+    var useService = (checked && checked.value === 'service') || !cpmPicked.hostIP || !cpmPicked.pub;
+    var input = document.getElementById('target_ip');
+    var p = document.getElementById('target_port');
+    if (useService) {
+        if (input) input.value = cpmPicked.name;
+        if (p && cpmPicked.priv) p.value = cpmPicked.priv;
+    } else {
+        if (input) input.value = cpmPicked.hostIP;
+        if (p) p.value = cpmPicked.pub;
+    }
+}
+
 function selectContainer(sel) {
     var v = sel.value;
-    if (!v) return;
+    if (!v) { cpmPicked = null; return; }
     var parts = v.split('|');
-    var name = parts[0];
-    var port = parts[1] || '';
-    var input = document.getElementById('target_ip');
-    if (input) input.value = name;
-    if (port) {
-        var p = document.getElementById('target_port');
-        if (p) p.value = port;
-    }
-    var svc = document.querySelector('input[name="target_type"][value="service"]');
-    if (svc) { svc.checked = true; cpmApplyTargetType(); }
+    cpmPicked = { name: parts[0], priv: parts[1] || '', hostIP: parts[2] || '', pub: parts[3] && parts[3] !== '0' ? parts[3] : '' };
+    var mode = (cpmPicked.hostIP && cpmPicked.pub) ? 'ip' : 'service';
+    var radio = document.querySelector('input[name="target_type"][value="' + mode + '"]');
+    if (radio) { radio.checked = true; cpmApplyTargetType(); }
+    cpmApplyPicked();
 }
 
 function selectDiscoveryHost(ip) {
+    // Only offer containers of the chosen host.
+    document.querySelectorAll('#container-quick-select optgroup').forEach(function (og) {
+        var other = ip && og.getAttribute('data-host') !== ip;
+        og.hidden = other;
+        og.disabled = other;
+    });
     if (ip) {
         document.getElementById('target_ip').value = ip;
         var ipRadio = document.querySelector('input[name="target_type"][value="ip"]');
@@ -343,7 +366,7 @@ function selectDiscoveryHost(ip) {
 
 document.addEventListener('DOMContentLoaded', function () {
     var radios = document.querySelectorAll('input[name="target_type"]');
-    radios.forEach(function (r) { r.addEventListener('change', cpmApplyTargetType); });
+    radios.forEach(function (r) { r.addEventListener('change', function () { cpmApplyTargetType(); cpmApplyPicked(); }); });
 
     // If an existing target is not an IPv4 literal, assume it is a service name.
     var input = document.getElementById('target_ip');

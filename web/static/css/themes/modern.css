@@ -982,3 +982,7 @@ details[open] summary::before { transform: rotate(90deg); }
     }
     .help:hover::after, .help:focus::after { transform: none; }
 }
+
+/* Settings → Modules */
+.module-card h2 { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+.module-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }

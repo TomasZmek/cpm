@@ -1,3 +1,26 @@
+# CPM v3.5.0 - Modules & backend status
+
+Released 2026-11-09. Docker images: `perteus/caddy-ui:3.5.0` (Docker Hub), `ghcr.io/tomaszmek/cpm:3.5.0`; offline packages for amd64 and arm64 are attached to the GitHub release.
+
+## ⚠️ Upgrade notes
+
+- After the upgrade open **Settings → Modules** and set the **Docker host IP** of the *Docker (local)* module to the LAN address of the machine Docker runs on (e.g. your NAS, as used in proxy rules). Without it, rules targeting `IP:port` cannot be matched to containers.
+- If an earlier version auto-registered a container address (`172.x`) as the local Docker host in Settings → Docker, delete that entry.
+
+## ✨ New Features
+
+- **Modules** — new Settings → Modules (admin): modules are enabled, configured and disabled in the UI; their settings are written to `caddy-config/modules.json` and removed again when disabled, no restart needed. Modules are separate Go modules built against the dependency-free `sdk` package and compiled in via `--build-arg CPM_MODULES=...` without code changes (see `docs/modules.md`). Built-in module: **Docker (local)**.
+- **Backend status that works with IP rules** — rules are matched to containers by container name *or* by Docker host IP + published port (e.g. `192.168.1.10:8080` → `anki-sync`), the rest is checked with a TCP connect. States: running / stopped (with container name and host), reachable / unreachable, unknown. Containers are refreshed in the background every 30 s, so pages never wait for Docker.
+
+## 🐛 Bug Fixes
+
+- **Docker discovery mixed up hosts** — every configured host showed the containers of the local Docker daemon. Discovery now lists containers under the host they really run on, pairs rules by published port (not the container's inner port) and offers "Create rule" with host IP + published port. The rule form's container picker groups containers by host and fills host IP + published port (or name + inner port in service-name mode).
+- Classic theme: coloured badges (success/warning/…) were rendered grey.
+- **"Detect local IP" returned the container's address** (e.g. 172.23.0.2) instead of the host's: the Docker-network filter compared the 16-byte form of the address and never matched. Inside a container the host's LAN IP is not visible, so CPM now suggests the address the browser opened CPM on, and no longer auto-registers a container address as the local Docker host.
+- With no container source enabled, **Docker** disappears from the menu and Settings → Docker redirects to Settings → Modules.
+
+---
+
 # CPM v3.4.1 - Certificate backups & Restart Caddy
 
 Released 2026-11-09. Docker images: `perteus/caddy-ui:3.4.1` (Docker Hub), `ghcr.io/tomaszmek/cpm:3.4.1`; offline packages for amd64 and arm64 are attached to the GitHub release.

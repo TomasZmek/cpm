@@ -8,30 +8,17 @@ import (
 	"io"
 	"log"
 	"os"
+	"sort"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"syscall"
 	"time"
 
+	"github.com/TomasZmek/cpm/sdk"
 	"github.com/moby/moby/api/pkg/stdcopy"
 	"github.com/moby/moby/client"
 )
-
-// DiscoveredPort represents a single port mapping on a discovered container.
-type DiscoveredPort struct {
-	PrivatePort uint16
-	PublicPort  uint16
-}
-
-// DiscoveredContainer represents a running container eligible for auto-discovery.
-// Containers with multiple ports are returned as multiple entries (one per port).
-type DiscoveredContainer struct {
-	Name  string
-	State string
-	IP    string
-	Ports []DiscoveredPort
-}
 
 // DockerService handles Docker container operations
 type DockerService struct {
@@ -386,115 +373,59 @@ func (d *DockerService) GetLogs(lines int) ([]string, error) {
 	return cleanLines, nil
 }
 
-// ContainerStates returns a map of container name -> state ("running", "exited", ...)
-// for all containers (running and stopped). Used to show backend health per site.
-func (d *DockerService) ContainerStates() (map[string]string, error) {
+// ListContainers returns all containers (running and stopped) with their
+// published ports, in the module SDK's format. hostIP is the address of this
+// Docker host as used in proxy rules. Ports bound only to loopback are left
+// out (not reachable from Caddy); IPv4/IPv6 duplicates are merged.
+func (d *DockerService) ListContainers(ctx context.Context, hostIP, hostName string) ([]sdk.Container, error) {
 	if d.cli() == nil {
 		return nil, errDockerUnavailable
 	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
 	result, err := d.cli().ContainerList(ctx, client.ContainerListOptions{All: true})
 	if err != nil {
+		if isDockerUnreachable(err) {
+			d.reconnect(d.cli())
+		}
 		return nil, fmt.Errorf("failed to list containers: %w", err)
 	}
 
-	states := make(map[string]string)
+	out := make([]sdk.Container, 0, len(result.Items))
 	for _, c := range result.Items {
-		for _, n := range c.Names {
-			states[strings.TrimPrefix(n, "/")] = string(c.State)
-		}
-	}
-	return states, nil
-}
-
-// ListDiscoverableContainers returns running containers suitable for auto-discovery.
-// Caddy (d.containerName) and the CPM container itself are excluded.
-// Containers with N ports are returned as N separate entries (one per port).
-func (d *DockerService) ListDiscoverableContainers() ([]DiscoveredContainer, error) {
-	if d.cli() == nil {
-		return nil, errDockerUnavailable
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	selfHostname, _ := os.Hostname()
-
-	result, err := d.cli().ContainerList(ctx, client.ContainerListOptions{All: false})
-	if err != nil {
-		return nil, fmt.Errorf("failed to list containers: %w", err)
-	}
-
-	type portKey struct {
-		name        string
-		privatePort uint16
-	}
-	seen := make(map[portKey]bool)
-
-	var discovered []DiscoveredContainer
-	for _, c := range result.Items {
-		if c.State != "running" {
-			continue
-		}
-
 		name := ""
-		for _, n := range c.Names {
-			name = strings.TrimPrefix(n, "/")
-			break
+		if len(c.Names) > 0 {
+			name = strings.TrimPrefix(c.Names[0], "/")
 		}
-
-		if name == d.containerName {
-			continue
-		}
-
-		if selfHostname != "" && strings.HasPrefix(c.ID, selfHostname) {
-			continue
-		}
-
-		// Container IP (first network with an address).
-		ip := ""
-		if c.NetworkSettings != nil {
-			for _, ep := range c.NetworkSettings.Networks {
-				if ep.IPAddress.IsValid() {
-					ip = ep.IPAddress.String()
-					break
-				}
-			}
-		}
-
-		if len(c.Ports) == 0 {
-			key := portKey{name: name, privatePort: 0}
-			if !seen[key] {
-				seen[key] = true
-				discovered = append(discovered, DiscoveredContainer{
-					Name:  name,
-					State: "running",
-					IP:    ip,
-					Ports: []DiscoveredPort{},
-				})
-			}
-			continue
-		}
-
+		ctr := sdk.Container{ID: c.ID, Name: name, State: string(c.State), HostIP: hostIP, Host: hostName}
+		seen := map[sdk.Port]bool{}
 		for _, p := range c.Ports {
-			key := portKey{name: name, privatePort: p.PrivatePort}
-			if seen[key] {
+			if p.IP.IsValid() && p.IP.IsLoopback() {
 				continue
 			}
-			seen[key] = true
-			discovered = append(discovered, DiscoveredContainer{
-				Name:  name,
-				State: "running",
-				IP:    ip,
-				Ports: []DiscoveredPort{{PrivatePort: p.PrivatePort, PublicPort: p.PublicPort}},
-			})
+			port := sdk.Port{Private: p.PrivatePort, Public: p.PublicPort}
+			if !seen[port] {
+				seen[port] = true
+				ctr.Ports = append(ctr.Ports, port)
+			}
 		}
+		sort.Slice(ctr.Ports, func(i, j int) bool {
+			if ctr.Ports[i].Private != ctr.Ports[j].Private {
+				return ctr.Ports[i].Private < ctr.Ports[j].Private
+			}
+			return ctr.Ports[i].Public < ctr.Ports[j].Public
+		})
+		out = append(out, ctr)
 	}
+	return out, nil
+}
 
-	return discovered, nil
+// IsSelfOrCaddy reports whether a container is the Caddy container or the
+// container CPM itself runs in; discovery does not offer those.
+func (d *DockerService) IsSelfOrCaddy(c sdk.Container) bool {
+	if c.Name == d.containerName {
+		return true
+	}
+	self, _ := os.Hostname()
+	return self != "" && c.ID != "" && strings.HasPrefix(c.ID, self)
 }
 
 // GetContainerStatus returns the container status

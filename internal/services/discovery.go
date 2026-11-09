@@ -1,18 +1,19 @@
 package services
 
 import (
-	"fmt"
-	"log"
+	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/TomasZmek/cpm/internal/models"
+	"github.com/TomasZmek/cpm/sdk"
 )
 
 // DiscoveryResult represents a single discoverable container+port combination.
 type DiscoveryResult struct {
 	ContainerName string
-	Port          uint16 // PrivatePort — container's internal port
-	PublicPort    uint16 // PublicPort — host-mapped port (0 if not mapped)
+	Port          uint16 // port published on the Docker host (0 if not published)
+	PrivatePort   uint16 // port inside the container
 	DiscoveryIP   string
 	HostLabel     string
 	Paired        bool
@@ -20,60 +21,60 @@ type DiscoveryResult struct {
 	SuggestedName string
 }
 
-// DiscoverContainers lists running containers for a single host and matches them against existing proxy rules.
-func DiscoverContainers(dockerSvc *DockerService, caddySvc *CaddyService, host models.DiscoveryHost) ([]DiscoveryResult, error) {
-	sites, _ := caddySvc.GetAllSites()
-	return discoverHostSites(dockerSvc, host, sites)
-}
-
-// DiscoverAllHosts runs discovery for all configured hosts and merges the results.
-// Errors on individual hosts are logged but do not abort the whole operation.
-func DiscoverAllHosts(dockerSvc *DockerService, caddySvc *CaddyService, hosts []models.DiscoveryHost) ([]DiscoveryResult, error) {
-	sites, _ := caddySvc.GetAllSites()
-
-	var all []DiscoveryResult
-	for _, host := range hosts {
-		results, err := discoverHostSites(dockerSvc, host, sites)
-		if err != nil {
-			log.Printf("Discovery error for host %s: %v", host.IP, err)
-			continue
-		}
-		all = append(all, results...)
-	}
-	return all, nil
-}
-
-// discoverHostSites is the shared implementation used by both public discovery functions.
-func discoverHostSites(dockerSvc *DockerService, host models.DiscoveryHost, sites []*models.Site) ([]DiscoveryResult, error) {
-	containers, err := dockerSvc.ListDiscoverableContainers()
-	if err != nil {
-		return nil, err
+// Discover turns the containers known to the inventory into discovery rows:
+// one row per running container and published port, paired with an existing
+// proxy rule that targets it (by container name, or by Docker host IP and
+// published port). skip filters out containers that must not be offered
+// (Caddy, CPM itself).
+func Discover(containers []sdk.Container, sites []*models.Site, hosts []models.DiscoveryHost, skip func(sdk.Container) bool) []DiscoveryResult {
+	labels := map[string]string{}
+	for _, h := range hosts {
+		labels[h.IP] = h.Label
 	}
 
 	var results []DiscoveryResult
 	for _, c := range containers {
-		port := uint16(0)
-		publicPort := uint16(0)
-		if len(c.Ports) > 0 {
-			port = c.Ports[0].PrivatePort
-			publicPort = c.Ports[0].PublicPort
+		if !c.Running() || (skip != nil && skip(c)) {
+			continue
 		}
-
-		result := DiscoveryResult{
-			ContainerName: c.Name,
-			Port:          port,
-			PublicPort:    publicPort,
-			DiscoveryIP:   host.IP,
-			HostLabel:     host.Label,
-			SuggestedName: SuggestContainerName(c.Name),
+		label := labels[c.HostIP]
+		if label == "" {
+			label = c.Host
 		}
-
-		result.Paired, result.PairedDomain = findPairedSite(sites, host.IP, c.Name, port, publicPort)
-
-		results = append(results, result)
+		row := func(private, public uint16) DiscoveryResult {
+			r := DiscoveryResult{
+				ContainerName: c.Name,
+				Port:          public,
+				PrivatePort:   private,
+				DiscoveryIP:   c.HostIP,
+				HostLabel:     label,
+				SuggestedName: SuggestContainerName(c.Name),
+			}
+			r.Paired, r.PairedDomain = findPairedSite(sites, c.HostIP, c.Name, public)
+			return r
+		}
+		published := false
+		for _, p := range c.Ports {
+			if p.Public > 0 {
+				results = append(results, row(p.Private, p.Public))
+				published = true
+			}
+		}
+		if !published {
+			var private uint16
+			if len(c.Ports) > 0 {
+				private = c.Ports[0].Private
+			}
+			results = append(results, row(private, 0))
+		}
 	}
-
-	return results, nil
+	sort.SliceStable(results, func(i, j int) bool {
+		if results[i].DiscoveryIP != results[j].DiscoveryIP {
+			return results[i].DiscoveryIP < results[j].DiscoveryIP
+		}
+		return strings.ToLower(results[i].ContainerName) < strings.ToLower(results[j].ContainerName)
+	})
+	return results
 }
 
 // SuggestContainerName derives a URL-safe name from a container name.
@@ -91,22 +92,17 @@ func SuggestContainerName(name string) string {
 	return strings.Trim(b.String(), "-")
 }
 
-func findPairedSite(sites []*models.Site, ip, name string, privatePort, publicPort uint16) (bool, string) {
-	privStr := fmt.Sprintf("%d", privatePort)
-	pubStr := fmt.Sprintf("%d", publicPort)
+// findPairedSite returns the rule that targets a container: rules created
+// with a service-name target store the container name in TargetIP; IP-based
+// rules must use the Docker host IP and the published port (several
+// containers share one host IP).
+func findPairedSite(sites []*models.Site, hostIP, name string, publicPort uint16) (bool, string) {
+	pub := strconv.Itoa(int(publicPort))
 	for _, s := range sites {
-		// Rules created with a service-name target store the container name in
-		// TargetIP (e.g. "reverse_proxy jellyfin:8096"). The name uniquely
-		// identifies the container, so a name match counts as paired regardless of
-		// port (the container's first exposed port may differ from the rule's).
-		if name != "" && s.TargetIP == name {
+		if name != "" && strings.EqualFold(s.TargetIP, name) {
 			return true, s.PrimaryDomain()
 		}
-		// IP-based rules: an IP can host many containers, so require a port match.
-		if s.TargetIP != ip {
-			continue
-		}
-		if s.TargetPort == privStr || (publicPort > 0 && s.TargetPort == pubStr) {
+		if hostIP != "" && publicPort > 0 && s.TargetIP == hostIP && s.TargetPort == pub {
 			return true, s.PrimaryDomain()
 		}
 	}

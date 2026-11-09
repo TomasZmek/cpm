@@ -1,12 +1,15 @@
 package handlers
 
 import (
+	"net"
 	"net/url"
 	"strings"
 
 	"github.com/TomasZmek/cpm/internal/config"
 	"github.com/TomasZmek/cpm/internal/i18n"
+	"github.com/TomasZmek/cpm/internal/inventory"
 	"github.com/TomasZmek/cpm/internal/models"
+	"github.com/TomasZmek/cpm/internal/modules"
 	"github.com/TomasZmek/cpm/internal/services"
 	"github.com/gofiber/fiber/v2"
 )
@@ -22,6 +25,14 @@ type Handler struct {
 	dockerService   *services.DockerService
 	wildcardService *services.WildcardService
 	settingsService *services.SettingsService
+	modules         *modules.Manager
+	inventory       *inventory.Service
+}
+
+// SetModules attaches the module manager and the container inventory.
+func (h *Handler) SetModules(m *modules.Manager, inv *inventory.Service) {
+	h.modules = m
+	h.inventory = inv
 }
 
 // New creates a new Handler instance
@@ -149,13 +160,37 @@ func (h *Handler) baseData(c *fiber.Ctx, title string) fiber.Map {
 	}
 
 	return fiber.Map{
-		"Title":     title,
-		"Lang":      lang,
-		"ThemeCSS":  themeCSS,
-		"Version":   h.config.Version,
-		"User":      c.Locals("user"),
-		"CSRFToken": c.Locals("csrf_token"),
+		"Title":              title,
+		"Lang":               lang,
+		"ThemeCSS":           themeCSS,
+		"Version":            h.config.Version,
+		"User":               c.Locals("user"),
+		"CSRFToken":          c.Locals("csrf_token"),
+		"HasContainerSource": h.hasContainerSource(),
 	}
+}
+
+// hasContainerSource reports whether a module that lists containers is
+// enabled. Docker discovery and its settings are hidden otherwise.
+func (h *Handler) hasContainerSource() bool {
+	return h.modules != nil && len(h.modules.Active()) > 0
+}
+
+// requestHostIP returns the IP address the browser used to reach CPM (Host
+// header) when it is a usable LAN address — inside a container that is the
+// best hint for the Docker host's IP. Host names, loopback and Docker
+// bridge addresses are ignored.
+func requestHostIP(c *fiber.Ctx) string {
+	host := c.Get(fiber.HeaderHost)
+	if h, _, err := net.SplitHostPort(host); err == nil {
+		host = h
+	}
+	host = strings.Trim(host, "[]")
+	ip := net.ParseIP(host)
+	if ip == nil || ip.IsLoopback() || ip.IsUnspecified() || services.IsDockerBridgeIP(ip) {
+		return ""
+	}
+	return ip.String()
 }
 
 // getLang extracts the current language code from the request context.

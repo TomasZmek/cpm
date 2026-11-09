@@ -44,17 +44,19 @@
             <label for="container-quick-select">🐳 {{t .Lang "sites_container_select"}}</label>
             <select id="container-quick-select" onchange="selectContainer(this)">
                 <option value="">{{t .Lang "sites_container_select_ph"}}</option>
+                {{$lastHost := "__none__"}}
                 {{range .Containers}}
-                {{$name := .Name}}
-                {{$ip := .IP}}
+                {{if ne .HostIP $lastHost}}{{if ne $lastHost "__none__"}}</optgroup>{{end}}<optgroup data-host="{{.HostIP}}" label="{{if .Host}}{{.Host}} ({{.HostIP}}){{else if .HostIP}}{{.HostIP}}{{else}}Docker{{end}}">{{$lastHost = .HostIP}}{{end}}
+                {{$c := .}}
                 {{if .Ports}}
                 {{range .Ports}}
-                <option value="{{$name}}|{{.PrivatePort}}">{{$name}}{{if $ip}} ({{$ip}}){{end}} : {{.PrivatePort}}{{if .PublicPort}} (&rarr; {{.PublicPort}}){{end}}</option>
+                <option value="{{$c.Name}}|{{.Private}}|{{$c.HostIP}}|{{.Public}}">{{$c.Name}} : {{if .Public}}{{.Public}} &rarr; {{end}}{{.Private}}</option>
                 {{end}}
                 {{else}}
-                <option value="{{$name}}|">{{$name}}{{if $ip}} ({{$ip}}){{end}}</option>
+                <option value="{{$c.Name}}|||">{{$c.Name}}</option>
                 {{end}}
                 {{end}}
+                {{if ne $lastHost "__none__"}}</optgroup>{{end}}
             </select>
             <div class="form-hint">{{t .Lang "help_container_picker"}}</div>
         </div>
@@ -285,14 +287,28 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Fill the target from a running container: Caddy resolves the container
 // name on the shared Docker network.
+// Container picker: a port published on the Docker host is targeted as host
+// IP + published port (works across Docker networks); without a published
+// port the container name + inner port is used (requires a shared network).
 function selectContainer(sel) {
     if (!sel.value) return;
     var parts = sel.value.split('|');
-    document.getElementById('target_ip').value = parts[0];
-    if (parts[1]) document.getElementById('target_port').value = parts[1];
+    var hostIP = parts[2] || '', pub = parts[3] && parts[3] !== '0' ? parts[3] : '';
+    if (hostIP && pub) {
+        document.getElementById('target_ip').value = hostIP;
+        document.getElementById('target_port').value = pub;
+    } else {
+        document.getElementById('target_ip').value = parts[0];
+        if (parts[1]) document.getElementById('target_port').value = parts[1];
+    }
 }
 
 function selectDiscoveryHost(ip) {
+    document.querySelectorAll('#container-quick-select optgroup').forEach(function (og) {
+        var other = ip && og.getAttribute('data-host') !== ip;
+        og.hidden = other;
+        og.disabled = other;
+    });
     if (ip) {
         document.getElementById('target_ip').value = ip;
     }

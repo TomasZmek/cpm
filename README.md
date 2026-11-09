@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-3.4.1-blue" alt="Version">
+  <img src="https://img.shields.io/badge/version-3.5.0-blue" alt="Version">
   <img src="https://img.shields.io/badge/Go-1.26-00ADD8?logo=go" alt="Go">
   <img src="https://img.shields.io/badge/Docker-ready-2496ED?logo=docker" alt="Docker">
   <img src="https://img.shields.io/badge/platforms-amd64%20%7C%20arm64-lightgrey" alt="Platforms">
@@ -47,7 +47,7 @@
 
 | Feature | Description |
 |---------|-------------|
-| 📊 **Dashboard** | System overview, stats, alerts, backend status, quick actions |
+| 📊 **Dashboard** | System overview, stats, alerts, backend status (running / stopped / reachable), quick actions |
 | 🔀 **Proxy Rules** | Visual editor for reverse proxy rules, container picker |
 | 📥 **Caddyfile Import** | Import existing site blocks (lossless, with backup and rollback) |
 | 🔐 **Wildcard SSL** | Manage wildcard certificates with DNS challenge |
@@ -60,7 +60,8 @@
 | 🎨 **Themes** | Classic or Modern (light/dark, accent colours); works on phones and tablets |
 | 🌐 **i18n** | English, Czech & Korean |
 | 📋 **Templates** | 17+ pre-configured service templates |
-| 🐳 **Docker Auto-Discovery** | Automatic container detection with one-click rule creation |
+| 🐳 **Docker Auto-Discovery** | Containers per Docker host, paired with rules by host IP + published port, one-click rule creation |
+| 🧩 **Modules** | Extend CPM from the admin UI (container sources, more to come); built-in Docker (local) |
 
 ---
 
@@ -69,9 +70,9 @@
 ### Docker Hub / GitHub
 
 ```bash
-# Multi-arch image also on GitHub Container Registry: ghcr.io/tomaszmek/cpm:3.4.1
+# Multi-arch image also on GitHub Container Registry: ghcr.io/tomaszmek/cpm:3.5.0
 # Offline packages (docker load -i …): https://github.com/TomasZmek/cpm/releases
-docker pull perteus/caddy-ui:3.4.1
+docker pull perteus/caddy-ui:3.5.0
 docker pull perteus/caddy-ui:latest
 ```
 
@@ -92,7 +93,7 @@ services:
       - ./caddy-data:/data
 
   cpm:
-    image: perteus/caddy-ui:3.4.1
+    image: perteus/caddy-ui:3.5.0
     container_name: cpm
     ports:
       - "8501:8501"
@@ -122,7 +123,7 @@ services:
       - ./caddy-data:/data
 
   cpm:
-    image: perteus/caddy-ui:3.4.1
+    image: perteus/caddy-ui:3.5.0
     container_name: cpm
     privileged: true  # Required for Synology
     ports:
@@ -135,6 +136,20 @@ services:
       - ./caddy-data:/caddy-data
       - /var/run/docker.sock:/var/run/docker.sock
 ```
+
+---
+
+## 🧩 Modules
+
+Modules extend CPM without code changes. Open **Settings → Modules** (admin) to enable, configure or disable them — the settings are stored in `caddy-config/modules.json` and removed again when a module is disabled. No restart needed.
+
+| Module | What it does |
+|--------|--------------|
+| 🐳 **Docker (local)** | Reads containers from the mounted Docker socket. Set **Docker host IP** to the LAN address of the machine Docker runs on (e.g. your NAS) so rules like `192.168.1.10:8080` are matched to the container publishing that port. |
+
+With a container source enabled, CPM shows for every proxy rule whether its backend is **running / stopped** (with container name and host) or, for targets no module knows, **reachable / unreachable** (TCP check). Containers are refreshed in the background every 30 s.
+
+Writing your own module or building CPM with extra modules (`--build-arg CPM_MODULES=…`): see [docs/modules.md](docs/modules.md).
 
 ---
 
@@ -212,13 +227,15 @@ For Synology Docker, use `privileged: true` to allow Docker socket access:
 
 ```yaml
 cpm:
-  image: perteus/caddy-ui:3.4.1
+  image: perteus/caddy-ui:3.5.0
   privileged: true
   volumes:
     - /volume1/docker/caddy-config:/caddy-config
     - /volume1/docker/caddy-data:/caddy-data
     - /var/run/docker.sock:/var/run/docker.sock
 ```
+
+Then set the NAS address (e.g. `192.168.1.10`) as **Docker host IP** in Settings → Modules → Docker (local). Inside a container CPM cannot see the host's LAN IP itself; it suggests the address you opened CPM on.
 
 ---
 
@@ -252,8 +269,8 @@ go build -o cpm ./cmd/cpm
 ### Docker Build
 
 ```bash
-docker build -t perteus/caddy-ui:3.4.1 --no-cache .
-docker push perteus/caddy-ui:3.4.1
+docker build -t perteus/caddy-ui:3.5.0 --no-cache .
+docker push perteus/caddy-ui:3.5.0
 docker push perteus/caddy-ui:latest
 ```
 
@@ -263,6 +280,7 @@ docker push perteus/caddy-ui:latest
 
 | Version | Date | Notes |
 |---------|------|-------|
+| **3.5.0** | 2026-11-09 | 🧩 Modules, backend status for IP rules, discovery per host, host IP detection fix |
 | **3.4.1** | 2026-11-09 | 🔐 Certificate backups & restore, renewal that really renews, Restart Caddy button |
 | **3.4.0** | 2026-10-08 | 🎨 Modern theme, Caddyfile import, logs viewer, mobile layout, role enforcement & security hardening |
 | **3.3.1** | 2026-06-17 | 🔒 Security patch — Go 1.26.4 (CVE-2026-42504, CVE-2026-27145, CVE-2026-42507) |
@@ -276,6 +294,13 @@ docker push perteus/caddy-ui:latest
 | **3.0.1** | 2026-01 | 🔐 Wildcard SSL, migration tools, UI improvements |
 | **3.0.0** | 2026-01 | 🎉 Complete Go rewrite (794MB → 6MB) |
 | 2.2.1 | 2025-12 | Python version (deprecated) |
+
+### v3.5.0 - Modules & backend status
+- ✅ **Modules** — enable, configure and disable extensions in Settings → Modules; settings live in `caddy-config/modules.json` ([docs/modules.md](https://github.com/TomasZmek/cpm/blob/main/docs/modules.md))
+- ✅ **Backend status that works with IP rules** — `192.168.1.10:8080` is matched to the container publishing port 8080 on that host; other targets are checked by connecting to the port
+- ✅ **Docker discovery per host** — containers are listed under the host they run on, rules are created with host IP + published port
+- 🐛 **Host IP detection** no longer returns the container's own address (172.x)
+- ⚠️ After upgrading, set the **Docker host IP** in Settings → Modules → Docker (local)
 
 ### v3.4.1 - Certificate backups & Restart Caddy
 - ✅ **Certificate backups** — Renew/Delete move certificates to a backup instead of deleting them; restore from the Certificates page

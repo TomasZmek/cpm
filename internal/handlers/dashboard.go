@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"fmt"
+	"github.com/TomasZmek/cpm/internal/inventory"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -76,25 +77,19 @@ func (h *Handler) Dashboard(c *fiber.Ctx) error {
 	stats["snippets"] = len(availableSnippets)
 	stats["caddy_status"] = caddyStatus
 
-	// Backend status counts (matches container targets against running containers)
+	// Backend status counts from the container inventory (module sources
+	// matched by name or host IP + published port, TCP probe otherwise).
 	allSites, _ := h.caddyService.GetAllSites()
-	var states map[string]string
-	if h.dockerService != nil && h.dockerService.IsAvailable() {
-		states, _ = h.dockerService.ContainerStates()
-	}
 	backendUp, backendDown, backendUnknown := 0, 0, 0
 	for _, st := range allSites {
-		if states != nil {
-			if cs, ok := states[st.TargetIP]; ok {
-				if cs == "running" {
-					backendUp++
-				} else {
-					backendDown++
-				}
-				continue
-			}
+		switch h.backendStatus(st).State {
+		case inventory.Running, inventory.Reachable:
+			backendUp++
+		case inventory.Stopped, inventory.Unreachable:
+			backendDown++
+		default:
+			backendUnknown++
 		}
-		backendUnknown++
 	}
 
 	data := h.baseData(c, "Dashboard")

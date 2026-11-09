@@ -8,20 +8,20 @@
 </div>
 
 {{if not .HasLocalHost}}
-<!-- No local docker host configured -->
+<!-- No container source (module) enabled -->
 <div class="alert alert-warning">
     <strong>⚠️ {{t .Lang "discovery_no_local_host"}}</strong>
     {{t .Lang "discovery_no_local_host_desc"}}
-    <a href="/settings/docker">{{t .Lang "settings"}} → Docker</a>
-</div>
-
-{{else if .DiscoveryError}}
-<!-- Docker error -->
-<div class="alert alert-error">
-    <strong>❌ {{t .Lang "discovery_docker_error"}}</strong> {{.DiscoveryError}}
+    <a href="/settings/modules">{{t .Lang "settings"}} → {{t .Lang "settings_modules"}}</a>
 </div>
 
 {{else}}
+{{if .DiscoveryError}}
+<!-- Errors of individual sources; containers of the others are still listed -->
+<div class="alert alert-error">
+    <strong>❌ {{t .Lang "discovery_docker_error"}}</strong> {{.DiscoveryError}}
+</div>
+{{end}}
 <!-- Results table -->
 <div class="table-container">
     <table class="table">

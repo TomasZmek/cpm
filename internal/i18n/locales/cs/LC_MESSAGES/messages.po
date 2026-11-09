@@ -1030,10 +1030,10 @@ msgid "discovery_use_ip"
 msgstr "Použít tuto IP"
 
 msgid "discovery_no_local_host"
-msgstr "Žádný lokální Docker host není nastaven."
+msgstr "Není zapnutý žádný zdroj kontejnerů."
 
 msgid "discovery_no_local_host_desc"
-msgstr "Označte jeden host jako \"Lokální Docker\" v"
+msgstr "Zapněte modul, například Docker (lokální), v"
 
 msgid "sites_quick_host"
 msgstr "Hostitel (Docker)"
@@ -1096,7 +1096,7 @@ msgid "help_quick_host"
 msgstr "Rychle vyplní IP z nakonfigurovaného Docker hostitele."
 
 msgid "help_container_picker"
-msgstr "Vyplní název služby a interní port z kontejneru běžícího na lokálním Docker hostiteli."
+msgstr "Vyplní cíl podle běžícího kontejneru: IP Docker hosta + publikovaný port, v režimu názvu služby jméno kontejneru + interní port."
 
 msgid "help_https_backend"
 msgstr "Zapněte, pokud backend sám používá HTTPS. U self-signed backendů se přeskakuje ověření certifikátu."
@@ -1150,10 +1150,10 @@ msgid "sites_import_file_btn"
 msgstr "Vybrat soubor"
 
 msgid "status_up"
-msgstr "Backend běží"
+msgstr "Backend dostupný"
 
 msgid "status_down"
-msgstr "Backend zastaven"
+msgstr "Backend nedostupný"
 
 msgid "status_unknown"
 msgstr "Stav neznámý"
@@ -1436,3 +1436,75 @@ msgstr "Caddy nebyl restartován, protože konfigurace je neplatná (znovu by ne
 
 msgid "msg_restart_not_running"
 msgstr "Caddy byl restartován, ale neběží — zkontrolujte log Caddy"
+
+msgid "settings_modules"
+msgstr "Moduly"
+
+msgid "settings_desc_modules"
+msgstr "Zdroje kontejnerů a další rozšíření"
+
+msgid "modules_intro"
+msgstr "Moduly rozšiřují CPM, například o zdroje kontejnerů pro stav backendu a Docker discovery. Zapnutím se nastavení modulu uloží do caddy-config/modules.json, vypnutím se z něj zase odstraní."
+
+msgid "modules_enabled"
+msgstr "Zapnuto"
+
+msgid "modules_disabled"
+msgstr "Vypnuto"
+
+msgid "modules_containers"
+msgstr "Nalezeno kontejnerů:"
+
+msgid "modules_secret_keep"
+msgstr "Uloženo – ponechte prázdné pro zachování"
+
+msgid "modules_save"
+msgstr "Uložit"
+
+msgid "modules_enable"
+msgstr "Zapnout"
+
+msgid "modules_disable"
+msgstr "Vypnout"
+
+msgid "modules_disable_confirm"
+msgstr "Vypnout modul a odstranit jeho nastavení?"
+
+msgid "modules_none"
+msgstr "V tomto sestavení nejsou k dispozici žádné moduly."
+
+msgid "msg_module_error"
+msgstr "Modul '{0}' se nepodařilo uložit"
+
+msgid "msg_module_saved_error"
+msgstr "Modul '{0}' byl uložen, ale zatím nefunguje"
+
+msgid "msg_module_saved"
+msgstr "Nastavení modulu '{0}' bylo uloženo."
+
+msgid "msg_module_enabled"
+msgstr "Modul '{0}' byl zapnut."
+
+msgid "msg_module_disabled"
+msgstr "Modul '{0}' byl vypnut a jeho nastavení odstraněno."
+
+msgid "status_running"
+msgstr "Běží"
+
+msgid "status_stopped"
+msgstr "Zastaven"
+
+msgid "status_reachable"
+msgstr "Dostupný (port odpovídá)"
+
+msgid "status_unreachable"
+msgstr "Nedostupný (port neodpovídá)"
+
+msgid "dashboard_backend_hint"
+msgstr "Kontejnery z modulů (Nastavení → Moduly) se párují podle jména kontejneru nebo podle IP Docker hosta a publikovaného portu; ostatní cíle se ověřují připojením na port."
+
+msgid "modules_suggest"
+msgstr "Navrhovaná IP hosta (adresa, přes kterou máte CPM otevřené):"
+
+msgid "msg_host_ip_not_detected"
+msgstr "IP adresu hosta nejde zevnitř kontejneru zjistit. Zadejte adresu stroje v síti, na kterém běží Docker (např. NAS)."
