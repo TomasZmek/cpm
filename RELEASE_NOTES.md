@@ -1,3 +1,21 @@
+# CPM v3.5.1 - Security Patch
+
+Released 2026-11-10. Docker images: `perteus/caddy-ui:3.5.1` (Docker Hub), `ghcr.io/tomaszmek/cpm:3.5.1`; offline packages for amd64 and arm64 are attached to the GitHub release.
+
+## 🔒 Security Fixes
+
+`govulncheck` on the 3.5.0 image reported 31 known vulnerabilities; this release has none.
+
+- **Go 1.26.10** (was 1.26.4) — 24 standard library vulnerabilities in `net/http`, `crypto/tls`, `crypto/x509`, `html/template`, `net/url`, `encoding/asn1`, `encoding/xml`, `mime/multipart`, `os` and others
+- **fasthttp 1.78.0** (via Fiber 2.52.16) — authorization bypass via double-encoded paths (GO-2026-4950)
+- **klauspost/compress 1.20.4** — out-of-bounds read (GO-2026-5841, GO-2026-6865)
+- **brotli** — vulnerable `andybalholm/brotli` replaced by fasthttp's new brotli implementation (GO-2026-6888)
+- **golang.org/x/crypto** — updated to the commit that removes the unmaintained `openpgp` package (GO-2026-5932; CPM never used it, but scanners flag the module)
+
+No functional changes.
+
+---
+
 # CPM v3.5.0 - Modules & backend status
 
 Released 2026-11-09. Docker images: `perteus/caddy-ui:3.5.0` (Docker Hub), `ghcr.io/tomaszmek/cpm:3.5.0`; offline packages for amd64 and arm64 are attached to the GitHub release.

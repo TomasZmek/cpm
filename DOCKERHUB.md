@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-3.5.0-blue" alt="Version">
+  <img src="https://img.shields.io/badge/version-3.5.1-blue" alt="Version">
   <img src="https://img.shields.io/badge/Go-1.26-00ADD8?logo=go" alt="Go">
   <img src="https://img.shields.io/badge/image_size-~6MB-green" alt="Image Size">
   <img src="https://img.shields.io/badge/platforms-amd64%20%7C%20arm64-lightgrey" alt="Platforms">
@@ -68,7 +68,7 @@
 
 ```bash
 docker pull perteus/caddy-ui:latest
-docker pull perteus/caddy-ui:3.5.0
+docker pull perteus/caddy-ui:3.5.1
 ```
 
 ### Docker Compose
@@ -89,7 +89,7 @@ services:
       - ./caddy-data:/data
 
   cpm:
-    image: perteus/caddy-ui:3.5.0
+    image: perteus/caddy-ui:3.5.1
     container_name: cpm
     ports:
       - "8501:8501"
@@ -108,7 +108,7 @@ On Synology add `privileged: true` for Docker socket access.
 
 ```yaml
 cpm:
-  image: perteus/caddy-ui:3.5.0
+  image: perteus/caddy-ui:3.5.1
   privileged: true
   volumes:
     - /volume1/docker/caddy-config:/caddy-config
@@ -134,6 +134,7 @@ cpm:
 
 | Version | Notes |
 |---------|-------|
+| **3.5.1** | 🔒 Security patch — Go 1.26.10, fasthttp, compress, x/crypto (31 known vulnerabilities fixed) |
 | **3.5.0** | 🧩 Modules, backend status for IP rules, discovery per host, host IP detection fix |
 | **3.4.1** | 🔐 Certificate backups & restore, renewal that really renews, Restart Caddy button |
 | **3.4.0** | 🎨 Modern theme, Caddyfile import, logs viewer, mobile layout, role enforcement & security hardening |
