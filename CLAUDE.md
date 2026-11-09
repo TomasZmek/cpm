@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-**CPM - Caddy Proxy Manager** — a lightweight Go web UI for managing a Caddy reverse proxy. Distributed as a ~6 MB Docker image (`perteus/caddy-ui` on Docker Hub). Current released version: **3.5.0**.
+**CPM - Caddy Proxy Manager** — a lightweight Go web UI for managing a Caddy reverse proxy. Distributed as a ~6 MB Docker image (`perteus/caddy-ui` on Docker Hub). Current released version: **3.5.1**.
 
 - GitHub: https://github.com/TomasZmek/cpm
 - Docker Hub: `perteus/caddy-ui`
@@ -168,7 +168,7 @@ Handlers call `setFlash(c, type, msg)` (`handlers/handlers.go`), which stores th
 
 ## Tests
 
-Tests live next to the code (`*_test.go`): site validation (`models`), filename/domain validation, backup/import path traversal, auth rules and Docker stream demux (`services/security_test.go`), safe redirects (`handlers`). Run `go test ./...` and `go vet ./...` before committing; there is no CI yet.
+Tests live next to the code (`*_test.go`): site validation (`models`), filename/domain validation, backup/import path traversal, auth rules and Docker stream demux (`services/security_test.go`), safe redirects (`handlers`). Run `go test ./...` and `go vet ./...` before committing; there is no CI yet. Before a release, scan for known vulnerabilities: `go install golang.org/x/vuln/cmd/govulncheck@latest && govulncheck ./...` (and `govulncheck -mode=binary <binary>` built with the Go version from the `Dockerfile`), and keep the Go version in `Dockerfile` / `Dockerfile.alpine` on the latest patch release.
 
 ## Commit convention
 

@@ -20,7 +20,10 @@ func TestSafeRedirectTarget(t *testing.T) {
 		"/settings":                      "/settings",
 	}
 	for ref, want := range cases {
-		req := httptest.NewRequest("GET", "http://example.com/", nil)
+		// Origin-form request with an explicit Host header: fasthttp >= 1.70
+		// rejects requests without one.
+		req := httptest.NewRequest("GET", "/", nil)
+		req.Host = "example.com"
 		if ref != "" {
 			req.Header.Set("Referer", ref)
 		}

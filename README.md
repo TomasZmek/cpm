@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-3.5.0-blue" alt="Version">
+  <img src="https://img.shields.io/badge/version-3.5.1-blue" alt="Version">
   <img src="https://img.shields.io/badge/Go-1.26-00ADD8?logo=go" alt="Go">
   <img src="https://img.shields.io/badge/Docker-ready-2496ED?logo=docker" alt="Docker">
   <img src="https://img.shields.io/badge/platforms-amd64%20%7C%20arm64-lightgrey" alt="Platforms">
@@ -70,9 +70,9 @@
 ### Docker Hub / GitHub
 
 ```bash
-# Multi-arch image also on GitHub Container Registry: ghcr.io/tomaszmek/cpm:3.5.0
+# Multi-arch image also on GitHub Container Registry: ghcr.io/tomaszmek/cpm:3.5.1
 # Offline packages (docker load -i …): https://github.com/TomasZmek/cpm/releases
-docker pull perteus/caddy-ui:3.5.0
+docker pull perteus/caddy-ui:3.5.1
 docker pull perteus/caddy-ui:latest
 ```
 
@@ -93,7 +93,7 @@ services:
       - ./caddy-data:/data
 
   cpm:
-    image: perteus/caddy-ui:3.5.0
+    image: perteus/caddy-ui:3.5.1
     container_name: cpm
     ports:
       - "8501:8501"
@@ -123,7 +123,7 @@ services:
       - ./caddy-data:/data
 
   cpm:
-    image: perteus/caddy-ui:3.5.0
+    image: perteus/caddy-ui:3.5.1
     container_name: cpm
     privileged: true  # Required for Synology
     ports:
@@ -227,7 +227,7 @@ For Synology Docker, use `privileged: true` to allow Docker socket access:
 
 ```yaml
 cpm:
-  image: perteus/caddy-ui:3.5.0
+  image: perteus/caddy-ui:3.5.1
   privileged: true
   volumes:
     - /volume1/docker/caddy-config:/caddy-config
@@ -269,8 +269,8 @@ go build -o cpm ./cmd/cpm
 ### Docker Build
 
 ```bash
-docker build -t perteus/caddy-ui:3.5.0 --no-cache .
-docker push perteus/caddy-ui:3.5.0
+docker build -t perteus/caddy-ui:3.5.1 --no-cache .
+docker push perteus/caddy-ui:3.5.1
 docker push perteus/caddy-ui:latest
 ```
 
@@ -280,6 +280,7 @@ docker push perteus/caddy-ui:latest
 
 | Version | Date | Notes |
 |---------|------|-------|
+| **3.5.1** | 2026-11-10 | 🔒 Security patch — Go 1.26.10, fasthttp, compress, x/crypto (31 known vulnerabilities fixed) |
 | **3.5.0** | 2026-11-09 | 🧩 Modules, backend status for IP rules, discovery per host, host IP detection fix |
 | **3.4.1** | 2026-11-09 | 🔐 Certificate backups & restore, renewal that really renews, Restart Caddy button |
 | **3.4.0** | 2026-10-08 | 🎨 Modern theme, Caddyfile import, logs viewer, mobile layout, role enforcement & security hardening |
