@@ -23,8 +23,8 @@ import (
 )
 
 const (
-	Version   = "3.4.0"
-	BuildDate = "2026-10-08"
+	Version   = "3.4.1"
+	BuildDate = "2026-11-09"
 )
 
 func main() {

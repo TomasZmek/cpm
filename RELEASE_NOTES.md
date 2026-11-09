@@ -1,4 +1,6 @@
-# CPM - Unreleased
+# CPM v3.4.1 - Certificate backups & Restart Caddy
+
+Released 2026-11-09. Docker images: `perteus/caddy-ui:3.4.1` (Docker Hub), `ghcr.io/tomaszmek/cpm:3.4.1`; offline packages for amd64 and arm64 are attached to the GitHub release.
 
 ## ✨ New Features
 

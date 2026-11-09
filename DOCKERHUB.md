@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-3.4.0-blue" alt="Version">
+  <img src="https://img.shields.io/badge/version-3.4.1-blue" alt="Version">
   <img src="https://img.shields.io/badge/Go-1.26-00ADD8?logo=go" alt="Go">
   <img src="https://img.shields.io/badge/image_size-~6MB-green" alt="Image Size">
   <img src="https://img.shields.io/badge/platforms-amd64%20%7C%20arm64-lightgrey" alt="Platforms">
@@ -67,7 +67,7 @@
 
 ```bash
 docker pull perteus/caddy-ui:latest
-docker pull perteus/caddy-ui:3.4.0
+docker pull perteus/caddy-ui:3.4.1
 ```
 
 ### Docker Compose
@@ -88,7 +88,7 @@ services:
       - ./caddy-data:/data
 
   cpm:
-    image: perteus/caddy-ui:3.4.0
+    image: perteus/caddy-ui:3.4.1
     container_name: cpm
     ports:
       - "8501:8501"
@@ -107,7 +107,7 @@ On Synology add `privileged: true` for Docker socket access.
 
 ```yaml
 cpm:
-  image: perteus/caddy-ui:3.4.0
+  image: perteus/caddy-ui:3.4.1
   privileged: true
   volumes:
     - /volume1/docker/caddy-config:/caddy-config
@@ -133,6 +133,7 @@ cpm:
 
 | Version | Notes |
 |---------|-------|
+| **3.4.1** | 🔐 Certificate backups & restore, renewal that really renews, Restart Caddy button |
 | **3.4.0** | 🎨 Modern theme, Caddyfile import, logs viewer, mobile layout, role enforcement & security hardening |
 | **3.3.1** | 🔒 Security patch — Go 1.26.4 (CVE-2026-42504, CVE-2026-27145, CVE-2026-42507) |
 | **3.3.0** | 🌐 i18n refactor — PO/MO format, Korean language, plural support infrastructure |
@@ -145,6 +146,12 @@ cpm:
 | **3.0.1** | 🔐 Wildcard SSL, migration tools, UI improvements |
 | **3.0.0** | 🎉 Complete Go rewrite (794MB → 6MB) |
 | 2.x | Python version (deprecated) |
+
+### v3.4.1 - Certificate backups & Restart Caddy
+- ✅ **Certificate backups** — Renew/Delete move certificates to a backup instead of deleting them; restore from the Certificates page
+- ✅ **Renewal that really renews** — Caddy is restarted (a reload kept serving the old certificate from memory)
+- ✅ **Restart Caddy** button on the dashboard, with config validation first
+- 📦 Offline packages (amd64/arm64) and `ghcr.io/tomaszmek/cpm` multi-arch image on [GitHub Releases](https://github.com/TomasZmek/cpm/releases)
 
 ### v3.4.0 - Modern theme, Caddyfile import & security hardening
 - ✅ **Modern theme** — optional redesign with light/dark mode and accent colours (Classic stays default)
