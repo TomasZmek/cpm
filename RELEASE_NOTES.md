@@ -1,4 +1,12 @@
-# CPM - Unreleased
+# CPM v3.7.0 - Access log per rule
+
+Released 2026-11-10. Docker images: `perteus/caddy-ui:3.7.0` (Docker Hub), `ghcr.io/tomaszmek/cpm:3.7.0`; offline packages for amd64 and arm64 are attached to the GitHub release.
+
+## ⚠️ Upgrade notes
+
+- The access log is **off** after the upgrade; turn it on in **Settings → Logs**. It needs Caddy's data directory mounted at `/data` in the Caddy container (as in the official image and our `docker-compose.yml`) and the same directory as `/caddy-data` in CPM.
+- CPM behind a reverse proxy outside private networks (or opened through an origin it cannot see): set `TRUSTED_PROXIES` or `TRUSTED_ORIGINS`, otherwise forms are rejected (see *Under the hood*).
+- Forms open during the upgrade have to be submitted again.
 
 ## ✨ New Features
 
