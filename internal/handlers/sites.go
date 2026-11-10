@@ -116,6 +116,7 @@ func (h *Handler) SiteCreate(c fiber.Ctx) error {
 
 	// Parse tags
 	site.Tags = splitList(c.FormValue("tags"))
+	readLogSkipForm(c, site)
 
 	// Validation
 	if len(site.Domains) == 0 {
@@ -227,6 +228,7 @@ func (h *Handler) SiteUpdate(c fiber.Ctx) error {
 		site.IsInternal = utils.Contains(site.Snippets, "internal_only")
 
 		site.Tags = splitList(c.FormValue("tags"))
+		readLogSkipForm(c, site)
 
 		if err := h.caddyService.UpdateSite(site); err != nil {
 			return c.Status(fiber.StatusBadRequest).SendString(err.Error())
@@ -349,6 +351,12 @@ func formList(c fiber.Ctx, key string) []string {
 }
 
 // splitList splits a comma-separated form value into trimmed, non-empty items
+// readLogSkipForm reads the access log exclusions of the rule form.
+func readLogSkipForm(c fiber.Ctx, site *models.Site) {
+	site.NoAccessLog = c.FormValue("no_access_log") == "on"
+	site.LogSkipPaths = strings.Fields(strings.ReplaceAll(c.FormValue("log_skip_paths"), ",", " "))
+}
+
 func splitList(v string) []string {
 	items := []string{}
 	for _, item := range strings.Split(v, ",") {

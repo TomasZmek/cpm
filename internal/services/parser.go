@@ -85,6 +85,9 @@ func (p *ParserService) Parse(content, filenameDomain string) *models.Site {
 	// Parse basic auth
 	site.BasicAuthEnabled, site.BasicAuthUsers = p.parseBasicAuth(content)
 
+	// Parse access log exclusions
+	site.NoAccessLog, site.LogSkipPaths = p.parseLogSkip(content)
+
 	// Parse extra config
 	site.ExtraConfig = p.parseExtraConfig(content)
 
@@ -287,6 +290,7 @@ func (p *ParserService) parseExtraConfig(content string) string {
 		"dial_timeout",
 		"response_header_timeout",
 		"basic_auth",
+		"log_skip",
 	}
 
 	for _, line := range lines {
@@ -346,6 +350,23 @@ func (p *ParserService) parseExtraConfig(content string) string {
 	}
 
 	return strings.Join(extraLines, "\n")
+}
+
+var (
+	logSkipAllRe   = regexp.MustCompile(`(?m)^\s*log_skip\s*$`)
+	logSkipPathsRe = regexp.MustCompile(`(?m)^\s*@\w*log_skip\s+path\s+(.+?)\s*$`)
+)
+
+// parseLogSkip reads the access log exclusions written by Site.logSkipLines:
+// a bare log_skip (whole rule) or a log_skip matcher with path patterns.
+func (p *ParserService) parseLogSkip(content string) (bool, []string) {
+	if logSkipAllRe.MatchString(content) {
+		return true, nil
+	}
+	if m := logSkipPathsRe.FindStringSubmatch(content); len(m) > 1 {
+		return false, strings.Fields(m[1])
+	}
+	return false, nil
 }
 
 // CleanDomains normalizes domain list

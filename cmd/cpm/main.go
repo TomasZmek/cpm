@@ -65,6 +65,10 @@ func main() {
 	// Initialize CaddyfileManager for wildcard block management
 	caddyfileManager := services.NewCaddyfileManager(cfg, wildcardService, snippetsService)
 	caddyService.SetCaddyfileManager(caddyfileManager)
+	caddyfileManager.SetAccessLogSettings(func() models.AccessLogSettings {
+		st, _ := settingsService.Get()
+		return st.AccessLog
+	})
 
 	// Ensure directory structure exists
 	if err := caddyfileManager.EnsureDirectoryStructure(); err != nil {
@@ -157,6 +161,7 @@ func main() {
 	)
 
 	h.SetModules(moduleManager, inv)
+	h.SetAccessLog(services.NewAccessLogService(cfg.DataDir))
 
 	// Setup routes
 	setupRoutes(app, h, authService)
@@ -265,6 +270,8 @@ func setupRoutes(app *fiber.App, h *handlers.Handler, authService *services.Auth
 	protected.Post("/discovery/create", edit, h.DiscoveryCreate)
 	protected.Get("/settings/docker", admin, h.SettingsDocker)
 	protected.Get("/settings/modules", admin, h.SettingsModules)
+	protected.Get("/settings/logs", admin, h.SettingsLogs)
+	protected.Post("/settings/logs", admin, h.AccessLogSave)
 	protected.Post("/settings/modules/:id", admin, h.ModuleSave)
 	protected.Post("/settings/modules/:id/disable", admin, h.ModuleDisable)
 	protected.Post("/settings/fallback", admin, h.FallbackSave)

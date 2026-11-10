@@ -183,6 +183,28 @@
             </div>
             
             <div class="form-group">
+                <label class="toggle-label">
+                    <span class="toggle-text">📝 {{t .Lang "sites_no_access_log"}}</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox"
+                               name="no_access_log"
+                               {{if .Site.NoAccessLog}}checked{{end}}>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </label>
+            </div>
+
+            <div class="form-group">
+                <label for="log_skip_paths">{{t .Lang "sites_log_skip_paths"}}</label>
+                <input type="text"
+                       id="log_skip_paths"
+                       name="log_skip_paths"
+                       value="{{join .Site.LogSkipPaths " "}}"
+                       placeholder="/health* /metrics">
+                <div class="form-hint">{{t .Lang "help_log_skip_paths"}}</div>
+            </div>
+
+            <div class="form-group">
                 <label for="extra_config">{{t .Lang "sites_extra_config"}}</label>
                 <textarea id="extra_config" 
                           name="extra_config" 

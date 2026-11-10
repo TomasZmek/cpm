@@ -26,8 +26,9 @@ func NewSettingsService(configDir string) *SettingsService {
 
 // migrationSettings handles backward-compatible deserialization of legacy discovery_ip.
 type migrationSettings struct {
-	DiscoveryIP    string                 `json:"discovery_ip"`
-	DiscoveryHosts []models.DiscoveryHost `json:"discovery_hosts"`
+	DiscoveryIP    string                   `json:"discovery_ip"`
+	DiscoveryHosts []models.DiscoveryHost   `json:"discovery_hosts"`
+	AccessLog      models.AccessLogSettings `json:"access_log"`
 }
 
 // Get loads settings from disk. Returns empty defaults if the file doesn't exist yet.
@@ -57,6 +58,7 @@ func (s *SettingsService) Get() (*models.AppSettings, error) {
 	}
 
 	settings.DiscoveryHosts = migration.DiscoveryHosts
+	settings.AccessLog = migration.AccessLog
 	return settings, nil
 }
 
