@@ -5,12 +5,12 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
 func TestRequestHostIP(t *testing.T) {
 	app := fiber.New()
-	app.Get("/", func(c *fiber.Ctx) error { return c.SendString(requestHostIP(c)) })
+	app.Get("/", func(c fiber.Ctx) error { return c.SendString(requestHostIP(c)) })
 	for host, want := range map[string]string{
 		"192.168.50.222:8501": "192.168.50.222",
 		"192.168.50.222":      "192.168.50.222",

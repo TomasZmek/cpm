@@ -6,13 +6,13 @@ import (
 
 	"github.com/TomasZmek/cpm/internal/models"
 	"github.com/TomasZmek/cpm/internal/services"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
 // SitesImportPreview parses the site blocks written directly in the main
 // Caddyfile and returns them as JSON WITHOUT saving anything. Used to populate
 // the import modal on the proxy-rules page.
-func (h *Handler) SitesImportPreview(c *fiber.Ctx) error {
+func (h *Handler) SitesImportPreview(c fiber.Ctx) error {
 	// Sources are limited to an uploaded file's content or the main Caddyfile.
 	// Arbitrary server-side paths are deliberately not accepted (#29).
 	content := c.FormValue("content")
@@ -66,7 +66,7 @@ func (h *Handler) SitesImportPreview(c *fiber.Ctx) error {
 // Caddyfile) as sites/standard/{domain}.caddy, then validates and reloads
 // Caddy. A backup is stored first, and all file changes are rolled back if the
 // resulting configuration does not validate (#30, #31).
-func (h *Handler) SitesImport(c *fiber.Ctx) error {
+func (h *Handler) SitesImport(c fiber.Ctx) error {
 	backupPath, err := h.backupService.SaveBackupToDisk()
 	if err != nil {
 		return redirectFlash(c, "error", tl(c, "msg_import_backup_failed")+": "+err.Error(), "/sites")

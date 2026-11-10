@@ -1508,3 +1508,9 @@ msgstr "Navrhovaná IP hosta (adresa, přes kterou máte CPM otevřené):"
 
 msgid "msg_host_ip_not_detected"
 msgstr "IP adresu hosta nejde zevnitř kontejneru zjistit. Zadejte adresu stroje v síti, na kterém běží Docker (např. NAS)."
+
+msgid "msg_csrf_expired"
+msgstr "Platnost stránky vypršela (třeba po restartu nebo aktualizaci CPM). Odešlete ji prosím znovu."
+
+msgid "msg_csrf_origin"
+msgstr "Požadavek nepochází z této stránky. Pokud CPM běží za reverzní proxy, nastavte TRUSTED_PROXIES (nebo TRUSTED_ORIGINS, např. https://cpm.example.com)."

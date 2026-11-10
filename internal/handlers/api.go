@@ -4,11 +4,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
 // APISites returns all sites as JSON
-func (h *Handler) APISites(c *fiber.Ctx) error {
+func (h *Handler) APISites(c fiber.Ctx) error {
 	sites, err := h.caddyService.GetAllSites()
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -23,7 +23,7 @@ func (h *Handler) APISites(c *fiber.Ctx) error {
 }
 
 // APIStatus returns system status as JSON
-func (h *Handler) APIStatus(c *fiber.Ctx) error {
+func (h *Handler) APIStatus(c fiber.Ctx) error {
 	stats := h.caddyService.GetStats()
 	certStats := h.certService.GetStats()
 	caddyStatus := h.dockerService.GetContainerStatus()
@@ -42,8 +42,8 @@ func (h *Handler) APIStatus(c *fiber.Ctx) error {
 }
 
 // APIReload reloads Caddy configuration
-func (h *Handler) APIReload(c *fiber.Ctx) error {
-	validate := c.QueryBool("validate", true)
+func (h *Handler) APIReload(c fiber.Ctx) error {
+	validate := fiber.Query[bool](c, "validate", true)
 
 	var success bool
 	var errMsg, message string
@@ -74,7 +74,7 @@ func (h *Handler) APIReload(c *fiber.Ctx) error {
 }
 
 // CaddyReload handles the reload button from UI
-func (h *Handler) CaddyReload(c *fiber.Ctx) error {
+func (h *Handler) CaddyReload(c fiber.Ctx) error {
 	result := h.caddyService.ReloadWithValidation()
 
 	if c.Get("HX-Request") == "true" {
@@ -106,14 +106,14 @@ func (h *Handler) CaddyReload(c *fiber.Ctx) error {
 		setFlash(c, "error", tl(c, "msg_reload_failed")+": "+result.Error)
 	}
 
-	return c.Redirect(safeRedirectTarget(c))
+	return redirectTo(c, safeRedirectTarget(c))
 }
 
 // CaddyRestart validates the configuration and restarts the Caddy
 // container. Unlike a reload this clears Caddy's in-memory state (e.g.
 // cached certificates). An invalid configuration is never restarted into,
 // since Caddy would not come back up and every site would be down.
-func (h *Handler) CaddyRestart(c *fiber.Ctx) error {
+func (h *Handler) CaddyRestart(c fiber.Ctx) error {
 	msgType, msg, detail := "success", tl(c, "msg_restart_success"), ""
 
 	validation := h.caddyService.Validate()
@@ -144,7 +144,7 @@ func (h *Handler) CaddyRestart(c *fiber.Ctx) error {
 		return c.SendString(out)
 	}
 	setFlash(c, msgType, msg)
-	return c.Redirect(safeRedirectTarget(c))
+	return redirectTo(c, safeRedirectTarget(c))
 }
 
 // waitCaddyRunning reports whether the Caddy container is still running a
@@ -155,7 +155,7 @@ func (h *Handler) waitCaddyRunning() bool {
 }
 
 // CaddyReloadForce forces a Caddy config reload (re-issues missing certs).
-func (h *Handler) CaddyReloadForce(c *fiber.Ctx) error {
+func (h *Handler) CaddyReloadForce(c fiber.Ctx) error {
 	result := h.caddyService.ReloadForce()
 	if result.Success {
 		return c.JSON(fiber.Map{"ok": true})
@@ -164,7 +164,7 @@ func (h *Handler) CaddyReloadForce(c *fiber.Ctx) error {
 }
 
 // CaddyValidate validates Caddy configuration
-func (h *Handler) CaddyValidate(c *fiber.Ctx) error {
+func (h *Handler) CaddyValidate(c fiber.Ctx) error {
 	result := h.caddyService.Validate()
 
 	if c.Get("HX-Request") == "true" {
@@ -197,7 +197,7 @@ func (h *Handler) CaddyValidate(c *fiber.Ctx) error {
 		setFlash(c, "error", tl(c, "msg_validate_failed")+": "+result.Error)
 	}
 
-	return c.Redirect(safeRedirectTarget(c))
+	return redirectTo(c, safeRedirectTarget(c))
 }
 
 // escapeHTML escapes HTML special characters

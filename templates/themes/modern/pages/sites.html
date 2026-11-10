@@ -23,6 +23,8 @@
                hx-get="/htmx/sites/list"
                hx-trigger="keyup changed delay:300ms"
                hx-target="#sites-list"
+               hx-select="#sites-list"
+               hx-swap="outerHTML"
                hx-include="[name='tag']">
     </div>
     
@@ -36,6 +38,8 @@
             hx-get="/htmx/sites/list"
             hx-trigger="change"
             hx-target="#sites-list"
+               hx-select="#sites-list"
+               hx-swap="outerHTML"
             hx-include="[name='search']">
         <option value="">{{t .Lang "sites_all_tags"}}</option>
         {{range .AllTags}}

@@ -1,3 +1,22 @@
+# CPM - Unreleased
+
+## 🔧 Under the hood
+
+- **Fiber v3** — CPM moved from the deprecated Fiber v2 to Fiber v3 (3.7). Binary +1.5 MB, image still ~7 MB.
+- **Flash messages** use Fiber's built-in flash (hex-encoded cookie), so Czech, Korean and other non-ASCII messages can no longer be dropped by stricter cookie handling.
+- **CSRF behind a reverse proxy** — Fiber v3 also checks that forms are submitted from the page's own origin. Behind Caddy (TLS at Caddy, plain HTTP to CPM) CPM now reads the original scheme/host from `X-Forwarded-*` of trusted proxies: new env `TRUSTED_PROXIES` (default `private,loopback`, i.e. Caddy on the same host or Docker network) and `TRUSTED_ORIGINS` (e.g. `https://cpm.example.com`) for proxies that cannot be trusted. Tested with Caddy 2.10 in front of CPM. A side effect: the login rate limit and logs now see the real client IP instead of Caddy's, and the session cookie gets `Secure` when CPM is opened over HTTPS through the proxy.
+- **Expired forms** (CSRF tokens live in memory and are lost on restart/upgrade) no longer end in a bare 403: CPM returns to the page with a message to submit again. The CSRF cookie was renamed (`cpm_csrf_v3`), so tokens of older versions are simply ignored.
+- Uploads (backup restore, rule import) are accepted up to 64 MB.
+
+## 🐛 Bug Fixes
+
+- **Rules search and tag filter** on the Proxy Rules page did nothing (the server answered with an error) — fixed.
+- **"Download backup"** did nothing (the link was a GET, the endpoint has required POST with a CSRF token since 3.1.2) — now a proper form.
+- After **changing a user's password** the success message was not shown.
+- Returning to the previous page (e.g. after reload/validate) went to the dashboard when CPM was opened with a port (`:8501`).
+
+---
+
 # CPM v3.6.0 - Dockhand module
 
 Released 2026-11-10. Docker images: `perteus/caddy-ui:3.6.0` (Docker Hub), `ghcr.io/tomaszmek/cpm:3.6.0`; offline packages for amd64 and arm64 are attached to the GitHub release.

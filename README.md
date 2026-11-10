@@ -200,6 +200,8 @@ adguard.zrnek.cz {
 | `CADDY_DATA_PATH` | Path to Caddy data | `/caddy-data` |
 | `DEFAULT_IP` | Default target IP for new rules | `192.168.1.1` |
 | `THEME` | Default UI theme (`classic` or `modern`); users can switch in Settings | `classic` |
+| `TRUSTED_PROXIES` | Reverse proxies (e.g. Caddy) whose `X-Forwarded-*` headers are trusted: `private`, `loopback`, IPs/CIDRs (comma-separated), or `none` | `private,loopback` |
+| `TRUSTED_ORIGINS` | Extra origins allowed to submit forms, e.g. `https://cpm.example.com` (when the proxy cannot be trusted) | – |
 | `CF_API_TOKEN` | Cloudflare API token (for wildcard SSL) | - |
 
 ---

@@ -126,6 +126,8 @@ cpm:
 | `CONTAINER_NAME` | `caddy` | Caddy container name |
 | `DEFAULT_IP` | `192.168.1.1` | Default target IP |
 | `THEME` | `classic` | Default UI theme (`classic` or `modern`) |
+| `TRUSTED_PROXIES` | `private,loopback` | Reverse proxies whose `X-Forwarded-*` headers are trusted (`none` to disable) |
+| `TRUSTED_ORIGINS` | - | Extra origins allowed to submit forms, e.g. `https://cpm.example.com` |
 | `CF_API_TOKEN` | - | Cloudflare API token (for wildcard SSL) |
 
 ---

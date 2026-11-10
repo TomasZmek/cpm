@@ -1,19 +1,20 @@
 package handlers
 
 import (
-	"github.com/TomasZmek/cpm/internal/inventory"
-	"github.com/TomasZmek/cpm/sdk"
 	"sort"
 	"strings"
+
+	"github.com/TomasZmek/cpm/internal/inventory"
+	"github.com/TomasZmek/cpm/sdk"
 
 	"github.com/TomasZmek/cpm/internal/models"
 	"github.com/TomasZmek/cpm/internal/services"
 	"github.com/TomasZmek/cpm/internal/utils"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
 // SitesList renders the sites list page
-func (h *Handler) SitesList(c *fiber.Ctx) error {
+func (h *Handler) SitesList(c fiber.Ctx) error {
 	sites, err := h.caddyService.GetAllSites()
 	if err != nil {
 		return err
@@ -49,7 +50,7 @@ func (h *Handler) SitesList(c *fiber.Ctx) error {
 }
 
 // SiteNew renders the new site form
-func (h *Handler) SiteNew(c *fiber.Ctx) error {
+func (h *Handler) SiteNew(c fiber.Ctx) error {
 	availableSnippets, _ := h.snippetsService.GetAvailableSnippets()
 	templates := models.GetServiceTemplates()
 	categories := models.GetTemplateCategories()
@@ -91,7 +92,7 @@ func (h *Handler) SiteNew(c *fiber.Ctx) error {
 }
 
 // SiteCreate creates a new site
-func (h *Handler) SiteCreate(c *fiber.Ctx) error {
+func (h *Handler) SiteCreate(c fiber.Ctx) error {
 	site := &models.Site{}
 
 	// Parse form
@@ -138,16 +139,11 @@ func (h *Handler) SiteCreate(c *fiber.Ctx) error {
 	}
 
 	// HTMX redirect
-	if c.Get("HX-Request") == "true" {
-		c.Set("HX-Redirect", "/sites")
-		return c.SendStatus(fiber.StatusOK)
-	}
-
-	return c.Redirect("/sites")
+	return redirectTo(c, "/sites")
 }
 
 // SiteDetail shows a single site
-func (h *Handler) SiteDetail(c *fiber.Ctx) error {
+func (h *Handler) SiteDetail(c fiber.Ctx) error {
 	filename := c.Params("id")
 
 	site, err := h.caddyService.GetSite(filename)
@@ -163,7 +159,7 @@ func (h *Handler) SiteDetail(c *fiber.Ctx) error {
 }
 
 // SiteEdit renders the edit form
-func (h *Handler) SiteEdit(c *fiber.Ctx) error {
+func (h *Handler) SiteEdit(c fiber.Ctx) error {
 	filename := c.Params("id")
 
 	site, err := h.caddyService.GetSite(filename)
@@ -197,7 +193,7 @@ func (h *Handler) SiteEdit(c *fiber.Ctx) error {
 }
 
 // SiteUpdate updates an existing site
-func (h *Handler) SiteUpdate(c *fiber.Ctx) error {
+func (h *Handler) SiteUpdate(c fiber.Ctx) error {
 	filename := c.Params("id")
 
 	site, err := h.caddyService.GetSite(filename)
@@ -245,16 +241,11 @@ func (h *Handler) SiteUpdate(c *fiber.Ctx) error {
 		setFlash(c, "success", tl(c, "msg_rule_updated_name", site.PrimaryDomain()))
 	}
 
-	if c.Get("HX-Request") == "true" {
-		c.Set("HX-Redirect", "/sites")
-		return c.SendStatus(fiber.StatusOK)
-	}
-
-	return c.Redirect("/sites")
+	return redirectTo(c, "/sites")
 }
 
 // SiteDelete deletes a site
-func (h *Handler) SiteDelete(c *fiber.Ctx) error {
+func (h *Handler) SiteDelete(c fiber.Ctx) error {
 	filename := c.Params("id")
 
 	site, err := h.caddyService.GetSite(filename)
@@ -274,16 +265,11 @@ func (h *Handler) SiteDelete(c *fiber.Ctx) error {
 		setFlash(c, "success", tl(c, "msg_rule_deleted_name", site.PrimaryDomain()))
 	}
 
-	if c.Get("HX-Request") == "true" {
-		c.Set("HX-Redirect", "/sites")
-		return c.SendStatus(fiber.StatusOK)
-	}
-
-	return c.Redirect("/sites")
+	return redirectTo(c, "/sites")
 }
 
 // SiteDuplicate duplicates a site
-func (h *Handler) SiteDuplicate(c *fiber.Ctx) error {
+func (h *Handler) SiteDuplicate(c fiber.Ctx) error {
 	filename := c.Params("id")
 	newDomains := services.CleanDomains(c.FormValue("domains"))
 
@@ -304,30 +290,18 @@ func (h *Handler) SiteDuplicate(c *fiber.Ctx) error {
 		setFlash(c, "success", tl(c, "msg_rule_created_name", newSite.PrimaryDomain()))
 	}
 
-	if c.Get("HX-Request") == "true" {
-		c.Set("HX-Redirect", "/sites")
-		return c.SendStatus(fiber.StatusOK)
-	}
-
-	return c.Redirect("/sites")
+	return redirectTo(c, "/sites")
 }
 
-// HTMXSitesList returns sites list as HTML partial
-func (h *Handler) HTMXSitesList(c *fiber.Ctx) error {
-	sites, _ := h.caddyService.GetAllSites()
-	search := c.Query("search")
-	tag := c.Query("tag")
-
-	filteredSites := filterSites(sites, search, tag)
-
-	return c.Render("partials/sites_list", fiber.Map{
-		"Sites":      filteredSites,
-		"TotalSites": len(sites),
-	})
+// HTMXSitesList serves the live search and tag filter of the rules page.
+func (h *Handler) HTMXSitesList(c fiber.Ctx) error {
+	// The rules page already filters by ?search= and ?tag=; the search box
+	// and tag filter pick its #sites-list with hx-select.
+	return h.SitesList(c)
 }
 
 // HTMXSiteCard returns a single site card as HTML partial
-func (h *Handler) HTMXSiteCard(c *fiber.Ctx) error {
+func (h *Handler) HTMXSiteCard(c fiber.Ctx) error {
 	filename := c.Params("id")
 	site, err := h.caddyService.GetSite(filename)
 	if err != nil {
@@ -340,7 +314,7 @@ func (h *Handler) HTMXSiteCard(c *fiber.Ctx) error {
 }
 
 // HTMXSitePreview returns site config preview
-func (h *Handler) HTMXSitePreview(c *fiber.Ctx) error {
+func (h *Handler) HTMXSitePreview(c fiber.Ctx) error {
 	filename := c.Params("id")
 	site, err := h.caddyService.GetSite(filename)
 	if err != nil {
@@ -353,7 +327,7 @@ func (h *Handler) HTMXSitePreview(c *fiber.Ctx) error {
 // formList collects all values of a (possibly repeated) form field, e.g.
 // several checked checkboxes with the same name, also accepting a single
 // comma-separated value.
-func formList(c *fiber.Ctx, key string) []string {
+func formList(c fiber.Ctx, key string) []string {
 	var raw []string
 	if form, err := c.MultipartForm(); err == nil && form != nil {
 		raw = form.Value[key]
@@ -388,7 +362,7 @@ func splitList(v string) []string {
 // SitesStatus returns each site's backend status as JSON: filename -> "up"|"down"|"unknown".
 // "up"/"down" are based on whether a Docker container matching the target name is running.
 // IP targets (or names without a matching container) are reported as "unknown".
-func (h *Handler) SitesStatus(c *fiber.Ctx) error {
+func (h *Handler) SitesStatus(c fiber.Ctx) error {
 	sites, _ := h.caddyService.GetAllSites()
 	out := make(map[string]inventory.Status, len(sites))
 	for _, s := range sites {

@@ -102,9 +102,12 @@
                 <div class="card flex-1">
                     <h3>📥 {{t .Lang "backup_create"}}</h3>
                     <p>{{t .Lang "backup_create_desc"}}</p>
-                    <a href="/settings/backup/create" class="btn btn-primary">
-                        ⬇️ {{t .Lang "backup_download"}}
-                    </a>
+                    <form action="/settings/backup/create" method="POST">
+                        <input type="hidden" name="_csrf" value="{{.CSRFToken}}">
+                        <button type="submit" class="btn btn-primary">
+                            ⬇️ {{t .Lang "backup_download"}}
+                        </button>
+                    </form>
                 </div>
                 
                 <div class="card flex-1">
@@ -682,7 +685,10 @@ function showPasswordModal(username) {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
-                'X-CSRF-Token': csrfToken
+                'X-CSRF-Token': csrfToken,
+                // Answered with 200 + HX-Redirect (no followed redirect), so
+                // the flash is still there for the reload below.
+                'HX-Request': 'true'
             },
             body: `password=${encodeURIComponent(newPassword)}`
         }).then(async (resp) => {

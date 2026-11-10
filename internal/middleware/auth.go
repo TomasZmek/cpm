@@ -6,12 +6,12 @@ import (
 	"github.com/TomasZmek/cpm/internal/models"
 	"github.com/TomasZmek/cpm/internal/services"
 	"github.com/TomasZmek/cpm/internal/utils"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
 // Auth middleware checks if user is authenticated
 func Auth(authService *services.AuthService) fiber.Handler {
-	return func(c *fiber.Ctx) error {
+	return func(c fiber.Ctx) error {
 		// If auth is not enabled, allow all requests
 		if !authService.IsEnabled() {
 			return c.Next()
@@ -41,7 +41,7 @@ func Auth(authService *services.AuthService) fiber.Handler {
 // Must be mounted after Auth. When authentication is disabled every request
 // is allowed, matching the behaviour of Auth.
 func RequirePermission(authService *services.AuthService, permission string) fiber.Handler {
-	return func(c *fiber.Ctx) error {
+	return func(c fiber.Ctx) error {
 		if !authService.IsEnabled() {
 			return c.Next()
 		}
@@ -59,7 +59,7 @@ func RequirePermission(authService *services.AuthService, permission string) fib
 	}
 }
 
-func redirectToLogin(c *fiber.Ctx) error {
+func redirectToLogin(c fiber.Ctx) error {
 	// For HTMX requests, return a redirect header
 	if c.Get("HX-Request") == "true" {
 		c.Set("HX-Redirect", "/login")
@@ -74,5 +74,5 @@ func redirectToLogin(c *fiber.Ctx) error {
 	}
 
 	// For regular requests, redirect to login
-	return c.Redirect("/login")
+	return c.Redirect().To("/login")
 }

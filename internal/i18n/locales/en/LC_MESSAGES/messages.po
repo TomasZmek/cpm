@@ -1508,3 +1508,9 @@ msgstr "Suggested host IP (address CPM was opened on):"
 
 msgid "msg_host_ip_not_detected"
 msgstr "The host's IP cannot be detected from inside the container. Enter the LAN address of the machine Docker runs on (e.g. your NAS)."
+
+msgid "msg_csrf_expired"
+msgstr "The page has expired (for example after CPM was restarted or updated). Please submit it again."
+
+msgid "msg_csrf_origin"
+msgstr "The request does not come from this site. If CPM runs behind a reverse proxy, set TRUSTED_PROXIES (or TRUSTED_ORIGINS, e.g. https://cpm.example.com)."

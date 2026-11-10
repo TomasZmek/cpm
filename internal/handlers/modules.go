@@ -7,7 +7,7 @@ import (
 
 	"github.com/TomasZmek/cpm/internal/services"
 	"github.com/TomasZmek/cpm/sdk"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
 // moduleFieldView is one configuration field as rendered by the settings page.
@@ -39,11 +39,11 @@ type moduleView struct {
 }
 
 // SettingsModules renders Settings → Modules.
-func (h *Handler) SettingsModules(c *fiber.Ctx) error {
+func (h *Handler) SettingsModules(c fiber.Ctx) error {
 	return h.renderSettingsTab(c, "modules")
 }
 
-func (h *Handler) moduleViews(c *fiber.Ctx) []moduleView {
+func (h *Handler) moduleViews(c fiber.Ctx) []moduleView {
 	if h.modules == nil {
 		return nil
 	}
@@ -128,7 +128,7 @@ func (h *Handler) moduleViews(c *fiber.Ctx) []moduleView {
 
 // ModuleSave enables a module or saves its configuration. Form fields are
 // named f_<key>.
-func (h *Handler) ModuleSave(c *fiber.Ctx) error {
+func (h *Handler) ModuleSave(c fiber.Ctx) error {
 	id := c.Params("id")
 	mod, ok := sdk.Lookup(id)
 	if !ok || h.modules == nil {
@@ -148,7 +148,7 @@ func (h *Handler) ModuleSave(c *fiber.Ctx) error {
 	name := mod.Name.In(getLang(c))
 	if err := h.modules.Enable(id, values); err != nil {
 		setFlash(c, "error", tl(c, "msg_module_error", name)+": "+err.Error())
-		return c.Redirect("/settings/modules")
+		return redirectTo(c, "/settings/modules")
 	}
 
 	// Refresh now so the page shows whether the source works.
@@ -159,7 +159,7 @@ func (h *Handler) ModuleSave(c *fiber.Ctx) error {
 		for _, st := range h.inventory.Sources() {
 			if st.ModuleID == id && st.Err != "" {
 				setFlash(c, "warning", tl(c, "msg_module_saved_error", name)+": "+st.Err)
-				return c.Redirect("/settings/modules")
+				return redirectTo(c, "/settings/modules")
 			}
 		}
 	}
@@ -169,11 +169,11 @@ func (h *Handler) ModuleSave(c *fiber.Ctx) error {
 		key = "msg_module_enabled"
 	}
 	setFlash(c, "success", tl(c, key, name))
-	return c.Redirect("/settings/modules")
+	return redirectTo(c, "/settings/modules")
 }
 
 // ModuleDisable disables a module and removes its configuration.
-func (h *Handler) ModuleDisable(c *fiber.Ctx) error {
+func (h *Handler) ModuleDisable(c fiber.Ctx) error {
 	id := c.Params("id")
 	mod, ok := sdk.Lookup(id)
 	if !ok || h.modules == nil {
@@ -182,7 +182,7 @@ func (h *Handler) ModuleDisable(c *fiber.Ctx) error {
 	name := mod.Name.In(getLang(c))
 	if err := h.modules.Disable(id); err != nil {
 		setFlash(c, "error", tl(c, "msg_module_error", name)+": "+err.Error())
-		return c.Redirect("/settings/modules")
+		return redirectTo(c, "/settings/modules")
 	}
 	if h.inventory != nil {
 		ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
@@ -190,5 +190,5 @@ func (h *Handler) ModuleDisable(c *fiber.Ctx) error {
 		cancel()
 	}
 	setFlash(c, "success", tl(c, "msg_module_disabled", strings.TrimSpace(name)))
-	return c.Redirect("/settings/modules")
+	return redirectTo(c, "/settings/modules")
 }

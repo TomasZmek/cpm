@@ -1510,3 +1510,9 @@ msgstr "제안된 호스트 IP (CPM에 접속한 주소):"
 
 msgid "msg_host_ip_not_detected"
 msgstr "컨테이너 내부에서는 호스트 IP를 확인할 수 없습니다. Docker가 실행되는 머신(예: NAS)의 LAN 주소를 입력하세요."
+
+msgid "msg_csrf_expired"
+msgstr "페이지가 만료되었습니다 (예: CPM 재시작 또는 업데이트 후). 다시 제출해 주세요."
+
+msgid "msg_csrf_origin"
+msgstr "요청이 이 사이트에서 오지 않았습니다. CPM이 리버스 프록시 뒤에 있으면 TRUSTED_PROXIES(또는 TRUSTED_ORIGINS, 예: https://cpm.example.com)를 설정하세요."

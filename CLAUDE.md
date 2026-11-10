@@ -41,7 +41,7 @@ Version is authoritative in `cmd/cpm/main.go` constants `Version` and `BuildDate
 ## Tech stack
 
 - **Go 1.26** (module: `github.com/TomasZmek/cpm`)
-- **Fiber v2** — HTTP framework
+- **Fiber v3** — HTTP framework (`fiber.Ctx` is an interface: handlers take `c fiber.Ctx`; redirects are `c.Redirect().To()`, view bindings `c.ViewBind()`, the fasthttp context `c.RequestCtx()`)
 - **gofiber/template/html** — HTML template engine (Go `html/template`-compatible)
 - **HTMX** — frontend interactivity (no build step, CDN)
 - **SweetAlert2** — dialogs
@@ -152,7 +152,7 @@ Roles are enforced per route in `setupRoutes` (`cmd/cpm/main.go`) via `middlewar
 - **File paths**: site filenames from URL params, forms or imports go through `ValidateSiteFilename` (`services/caddy.go`). Backup restore accepts only paths that `CreateBackup` produces.
 - **Output**: HTML built by hand in handlers must use `escapeHTML`; redirects to the Referer go through `safeRedirectTarget`.
 - **Secrets**: files containing tokens or password hashes are written with `0600`.
-- **CSRF**: forms include `<input type="hidden" name="_csrf" value="{{.CSRFToken}}">`; HTMX/fetch requests send the `X-CSRF-Token` header (set globally in `layouts/base.html`).
+- **CSRF**: forms include `<input type="hidden" name="_csrf" value="{{.CSRFToken}}">`; HTMX/fetch requests send the `X-CSRF-Token` header (set globally in `layouts/base.html`). The token is `csrf.TokenFromContext(c)`. Fiber v3 also checks that unsafe requests come from the page's own origin (`Origin`/`Referer` against scheme + host). Behind a reverse proxy that terminates TLS (Caddy) the scheme/host come from `X-Forwarded-*`, honoured only for `TRUSTED_PROXIES` (env, default `private,loopback`); `TRUSTED_ORIGINS` adds allowed origins. App and middleware setup live in `newApp` (`cmd/cpm/main.go`), tested in `cmd/cpm/app_test.go` incl. the Caddy cases. A rejected token (e.g. after a restart, tokens are in memory) redirects back with a flash (`handlers.CSRFError`).
 
 ### UI themes
 
@@ -164,7 +164,7 @@ On narrow screens both layouts switch the sidebar to an off-canvas drawer opened
 
 ### Flash messages
 
-Handlers call `setFlash(c, type, msg)` (`handlers/handlers.go`), which stores the message in `flash_type` / `flash_message` cookies; page handlers read them with `getFlash(c)`, pass them as `FlashType` / `FlashMessage`, and `layouts/base.html` renders them. Use `tl(c, key, args...)` for translated messages.
+Handlers call `setFlash(c, type, msg)` (`handlers/handlers.go`), which queues Fiber's built-in flash messages (`c.Redirect().With`, hex-encoded cookie, safe for any language), and **must then return `redirectTo(c, url)`** — the flash cookie is only written by the redirect; `redirectTo` answers HTMX requests with 200 + `HX-Redirect`. Page handlers read them with `getFlash(c)`, pass them as `FlashType` / `FlashMessage`, and `layouts/base.html` renders them. Use `tl(c, key, args...)` for translated messages.
 
 ## Tests
 

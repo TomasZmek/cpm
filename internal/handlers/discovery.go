@@ -5,12 +5,12 @@ import (
 	"strings"
 
 	"github.com/TomasZmek/cpm/internal/services"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
 // DiscoveryPage renders the Docker Auto-Discovery page.
 // It lists running containers on the host marked as IsLocalDocker.
-func (h *Handler) DiscoveryPage(c *fiber.Ctx) error {
+func (h *Handler) DiscoveryPage(c fiber.Ctx) error {
 	flashType, flashMsg := getFlash(c)
 
 	data := h.baseData(c, "Docker Discovery")
@@ -49,14 +49,14 @@ func (h *Handler) DiscoveryPage(c *fiber.Ctx) error {
 
 // DiscoveryCreate redirects to the new-site form pre-filled with discovery data.
 // The host IP is taken from the form (submitted as a hidden field from the discovery result).
-func (h *Handler) DiscoveryCreate(c *fiber.Ctx) error {
+func (h *Handler) DiscoveryCreate(c fiber.Ctx) error {
 	containerName := c.FormValue("container_name")
 	port := c.FormValue("port")
 	ip := c.FormValue("ip")
 
 	suggestedName := services.SuggestContainerName(containerName)
 
-	return c.Redirect("/sites/new?" + url.Values{
+	return redirectTo(c, "/sites/new?"+url.Values{
 		"ip":   {ip},
 		"port": {port},
 		"name": {suggestedName},

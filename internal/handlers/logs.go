@@ -6,12 +6,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
 // LogsPage renders the logs viewer page
-func (h *Handler) LogsPage(c *fiber.Ctx) error {
-	lines := c.QueryInt("lines", 100)
+func (h *Handler) LogsPage(c fiber.Ctx) error {
+	lines := fiber.Query[int](c, "lines", 100)
 	if lines < 1 {
 		lines = 100
 	} else if lines > 5000 {
@@ -33,13 +33,13 @@ func (h *Handler) LogsPage(c *fiber.Ctx) error {
 }
 
 // HTMXLogsStream streams logs via Server-Sent Events
-func (h *Handler) HTMXLogsStream(c *fiber.Ctx) error {
+func (h *Handler) HTMXLogsStream(c fiber.Ctx) error {
 	c.Set("Content-Type", "text/event-stream")
 	c.Set("Cache-Control", "no-cache")
 	c.Set("Connection", "keep-alive")
 	c.Set("Transfer-Encoding", "chunked")
 
-	c.Context().SetBodyStreamWriter(func(w *bufio.Writer) {
+	return c.SendStreamWriter(func(w *bufio.Writer) {
 		lastLines := make(map[string]bool)
 
 		for i := 0; i < 60; i++ { // Stream for 60 seconds max
@@ -72,6 +72,4 @@ func (h *Handler) HTMXLogsStream(c *fiber.Ctx) error {
 			time.Sleep(2 * time.Second)
 		}
 	})
-
-	return nil
 }

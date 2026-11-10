@@ -4,7 +4,7 @@ import (
 	"strconv"
 
 	"github.com/TomasZmek/cpm/internal/services"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
 // defaultFallback answers plain-HTTP requests for hosts without a rule.
@@ -15,18 +15,18 @@ const defaultFallback = "# Fallback — handles plain-HTTP requests that don't m
 	":80 {\n\trespond \"No matching site\" 404\n}\n"
 
 // FallbackSave saves the fallback rule content.
-func (h *Handler) FallbackSave(c *fiber.Ctx) error {
+func (h *Handler) FallbackSave(c fiber.Ctx) error {
 	return h.saveFallback(c, c.FormValue("content"), "msg_fallback_saved")
 }
 
 // FallbackCreate creates a default fallback.caddy file.
-func (h *Handler) FallbackCreate(c *fiber.Ctx) error {
+func (h *Handler) FallbackCreate(c fiber.Ctx) error {
 	return h.saveFallback(c, defaultFallback, "msg_fallback_created")
 }
 
 // saveFallback writes the fallback, validates and reloads Caddy, and restores
 // the previous state when the new configuration is rejected (#32).
-func (h *Handler) saveFallback(c *fiber.Ctx, content, successKey string) error {
+func (h *Handler) saveFallback(c fiber.Ctx, content, successKey string) error {
 	rollback, err := h.caddyService.SaveFallback(content)
 	if err != nil {
 		return redirectFlash(c, "error", err.Error(), "/settings/caddy")
@@ -47,7 +47,7 @@ func (h *Handler) saveFallback(c *fiber.Ctx, content, successKey string) error {
 }
 
 // ErrorPageSave saves a custom error page (403 or 404).
-func (h *Handler) ErrorPageSave(c *fiber.Ctx) error {
+func (h *Handler) ErrorPageSave(c fiber.Ctx) error {
 	code, err := strconv.Atoi(c.Params("code"))
 	if err != nil || !services.AllowedErrorPages[code] {
 		return c.Status(fiber.StatusBadRequest).SendString("invalid error code")
