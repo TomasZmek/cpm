@@ -137,9 +137,20 @@ func (s *Service) Refresh(ctx context.Context) {
 	}
 	wg.Wait()
 
+	// Several sources can report the same daemon (e.g. Docker (local) and
+	// Dockhand's local environment): keep each container once.
 	var containers []sdk.Container
+	seen := map[string]bool{}
 	for _, l := range lists {
-		containers = append(containers, l...)
+		for _, c := range l {
+			if key := containerKey(c); key != "" {
+				if seen[key] {
+					continue
+				}
+				seen[key] = true
+			}
+			containers = append(containers, c)
+		}
 	}
 
 	// Probe targets of rules no container matched.
@@ -162,6 +173,15 @@ func (s *Service) Refresh(ctx context.Context) {
 			log.Printf("inventory: module %s: %s", st.ModuleID, st.Err)
 		}
 	}
+}
+
+// containerKey identifies a container across sources by its ID (short or
+// full form); containers without an ID are never merged.
+func containerKey(c sdk.Container) string {
+	if len(c.ID) >= 12 {
+		return c.ID[:12]
+	}
+	return ""
 }
 
 // probe connects to every target and records whether it accepted the

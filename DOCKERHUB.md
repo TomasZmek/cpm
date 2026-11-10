@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-3.5.1-blue" alt="Version">
+  <img src="https://img.shields.io/badge/version-3.6.0-blue" alt="Version">
   <img src="https://img.shields.io/badge/Go-1.26-00ADD8?logo=go" alt="Go">
   <img src="https://img.shields.io/badge/image_size-~6MB-green" alt="Image Size">
   <img src="https://img.shields.io/badge/platforms-amd64%20%7C%20arm64-lightgrey" alt="Platforms">
@@ -60,7 +60,7 @@
 | 🌐 **i18n** | English, Czech & Korean |
 | 📋 **Templates** | 17+ pre-configured service templates |
 | 🐳 **Docker Auto-Discovery** | Containers per Docker host, paired with rules by host IP + published port, one-click rule creation |
-| 🧩 **Modules** | Extend CPM from the admin UI (container sources, more to come); built-in Docker (local) |
+| 🧩 **Modules** | Extend CPM from the admin UI: Docker (local) and **Dockhand** (containers on all your Docker hosts) |
 
 ---
 
@@ -68,7 +68,7 @@
 
 ```bash
 docker pull perteus/caddy-ui:latest
-docker pull perteus/caddy-ui:3.5.1
+docker pull perteus/caddy-ui:3.6.0
 ```
 
 ### Docker Compose
@@ -89,7 +89,7 @@ services:
       - ./caddy-data:/data
 
   cpm:
-    image: perteus/caddy-ui:3.5.1
+    image: perteus/caddy-ui:3.6.0
     container_name: cpm
     ports:
       - "8501:8501"
@@ -108,7 +108,7 @@ On Synology add `privileged: true` for Docker socket access.
 
 ```yaml
 cpm:
-  image: perteus/caddy-ui:3.5.1
+  image: perteus/caddy-ui:3.6.0
   privileged: true
   volumes:
     - /volume1/docker/caddy-config:/caddy-config
@@ -134,6 +134,7 @@ cpm:
 
 | Version | Notes |
 |---------|-------|
+| **3.6.0** | ⚓ Dockhand module — backend status and discovery for containers on all Docker hosts |
 | **3.5.1** | 🔒 Security patch — Go 1.26.10, fasthttp, compress, x/crypto (31 known vulnerabilities fixed) |
 | **3.5.0** | 🧩 Modules, backend status for IP rules, discovery per host, host IP detection fix |
 | **3.4.1** | 🔐 Certificate backups & restore, renewal that really renews, Restart Caddy button |
@@ -149,6 +150,12 @@ cpm:
 | **3.0.1** | 🔐 Wildcard SSL, migration tools, UI improvements |
 | **3.0.0** | 🎉 Complete Go rewrite (794MB → 6MB) |
 | 2.x | Python version (deprecated) |
+
+### v3.6.0 - Dockhand module
+- ✅ **Dockhand module** — reads containers of all environments managed by [Dockhand](https://dockhand.pro) (local host and remote hosts via Hawser), so backend status and Docker discovery cover every machine
+- ✅ Host IP per environment from Dockhand's *Public IP* (or `ID=IP` in the module settings)
+- ✅ Containers reported by several modules are shown once
+- 🧪 Test builds of the develop branch: `perteus/caddy-ui:develop` (never `latest`)
 
 ### v3.5.0 - Modules & backend status
 - ✅ **Modules** — enable, configure and disable extensions in Settings → Modules; settings live in `caddy-config/modules.json` ([docs/modules.md](https://github.com/TomasZmek/cpm/blob/main/docs/modules.md))
@@ -190,9 +197,22 @@ cpm:
 
 ---
 
-## 🧩 Modules (v3.5.0)
+## 🧩 Modules
 
-Enable and configure extensions in **Settings → Modules**. The built-in **Docker (local)** module reads containers from the mounted Docker socket — set its **Docker host IP** to your NAS address, and CPM shows for every proxy rule whether the backend container is running. Docs: [docs/modules.md](https://github.com/TomasZmek/cpm/blob/main/docs/modules.md)
+Enable and configure extensions in **Settings → Modules** — no restart, settings are stored in `caddy-config/modules.json`.
+
+| Module | What it does |
+|--------|--------------|
+| 🐳 **Docker (local)** | Containers from the mounted Docker socket. Set **Docker host IP** to your NAS address. |
+| ⚓ **Dockhand** | Containers of all [Dockhand](https://dockhand.pro) environments (local and remote hosts via Hawser). Dockhand URL + API token; host IPs from each environment's *Public IP*. |
+
+CPM then shows for every proxy rule whether its backend container is running (with container name and host), or whether the target port responds. Docs: [docs/modules.md](https://github.com/TomasZmek/cpm/blob/main/docs/modules.md)
+
+---
+
+## 🧪 Test builds
+
+`perteus/caddy-ui:develop` (newest) and `perteus/caddy-ui:develop-<commit>` are built from the development branch on every change — for testing only, never tagged `latest`.
 
 ---
 

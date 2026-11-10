@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-**CPM - Caddy Proxy Manager** — a lightweight Go web UI for managing a Caddy reverse proxy. Distributed as a ~6 MB Docker image (`perteus/caddy-ui` on Docker Hub). Current released version: **3.5.1**.
+**CPM - Caddy Proxy Manager** — a lightweight Go web UI for managing a Caddy reverse proxy. Distributed as a ~6 MB Docker image (`perteus/caddy-ui` on Docker Hub). Current released version: **3.6.0**.
 
 - GitHub: https://github.com/TomasZmek/cpm
 - Docker Hub: `perteus/caddy-ui`
@@ -80,7 +80,7 @@ All services are constructed in `main.go` and injected into `handlers.Handler` a
 
 ### Modules (`sdk/`, `internal/modules`, `internal/inventory`)
 
-`sdk/` is a separate, dependency-free Go module (`github.com/TomasZmek/cpm/sdk`, `replace`d locally in `go.mod`) — the public interface for modules: `sdk.Register(sdk.Module{...})` from `init`, `Source.Containers(ctx)`, `Field` (settings form is generated from it), `Text` (per-module translations). Modules are compiled in (blank import in `cmd/cpm/modules.go` or `--build-arg CPM_MODULES=...`) and enabled at runtime in Settings → Modules. The built-in `docker` module (`internal/modules/dockerlocal`) wraps `DockerService.ListContainers`. Dashboard backend status, the rules list dots (`/htmx/sites/status`), Docker discovery and the rule form's container picker read **only** the inventory, never Docker directly — `DockerService` itself is for controlling Caddy (reload/validate/restart/logs). Matching: container name, or Docker host IP + **published** port. See `docs/modules.md`.
+`sdk/` is a separate, dependency-free Go module (`github.com/TomasZmek/cpm/sdk`, `replace`d locally in `go.mod`) — the public interface for modules: `sdk.Register(sdk.Module{...})` from `init`, `Source.Containers(ctx)`, `Field` (settings form is generated from it), `Text` (per-module translations). Modules are compiled in (blank import in `cmd/cpm/modules.go` or `--build-arg CPM_MODULES=...`) and enabled at runtime in Settings → Modules. The built-in `docker` module (`internal/modules/dockerlocal`) wraps `DockerService.ListContainers`; `modules/dockhand/` (own `go.mod`, `replace`d in the root `go.mod`, copied in the `Dockerfile` before `go mod download`) reads Dockhand's REST API. `go test ./...` in the root does not cover separate modules: also run it in `sdk/` and `modules/*/`. Dashboard backend status, the rules list dots (`/htmx/sites/status`), Docker discovery and the rule form's container picker read **only** the inventory, never Docker directly — `DockerService` itself is for controlling Caddy (reload/validate/restart/logs). Matching: container name, or Docker host IP + **published** port. See `docs/modules.md`.
 
 `CaddyfileManager` depends on both `WildcardService` and `SnippetsService`; to avoid circular imports it is created after them and injected into `CaddyService` via `SetCaddyfileManager()`.
 
@@ -200,6 +200,10 @@ Types: `feat`, `fix`, `docs`, `refactor`, `chore`
    POZNÁMKA: `buildx --push` pushuje přímo během buildu. `make docker-push` není potřeba volat zvlášť.
 5. Commit with `chore: bump version to vVERSION`, merge into `main`, then `main` back into `develop`
 6. Run the **Release** workflow (GitHub → Actions → Release → Run workflow, version without `v`, on `main`). It checks that `cmd/cpm/main.go` has that version, pushes the multi-arch image to `ghcr.io/tomaszmek/cpm:VERSION` and `:latest`, and creates the GitHub release `vVERSION` (tag included) with the notes from `RELEASE_NOTES.md` and offline packages `cpm-VERSION-amd64.tar` / `-arm64.tar` (`docker load`, tagged `perteus/caddy-ui:VERSION`). Pushing a `v*` tag runs it too. With the repository secrets `DOCKERHUB_USERNAME` / `DOCKERHUB_TOKEN` it also pushes `perteus/caddy-ui:VERSION` + `:latest` (multi-arch) and updates the Docker Hub description from `DOCKERHUB.md` — then step 4 is not needed.
+
+### Test builds of `develop`
+
+Every push to `develop` runs the **Develop build** workflow (`.github/workflows/develop.yml`): multi-arch images `perteus/caddy-ui:develop` + `:develop-<short sha>` (Docker Hub) and the same tags on `ghcr.io/tomaszmek/cpm`, never `latest`, plus a GitHub pre-release `develop` (replaced on every run, not marked latest) with offline packages and the "Unreleased" section of `RELEASE_NOTES.md`. Use these for testing instead of hand-built images.
 
 ## i18n
 
