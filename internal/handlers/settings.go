@@ -108,6 +108,7 @@ var settingsSections = []struct {
 	{SettingsSection{"backup", "/settings/backup", "💾", "settings_backup", "settings_desc_backup"}, "admin"},
 	{SettingsSection{"caddy", "/settings/caddy", "🔧", "settings_caddy", "settings_desc_caddy"}, "view"},
 	{SettingsSection{"wildcard", "/settings/wildcard", "🔐", "settings_wildcard", "settings_desc_wildcard"}, "admin"},
+	{SettingsSection{"logs", "/settings/logs", "📝", "settings_logs", "settings_desc_logs"}, "admin"},
 	{SettingsSection{"docker", "/settings/docker", "🐳", "settings_docker", "settings_desc_docker"}, "admin"},
 	{SettingsSection{"users", "/settings/users", "👥", "settings_users", "settings_desc_users"}, "admin"},
 	{SettingsSection{"modules", "/settings/modules", "🧩", "settings_modules", "settings_desc_modules"}, "admin"},
@@ -154,7 +155,7 @@ func (h *Handler) renderSettingsTab(c fiber.Ctx, tab string) error {
 func (h *Handler) renderSettings(c fiber.Ctx, tab string, index bool) error {
 	// Users and backup tabs expose sensitive data (user list, configuration
 	// with API tokens) and are reachable via ?tab=, so check here as well.
-	if (tab == "users" || tab == "backup" || tab == "docker" || tab == "modules") && !h.hasPermission(c, "admin") {
+	if (tab == "users" || tab == "backup" || tab == "docker" || tab == "modules" || tab == "logs") && !h.hasPermission(c, "admin") {
 		return fiber.NewError(fiber.StatusForbidden, "You do not have permission to view this page")
 	}
 
@@ -213,6 +214,13 @@ func (h *Handler) renderSettings(c fiber.Ctx, tab string, index bool) error {
 
 	case "modules":
 		data["Modules"] = h.moduleViews(c)
+
+	case "logs":
+		appSettings, _ := h.settingsService.Get()
+		data["AccessLog"] = appSettings.AccessLog.Normalized()
+		data["AccessLogPath"] = services.AccessLogCaddyDir + "/" + services.AccessLogFileName
+		data["MaxRollSizeMB"] = models.MaxAccessLogRollSizeMB
+		data["MaxRollKeep"] = models.MaxAccessLogRollKeep
 	}
 
 	return c.Render("pages/settings", data, "layouts/base")

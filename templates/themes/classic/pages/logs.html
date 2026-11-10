@@ -2,12 +2,171 @@
     <div class="page-header-title">
         <h1>📝 {{t .Lang "logs_title"}}</h1>
     </div>
+    {{if eq .View "caddy"}}
     <div class="page-header-actions">
         <button class="btn btn-secondary" onclick="refreshLogs()">
             🔄 {{t .Lang "logs_refresh"}}
         </button>
     </div>
+    {{end}}
 </div>
+<style>
+.logs-tabs { display: flex; gap: var(--space-2); flex-wrap: wrap; border-bottom: 1px solid var(--gray-200); margin-bottom: var(--space-4); }
+.logs-tabs .tab { padding: var(--space-2) var(--space-3); color: var(--text-muted); text-decoration: none; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.logs-tabs .tab.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 600; }
+.alog-alert { margin-bottom: var(--space-4); }
+.alog-filters { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: flex-end; margin-bottom: var(--space-4); }
+.alog-filters .form-group { margin: 0; flex: 0 1 auto; min-width: 0; }
+.alog-filters .alog-grow { flex: 1 1 12rem; }
+.alog-filters select, .alog-filters input { max-width: 100%; }
+.alog-rule { margin-bottom: var(--space-3); }
+.alog-stats { margin-bottom: var(--space-4); grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
+.alog-stats .stat-value { font-size: 1.5rem; }
+.alog-stats .stat-value.alog-small { font-size: 1rem; padding-top: 0.5rem; }
+.alog-stats .stat-success .stat-value { color: var(--success); }
+.alog-stats .stat-warning .stat-value { color: var(--warning); }
+.alog-stats .stat-danger .stat-value { color: var(--error); }
+.alog-table-wrap { overflow-x: auto; background: var(--bg-card); border-radius: var(--radius-lg); box-shadow: var(--shadow); }
+.alog-table { font-size: 0.85rem; margin: 0; }
+.alog-table td { vertical-align: top; }
+.alog-nowrap { white-space: nowrap; }
+.alog-num { text-align: right; }
+.alog-req { min-width: 14rem; word-break: break-all; }
+.alog-method { font-weight: 600; }
+.alog-uri { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.alog-status { display: inline-block; min-width: 2.6rem; text-align: center; padding: 1px 6px; border-radius: var(--radius); font-weight: 600; background: var(--gray-200); }
+.alog-2xx { background: rgb(16 185 129 / 0.15); color: var(--success); }
+.alog-3xx { background: rgb(59 130 246 / 0.15); color: var(--primary); }
+.alog-4xx { background: rgb(245 158 11 / 0.18); color: var(--warning); }
+.alog-5xx { background: rgb(239 68 68 / 0.15); color: var(--error); }
+.alog-count { margin-top: var(--space-2); font-size: 0.85rem; text-align: right; }
+.alog-empty { padding: var(--space-6, 2rem); text-align: center; color: var(--text-muted); background: var(--bg-card); border-radius: var(--radius-lg); }
+</style>
+
+<nav class="tabs-nav logs-tabs" aria-label="{{t .Lang "logs_title"}}">
+    <a href="/logs?view=access" class="tab {{if eq .View "access"}}active{{end}}"{{if eq .View "access"}} aria-current="page"{{end}}>🌐 {{t .Lang "logs_tab_access"}}</a>
+    <a href="/logs?view=caddy" class="tab {{if eq .View "caddy"}}active{{end}}"{{if eq .View "caddy"}} aria-current="page"{{end}}>⚙️ {{t .Lang "logs_tab_caddy"}}</a>
+</nav>
+
+{{if eq .View "access"}}
+{{if not .AccessLogEnabled}}
+<div class="alert alert-info alog-alert">
+    {{t .Lang "access_log_disabled"}}
+    {{if .CanAdmin}}<a href="/settings/logs">{{t .Lang "access_log_enable_link"}}</a>{{end}}
+</div>
+{{end}}
+{{if .SiteNotFound}}<div class="alert alert-warning alog-alert">{{t .Lang "access_log_rule_not_found"}}</div>{{end}}
+{{if .AccessLogError}}<div class="alert alert-error alog-alert">{{.AccessLogError}}</div>{{end}}
+
+<form method="GET" action="/logs" class="alog-filters">
+    <input type="hidden" name="view" value="access">
+    <div class="form-group alog-grow">
+        <label for="alog-site">{{t .Lang "access_log_rule"}}</label>
+        <select id="alog-site" name="site" onchange="this.form.submit()">
+            <option value="">{{t .Lang "access_log_all_rules"}}</option>
+            {{range .Sites}}<option value="{{.Filename}}" {{if eq .Filename $.SiteParam}}selected{{end}}>{{.PrimaryDomain}}</option>{{end}}
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="alog-status">{{t .Lang "access_log_status"}}</label>
+        <select id="alog-status" name="status" onchange="this.form.submit()">
+            <option value="">{{t .Lang "logs_level_all"}}</option>
+            <option value="errors" {{if eq .Status "errors"}}selected{{end}}>{{t .Lang "access_log_errors"}}</option>
+            <option value="2xx" {{if eq .Status "2xx"}}selected{{end}}>2xx</option>
+            <option value="3xx" {{if eq .Status "3xx"}}selected{{end}}>3xx</option>
+            <option value="4xx" {{if eq .Status "4xx"}}selected{{end}}>4xx</option>
+            <option value="5xx" {{if eq .Status "5xx"}}selected{{end}}>5xx</option>
+        </select>
+    </div>
+    <div class="form-group alog-grow">
+        <label for="alog-q">{{t .Lang "filter"}}</label>
+        <input type="search" id="alog-q" name="q" value="{{.Query}}" placeholder="{{t .Lang "access_log_search"}}">
+    </div>
+    <div class="form-group">
+        <label for="alog-limit">{{t .Lang "logs_lines"}}</label>
+        <select id="alog-limit" name="limit" onchange="this.form.submit()">
+            {{range .Limits}}<option value="{{.}}" {{if eq . $.Limit}}selected{{end}}>{{.}}</option>{{end}}
+        </select>
+    </div>
+    <div class="form-group">
+        <button type="submit" class="btn btn-primary">🔍 {{t .Lang "access_log_apply"}}</button>
+    </div>
+</form>
+
+{{if .Site}}
+<p class="alog-rule">{{t .Lang "access_log_rule_hosts"}} {{range $i, $d := .Site.Domains}}{{if $i}}, {{end}}<code>{{$d}}</code>{{end}}
+    · <a href="/sites/{{.Site.Filename}}/edit">{{t .Lang "edit"}}</a></p>
+{{end}}
+
+{{with .AccessLog}}
+<div class="stats-grid alog-stats">
+    <div class="stat-card">
+        <div class="stat-value">{{.Stats.Total}}</div>
+        <div class="stat-label">{{t $.Lang "access_log_requests_24h"}}</div>
+    </div>
+    <div class="stat-card stat-success">
+        <div class="stat-value">{{index .Stats.ByClass "2xx"}}</div>
+        <div class="stat-label">2xx</div>
+    </div>
+    <div class="stat-card stat-warning">
+        <div class="stat-value">{{index .Stats.ByClass "4xx"}}</div>
+        <div class="stat-label">4xx</div>
+    </div>
+    <div class="stat-card stat-danger">
+        <div class="stat-value">{{index .Stats.ByClass "5xx"}}</div>
+        <div class="stat-label">5xx ({{printf "%.1f" .Stats.ErrorRate}} %)</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value alog-small">{{.Stats.P50Text}} / {{.Stats.P95Text}}</div>
+        <div class="stat-label">{{t $.Lang "access_log_latency"}}</div>
+    </div>
+</div>
+
+{{if .Entries}}
+<div class="alog-table-wrap">
+    <table class="table alog-table">
+        <thead>
+            <tr>
+                <th>{{t $.Lang "access_log_time"}}</th>
+                <th>{{t $.Lang "access_log_status"}}</th>
+                <th>{{t $.Lang "access_log_request"}}</th>
+                {{if not $.Site}}<th>{{t $.Lang "access_log_host"}}</th>{{end}}
+                <th class="alog-num">{{t $.Lang "access_log_duration"}}</th>
+                <th class="alog-num">{{t $.Lang "access_log_size"}}</th>
+                <th>{{t $.Lang "access_log_client"}}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{range .Entries}}
+            <tr>
+                <td class="alog-nowrap"><time datetime="{{.Time.Format "2006-01-02T15:04:05Z07:00"}}">{{.Time.Format "2006-01-02 15:04:05"}}</time></td>
+                <td><span class="alog-status alog-{{.StatusClass}}">{{.Status}}</span></td>
+                <td class="alog-req"><span class="alog-method">{{.Method}}</span> <span class="alog-uri" title="{{.URI}}">{{.URI}}</span></td>
+                {{if not $.Site}}<td class="alog-nowrap">{{.Host}}</td>{{end}}
+                <td class="alog-num alog-nowrap">{{.DurationText}}</td>
+                <td class="alog-num alog-nowrap">{{.SizeText}}</td>
+                <td class="alog-nowrap" title="{{.UserAgent}}">{{.RemoteIP}}</td>
+            </tr>
+            {{end}}
+        </tbody>
+    </table>
+</div>
+<p class="text-muted alog-count">{{len .Entries}} · {{t $.Lang "access_log_newest_first"}}</p>
+{{else if .Available}}
+<div class="alog-empty">{{t $.Lang "access_log_no_entries"}}</div>
+{{else if $.AccessLogEnabled}}
+<div class="alog-empty">{{t $.Lang "access_log_no_file"}}</div>
+{{end}}
+{{end}}
+
+<script>
+// Show request times in the browser's time zone.
+document.querySelectorAll('.alog-table time[datetime]').forEach(function (el) {
+    var d = new Date(el.getAttribute('datetime'));
+    if (!isNaN(d)) el.textContent = d.toLocaleString();
+});
+</script>
+{{else}}
 
 <!-- Filters -->
 <div class="filters-bar clog-filters">
@@ -143,11 +302,11 @@ function renderLogs() {
 }
 
 function refreshLogs() {
-    window.location.href = '/logs?lines=' + document.getElementById('log-lines').value;
+    window.location.href = '/logs?view=caddy&lines=' + document.getElementById('log-lines').value;
 }
 
 function changeLinesCount(lines) {
-    window.location.href = '/logs?lines=' + lines;
+    window.location.href = '/logs?view=caddy&lines=' + lines;
 }
 
 document.querySelectorAll('#log-raw i').forEach(function (el) {
@@ -156,3 +315,4 @@ document.querySelectorAll('#log-raw i').forEach(function (el) {
 });
 renderLogs();
 </script>
+{{end}}

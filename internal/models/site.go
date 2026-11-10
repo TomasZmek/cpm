@@ -11,26 +11,33 @@ import (
 
 // Site represents a proxy rule
 type Site struct {
-	Filename           string    `json:"filename"`
-	Filepath           string    `json:"filepath"`
-	Domains            []string  `json:"domains"`
-	TargetIP           string    `json:"target_ip"`
-	TargetPort         string    `json:"target_port"`
-	IsHTTPSBackend     bool      `json:"is_https_backend"`
-	IsInternal         bool      `json:"is_internal"`
-	TLSMode            string    `json:"tls_mode"` // "auto" or "wildcard:domain.com"
-	Snippets           []string  `json:"snippets"`
-	Tags               []string  `json:"tags"`
-	AdditionalBackends []string  `json:"additional_backends"`
-	LBPolicy           string    `json:"lb_policy"`
-	EnableWebSocket    bool      `json:"enable_websocket"`
-	HealthCheckPath    string    `json:"health_check_path"`
-	TimeoutSeconds     int       `json:"timeout_seconds"`
-	BasicAuthEnabled   bool      `json:"basic_auth_enabled"`
-	BasicAuthUsers     []string  `json:"basic_auth_users"`
-	ExtraConfig        string    `json:"extra_config"`
-	RawContent         string    `json:"raw_content"`
-	ModifiedAt         time.Time `json:"modified_at"`
+	Filename           string   `json:"filename"`
+	Filepath           string   `json:"filepath"`
+	Domains            []string `json:"domains"`
+	TargetIP           string   `json:"target_ip"`
+	TargetPort         string   `json:"target_port"`
+	IsHTTPSBackend     bool     `json:"is_https_backend"`
+	IsInternal         bool     `json:"is_internal"`
+	TLSMode            string   `json:"tls_mode"` // "auto" or "wildcard:domain.com"
+	Snippets           []string `json:"snippets"`
+	Tags               []string `json:"tags"`
+	AdditionalBackends []string `json:"additional_backends"`
+	LBPolicy           string   `json:"lb_policy"`
+	EnableWebSocket    bool     `json:"enable_websocket"`
+	HealthCheckPath    string   `json:"health_check_path"`
+	TimeoutSeconds     int      `json:"timeout_seconds"`
+	BasicAuthEnabled   bool     `json:"basic_auth_enabled"`
+	BasicAuthUsers     []string `json:"basic_auth_users"`
+	ExtraConfig        string   `json:"extra_config"`
+	RawContent         string   `json:"raw_content"`
+	// NoAccessLog leaves this rule's requests out of the access log.
+	NoAccessLog bool `json:"no_access_log,omitempty"`
+	// LogSkipPaths are path patterns (e.g. /health*) not written to the access log.
+	LogSkipPaths []string `json:"log_skip_paths,omitempty"`
+	// AccessLog makes a standard site import the access log snippet. It
+	// mirrors the global setting and is set by CaddyService before writing.
+	AccessLog  bool      `json:"-"`
+	ModifiedAt time.Time `json:"modified_at"`
 }
 
 // unsafeTokenChars are characters that would let a form value break out of
@@ -95,6 +102,11 @@ func (s *Site) Validate() error {
 	for _, sn := range s.Snippets {
 		if sn != "" && !snippetNameRegex.MatchString(sn) {
 			return fmt.Errorf("invalid snippet name: %q", sn)
+		}
+	}
+	for _, p := range s.LogSkipPaths {
+		if !isSafeToken(p) || !strings.HasPrefix(p, "/") {
+			return fmt.Errorf("invalid log skip path: %q", p)
 		}
 	}
 	for _, t := range s.Tags {
@@ -197,6 +209,31 @@ func (s *Site) ToCaddyfile() string {
 	return s.ToCaddyfileStandard()
 }
 
+// AccessLogSnippet is the snippet (defined in the generated Caddyfile while
+// access logging is enabled) that turns on the access log for a site block.
+const AccessLogSnippet = "cpm_access_log"
+
+// logSkipLines returns the log_skip directives for this rule. The matcher
+// name must be unique within the site block (wildcard rules share one).
+func (s *Site) logSkipLines(matcher string) []string {
+	if s.NoAccessLog {
+		return []string{"    log_skip"}
+	}
+	var paths []string
+	for _, p := range s.LogSkipPaths {
+		if p = strings.TrimSpace(p); p != "" {
+			paths = append(paths, p)
+		}
+	}
+	if len(paths) == 0 {
+		return nil
+	}
+	return []string{
+		fmt.Sprintf("    @%s path %s", matcher, strings.Join(paths, " ")),
+		fmt.Sprintf("    log_skip @%s", matcher),
+	}
+}
+
 // ToCaddyfileWildcard generates handle block format for wildcard sites
 // This format is used inside a *.domain.com { } block
 func (s *Site) ToCaddyfileWildcard() string {
@@ -214,6 +251,7 @@ func (s *Site) ToCaddyfileWildcard() string {
 
 	// Handle block
 	lines = append(lines, fmt.Sprintf("handle @%s {", matcherName))
+	lines = append(lines, s.logSkipLines(matcherName+"_log_skip")...)
 
 	// Import snippets (except cloudflare_dns which is handled at wildcard block level via TLS snippet)
 	for _, snippet := range s.Snippets {
@@ -262,6 +300,10 @@ func (s *Site) ToCaddyfileStandard() string {
 
 	// Domain header
 	lines = append(lines, fmt.Sprintf("%s {", strings.Join(s.Domains, ", ")))
+	if s.AccessLog {
+		lines = append(lines, "    import "+AccessLogSnippet)
+	}
+	lines = append(lines, s.logSkipLines("cpm_log_skip")...)
 
 	// Import snippets
 	for _, snippet := range s.Snippets {

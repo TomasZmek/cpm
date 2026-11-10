@@ -69,6 +69,7 @@
                     {{end}}
                 </div>
                 <div class="site-card-actions">
+                    <a href="/logs?view=access&amp;site={{.Filename}}" class="btn btn-sm btn-secondary" title="{{t $.Lang "sites_show_logs"}}" aria-label="{{t $.Lang "sites_show_logs"}}">📝</a>
                     <a href="/sites/{{.Filename}}/edit" class="btn btn-sm btn-secondary">{{t $.Lang "edit"}}</a>
                     <button class="btn btn-sm btn-danger"
                             hx-post="/sites/{{.Filename}}/delete"

@@ -167,6 +167,10 @@ func (c *CaddyService) saveImportedSites(sites []*models.Site) (*ImportResult, [
 			content = strings.TrimSpace(site.ToCaddyfile())
 		}
 
+		if c.caddyfileManager.AccessLogSettings().Enabled {
+			content, _ = setAccessLogImport(content, true)
+		}
+
 		dest := filepath.Join(standardDir, filename+".caddy")
 		if err := os.WriteFile(dest, []byte(content+"\n"), 0644); err != nil {
 			res.Failed = append(res.Failed, fmt.Sprintf("%s (%v)", domain, err))

@@ -1,5 +1,12 @@
 # CPM - Unreleased
 
+## ✨ New Features
+
+- **Access log per rule** ([#37](https://github.com/TomasZmek/cpm/issues/37)) — new **Settings → Logs** (admin, off by default). When enabled, Caddy writes every request as JSON to `/data/cpm-logs/access.log` (the Caddy data volume CPM already has mounted — no docker-compose change), rotated by size (default 10 MB, 5 old files kept), optionally with client IPs masked (IPv4 /24, IPv6 /48). CPM defines a `cpm_access_log` snippet in the generated Caddyfile and imports it into every standard rule and every wildcard `*.domain` block; turning it off removes the imports again. If Caddy rejects the configuration, the previous state is restored.
+- **Logs → Requests** — table of requests (time, status, method + path, host, duration, size, client IP; user agent on hover), filter by rule, status class (2xx–5xx, errors), text and count, and 24-hour stats (requests, 2xx/4xx/5xx, error rate, median and p95 response time). Rotated (gzipped) files are read too. **Logs → Caddy** is the previous view of the Caddy container output.
+- 📝 on each rule (rules list and detail) opens its requests.
+- Rule form → Advanced: **Do not log this rule** and **Paths not to log** (e.g. `/health* /metrics`), generated as `log_skip` — works for wildcard rules too.
+
 ## 🔧 Under the hood
 
 - **Fiber v3** — CPM moved from the deprecated Fiber v2 to Fiber v3 (3.7). Binary +1.5 MB, image still ~7 MB.

@@ -53,7 +53,7 @@
 | 🔐 **Wildcard SSL** | Manage wildcard certificates with DNS challenge |
 | ⚙️ **Snippets** | Cloudflare DNS, security headers, rate limiting |
 | 📜 **Certificates** | SSL overview with expiration warnings, bulk renewal |
-| 📄 **Logs** | Parsed Caddy logs with level filter and search |
+| 📄 **Logs** | Access log of requests per rule (status, latency, client) with 24 h stats, plus parsed Caddy logs with level filter and search |
 | 👥 **Multi-User** | Role-based access (Admin, Editor, Viewer) |
 | 💾 **Backup** | Full config backup & restore |
 | 🏠 **Internal-only** | Restrict sites to internal network only |

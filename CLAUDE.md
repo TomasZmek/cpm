@@ -73,7 +73,8 @@ All services are constructed in `main.go` and injected into `handlers.Handler` a
 | `AuthService` | `services/auth.go` | Users, roles, in-memory sessions |
 | `BackupService` | `services/backup.go` | ZIP backup/restore, JSON import/export of rules |
 | `CertificateService` | `services/certificates.go` | Reads/deletes certificates from Caddy data dir |
-| `SettingsService` | `services/settings.go` | App settings (`settings.json`), Docker discovery hosts |
+| `SettingsService` | `services/settings.go` | App settings (`settings.json`), Docker discovery hosts, access log settings |
+| `AccessLogService` | `services/accesslog.go` | Reads Caddy's JSON access log (`<data>/cpm-logs/access.log` + rotated `.gz`), filters by rule hosts/status/text, 24 h stats; also the `cpm_access_log` snippet and `SyncAccessLogImports` |
 | Discovery | `services/discovery.go` | Docker Auto-Discovery — turns inventory containers into rows paired with proxy rules |
 | `modules.Manager` | `modules/manager.go` | Registered modules, enable/configure/disable at runtime, `caddy-config/modules.json` (0600) |
 | `inventory.Service` | `inventory/inventory.go` | Background refresh (30 s) of containers from active modules + TCP probe; backend status of rules |
@@ -128,7 +129,9 @@ caddy-config/
     └── standard/          # standard domain blocks
 ```
 
-In the Caddy data dir CPM only touches `caddy/certificates/` and `cpm-cert-backups/`: renewing or deleting a certificate moves its files (incl. private key, 0600) into a backup there (`services/cert_backups.go`), and renewal/restore restart the Caddy container — a reload keeps certificates cached in memory.
+**Access log** (Settings → Logs, off by default): while enabled, `GenerateCaddyfile` defines the `cpm_access_log` snippet (`log { output file /data/cpm-logs/access.log … }`) and imports it in every wildcard block; standard site files get `import cpm_access_log` after their address line (`Site.AccessLog`, set by `CaddyService` before writing, and `SyncAccessLogImports` when the setting changes). While disabled, neither the snippet nor the imports exist, so files stay as before. Per rule, `NoAccessLog` / `LogSkipPaths` generate `log_skip` (a `log` directive cannot be inside `handle`, `log_skip` can).
+
+In the Caddy data dir CPM reads `cpm-logs/` (written by Caddy) and only touches `caddy/certificates/` and `cpm-cert-backups/`: renewing or deleting a certificate moves its files (incl. private key, 0600) into a backup there (`services/cert_backups.go`), and renewal/restore restart the Caddy container — a reload keeps certificates cached in memory.
 
 ### Authentication
 

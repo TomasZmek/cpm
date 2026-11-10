@@ -4,6 +4,9 @@
         <a href="/sites/{{.Site.Filename}}/edit" class="btn btn-primary">
             ✏️ {{t .Lang "edit"}}
         </a>
+        <a href="/logs?view=access&amp;site={{.Site.Filename}}" class="btn btn-secondary">
+            📝 {{t .Lang "sites_show_logs"}}
+        </a>
         <button 
             class="btn btn-danger"
             hx-delete="/sites/{{.Site.Filename}}"

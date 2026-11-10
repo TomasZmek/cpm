@@ -219,6 +219,7 @@ func (c *CaddyService) CreateSite(site *models.Site) error {
 	}
 
 	// Generate Caddyfile content
+	site.AccessLog = c.caddyfileManager.AccessLogSettings().Enabled
 	content := site.ToCaddyfile()
 
 	// Write file
@@ -260,6 +261,7 @@ func (c *CaddyService) UpdateSite(site *models.Site) error {
 	}
 
 	// Generate Caddyfile content
+	site.AccessLog = c.caddyfileManager.AccessLogSettings().Enabled
 	content := site.ToCaddyfile()
 
 	// Write to new location

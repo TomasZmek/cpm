@@ -1516,3 +1516,132 @@ msgstr "페이지가 만료되었습니다 (예: CPM 재시작 또는 업데이�
 
 msgid "msg_csrf_origin"
 msgstr "요청이 이 사이트에서 오지 않았습니다. CPM이 리버스 프록시 뒤에 있으면 TRUSTED_PROXIES(또는 TRUSTED_ORIGINS, 예: https://cpm.example.com)를 설정하세요."
+
+msgid "settings_logs"
+msgstr "로그"
+
+msgid "settings_desc_logs"
+msgstr "규칙별 요청 액세스 로그"
+
+msgid "sites_no_access_log"
+msgstr "이 규칙은 기록하지 않음"
+
+msgid "help_no_access_log"
+msgstr "이 규칙에 대한 요청은 액세스 로그(설정 → 로그)에 기록되지 않습니다."
+
+msgid "sites_log_skip_paths"
+msgstr "기록하지 않을 경로"
+
+msgid "help_log_skip_paths"
+msgstr "액세스 로그에서 제외할 경로를 공백으로 구분하여 입력합니다. *는 와일드카드입니다(예: /health* /metrics)."
+
+msgid "sites_show_logs"
+msgstr "요청 보기(액세스 로그)"
+
+msgid "access_log_title"
+msgstr "액세스 로그"
+
+msgid "access_log_intro"
+msgstr "Caddy는 모든 요청을 JSON 로그 파일에 기록하고, CPM은 이를 로그에서 규칙별로 필터링하여 보여줍니다. 이 설정을 변경하면 Caddyfile을 다시 생성하고 Caddy를 다시 로드합니다."
+
+msgid "access_log_enable"
+msgstr "액세스 로그 기록"
+
+msgid "access_log_roll_size"
+msgstr "회전 크기(MB)"
+
+msgid "access_log_roll_keep"
+msgstr "보관할 회전 파일 수"
+
+msgid "access_log_mask_ips"
+msgstr "클라이언트 IP 주소 마스킹"
+
+msgid "access_log_mask_ips_hint"
+msgstr "IPv4 주소는 /24, IPv6 주소는 /48로 줄여서 기록합니다."
+
+msgid "access_log_file_hint"
+msgstr "Caddy 컨테이너의 로그 파일(Caddy 데이터 볼륨):"
+
+msgid "access_log_privacy_hint"
+msgstr "액세스 로그에는 클라이언트 IP 주소와 요청한 URL이 포함됩니다. 개인정보 보호(예: GDPR)가 중요하다면 IP 마스킹과 짧은 보관 기간을 고려하세요."
+
+msgid "access_log_open"
+msgstr "액세스 로그 열기"
+
+msgid "msg_access_log_saved"
+msgstr "액세스 로그 설정을 저장하고 Caddy를 다시 로드했습니다"
+
+msgid "msg_access_log_reverted"
+msgstr "Caddy가 구성을 거부하여 이전 액세스 로그 설정을 복원했습니다"
+
+msgid "logs_tab_access"
+msgstr "요청"
+
+msgid "logs_tab_caddy"
+msgstr "Caddy"
+
+msgid "access_log_disabled"
+msgstr "액세스 로그가 꺼져 있어 요청이 기록되지 않습니다."
+
+msgid "access_log_enable_link"
+msgstr "설정 → 로그에서 켜기"
+
+msgid "access_log_rule_not_found"
+msgstr "규칙을 찾을 수 없습니다."
+
+msgid "access_log_rule"
+msgstr "규칙"
+
+msgid "access_log_all_rules"
+msgstr "모든 규칙"
+
+msgid "access_log_status"
+msgstr "상태"
+
+msgid "access_log_errors"
+msgstr "오류(4xx + 5xx)"
+
+msgid "access_log_search"
+msgstr "경로, 호스트, IP 또는 사용자 에이전트…"
+
+msgid "access_log_apply"
+msgstr "필터"
+
+msgid "access_log_rule_hosts"
+msgstr "요청 대상:"
+
+msgid "access_log_requests_24h"
+msgstr "요청(24시간)"
+
+msgid "access_log_latency"
+msgstr "응답 시간 중앙값 / p95(24시간)"
+
+msgid "access_log_time"
+msgstr "시간"
+
+msgid "access_log_request"
+msgstr "요청"
+
+msgid "access_log_host"
+msgstr "호스트"
+
+msgid "access_log_duration"
+msgstr "소요 시간"
+
+msgid "access_log_size"
+msgstr "크기"
+
+msgid "access_log_client"
+msgstr "클라이언트"
+
+msgid "access_log_newest_first"
+msgstr "최신순"
+
+msgid "access_log_no_entries"
+msgstr "필터와 일치하는 요청이 없습니다."
+
+msgid "access_log_no_file"
+msgstr "로그 파일이 아직 없습니다. Caddy가 첫 요청 때 만듭니다."
+
+msgid "msg_access_log_saved_no_reload"
+msgstr "액세스 로그 설정을 저장했지만 Caddy를 다시 로드하지 못했습니다"

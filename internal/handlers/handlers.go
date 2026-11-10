@@ -28,6 +28,12 @@ type Handler struct {
 	settingsService *services.SettingsService
 	modules         *modules.Manager
 	inventory       *inventory.Service
+	accessLog       *services.AccessLogService
+}
+
+// SetAccessLog attaches the access log reader.
+func (h *Handler) SetAccessLog(a *services.AccessLogService) {
+	h.accessLog = a
 }
 
 // SetModules attaches the module manager and the container inventory.
