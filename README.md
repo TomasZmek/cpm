@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-3.5.1-blue" alt="Version">
+  <img src="https://img.shields.io/badge/version-3.6.0-blue" alt="Version">
   <img src="https://img.shields.io/badge/Go-1.26-00ADD8?logo=go" alt="Go">
   <img src="https://img.shields.io/badge/Docker-ready-2496ED?logo=docker" alt="Docker">
   <img src="https://img.shields.io/badge/platforms-amd64%20%7C%20arm64-lightgrey" alt="Platforms">
@@ -61,7 +61,7 @@
 | 🌐 **i18n** | English, Czech & Korean |
 | 📋 **Templates** | 17+ pre-configured service templates |
 | 🐳 **Docker Auto-Discovery** | Containers per Docker host, paired with rules by host IP + published port, one-click rule creation |
-| 🧩 **Modules** | Extend CPM from the admin UI (container sources, more to come); built-in Docker (local) |
+| 🧩 **Modules** | Extend CPM from the admin UI: Docker (local) and **Dockhand** (containers on all your Docker hosts) |
 
 ---
 
@@ -70,9 +70,9 @@
 ### Docker Hub / GitHub
 
 ```bash
-# Multi-arch image also on GitHub Container Registry: ghcr.io/tomaszmek/cpm:3.5.1
+# Multi-arch image also on GitHub Container Registry: ghcr.io/tomaszmek/cpm:3.6.0
 # Offline packages (docker load -i …): https://github.com/TomasZmek/cpm/releases
-docker pull perteus/caddy-ui:3.5.1
+docker pull perteus/caddy-ui:3.6.0
 docker pull perteus/caddy-ui:latest
 ```
 
@@ -95,7 +95,7 @@ services:
       - ./caddy-data:/data
 
   cpm:
-    image: perteus/caddy-ui:3.5.1
+    image: perteus/caddy-ui:3.6.0
     container_name: cpm
     ports:
       - "8501:8501"
@@ -125,7 +125,7 @@ services:
       - ./caddy-data:/data
 
   cpm:
-    image: perteus/caddy-ui:3.5.1
+    image: perteus/caddy-ui:3.6.0
     container_name: cpm
     privileged: true  # Required for Synology
     ports:
@@ -149,6 +149,8 @@ Modules extend CPM without code changes. Open **Settings → Modules** (admin) t
 |--------|--------------|
 | 🐳 **Docker (local)** | Reads containers from the mounted Docker socket. Set **Docker host IP** to the LAN address of the machine Docker runs on (e.g. your NAS) so rules like `192.168.1.10:8080` are matched to the container publishing that port. |
 | ⚓ **Dockhand** | Reads containers of all [Dockhand](https://dockhand.pro) environments — the local host and remote hosts via Hawser — through Dockhand's API (URL + API token). Each environment's host IP comes from its *Public IP* in Dockhand. |
+
+**Dockhand setup:** URL of Dockhand (e.g. `http://192.168.1.10:3866`) and an API token from Dockhand → Profile → API tokens (only needed when Dockhand authentication is on — recommended, otherwise Dockhand's API is open to the whole network). Set a *Public IP* for each environment in Dockhand → Settings → Environments, or enter `ID=IP` pairs in the module.
 
 With a container source enabled, CPM shows for every proxy rule whether its backend is **running / stopped** (with container name and host) or, for targets no module knows, **reachable / unreachable** (TCP check). Containers are refreshed in the background every 30 s.
 
@@ -230,7 +232,7 @@ For Synology Docker, use `privileged: true` to allow Docker socket access:
 
 ```yaml
 cpm:
-  image: perteus/caddy-ui:3.5.1
+  image: perteus/caddy-ui:3.6.0
   privileged: true
   volumes:
     - /volume1/docker/caddy-config:/caddy-config
@@ -272,8 +274,8 @@ go build -o cpm ./cmd/cpm
 ### Docker Build
 
 ```bash
-docker build -t perteus/caddy-ui:3.5.1 --no-cache .
-docker push perteus/caddy-ui:3.5.1
+docker build -t perteus/caddy-ui:3.6.0 --no-cache .
+docker push perteus/caddy-ui:3.6.0
 docker push perteus/caddy-ui:latest
 ```
 
@@ -283,6 +285,7 @@ docker push perteus/caddy-ui:latest
 
 | Version | Date | Notes |
 |---------|------|-------|
+| **3.6.0** | 2026-11-10 | ⚓ Dockhand module — backend status and discovery for containers on all Docker hosts |
 | **3.5.1** | 2026-11-10 | 🔒 Security patch — Go 1.26.10, fasthttp, compress, x/crypto (31 known vulnerabilities fixed) |
 | **3.5.0** | 2026-11-09 | 🧩 Modules, backend status for IP rules, discovery per host, host IP detection fix |
 | **3.4.1** | 2026-11-09 | 🔐 Certificate backups & restore, renewal that really renews, Restart Caddy button |
@@ -298,6 +301,12 @@ docker push perteus/caddy-ui:latest
 | **3.0.1** | 2026-01 | 🔐 Wildcard SSL, migration tools, UI improvements |
 | **3.0.0** | 2026-01 | 🎉 Complete Go rewrite (794MB → 6MB) |
 | 2.2.1 | 2025-12 | Python version (deprecated) |
+
+### v3.6.0 - Dockhand module
+- ✅ **Dockhand module** — reads containers of all environments managed by [Dockhand](https://dockhand.pro) (local host and remote hosts via Hawser), so backend status and Docker discovery cover every machine
+- ✅ Host IP per environment from Dockhand's *Public IP* (or `ID=IP` in the module settings)
+- ✅ Containers reported by several modules are shown once
+- 🧪 Test builds of the develop branch: `perteus/caddy-ui:develop` (never `latest`)
 
 ### v3.5.0 - Modules & backend status
 - ✅ **Modules** — enable, configure and disable extensions in Settings → Modules; settings live in `caddy-config/modules.json` ([docs/modules.md](https://github.com/TomasZmek/cpm/blob/main/docs/modules.md))
