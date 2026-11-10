@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-**CPM - Caddy Proxy Manager** — a lightweight Go web UI for managing a Caddy reverse proxy. Distributed as a ~6 MB Docker image (`perteus/caddy-ui` on Docker Hub). Current released version: **3.6.0**.
+**CPM - Caddy Proxy Manager** — a lightweight Go web UI for managing a Caddy reverse proxy. Distributed as a ~6 MB Docker image (`perteus/caddy-ui` on Docker Hub). Current released version: **3.7.0**.
 
 - GitHub: https://github.com/TomasZmek/cpm
 - Docker Hub: `perteus/caddy-ui`
