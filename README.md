@@ -76,6 +76,8 @@ docker pull perteus/caddy-ui:3.5.1
 docker pull perteus/caddy-ui:latest
 ```
 
+Test builds of the development branch (not for production): `perteus/caddy-ui:develop`, or a specific build `perteus/caddy-ui:develop-<commit>` — see the [develop pre-release](https://github.com/TomasZmek/cpm/releases/tag/develop).
+
 ### Docker Compose (Recommended)
 
 ```yaml

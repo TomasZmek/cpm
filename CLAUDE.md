@@ -201,6 +201,10 @@ Types: `feat`, `fix`, `docs`, `refactor`, `chore`
 5. Commit with `chore: bump version to vVERSION`, merge into `main`, then `main` back into `develop`
 6. Run the **Release** workflow (GitHub → Actions → Release → Run workflow, version without `v`, on `main`). It checks that `cmd/cpm/main.go` has that version, pushes the multi-arch image to `ghcr.io/tomaszmek/cpm:VERSION` and `:latest`, and creates the GitHub release `vVERSION` (tag included) with the notes from `RELEASE_NOTES.md` and offline packages `cpm-VERSION-amd64.tar` / `-arm64.tar` (`docker load`, tagged `perteus/caddy-ui:VERSION`). Pushing a `v*` tag runs it too. With the repository secrets `DOCKERHUB_USERNAME` / `DOCKERHUB_TOKEN` it also pushes `perteus/caddy-ui:VERSION` + `:latest` (multi-arch) and updates the Docker Hub description from `DOCKERHUB.md` — then step 4 is not needed.
 
+### Test builds of `develop`
+
+Every push to `develop` runs the **Develop build** workflow (`.github/workflows/develop.yml`): multi-arch images `perteus/caddy-ui:develop` + `:develop-<short sha>` (Docker Hub) and the same tags on `ghcr.io/tomaszmek/cpm`, never `latest`, plus a GitHub pre-release `develop` (replaced on every run, not marked latest) with offline packages and the "Unreleased" section of `RELEASE_NOTES.md`. Use these for testing instead of hand-built images.
+
 ## i18n
 
 Translations use gettext PO format via `github.com/leonelquinteros/gotext`.
