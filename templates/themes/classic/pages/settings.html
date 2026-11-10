@@ -90,9 +90,12 @@
                 <div class="card flex-1">
                     <h3>📥 {{t .Lang "backup_create"}}</h3>
                     <p>{{t .Lang "backup_create_desc"}}</p>
-                    <a href="/settings/backup/create" class="btn btn-primary">
-                        ⬇️ {{t .Lang "backup_download"}}
-                    </a>
+                    <form action="/settings/backup/create" method="POST">
+                        <input type="hidden" name="_csrf" value="{{.CSRFToken}}">
+                        <button type="submit" class="btn btn-primary">
+                            ⬇️ {{t .Lang "backup_download"}}
+                        </button>
+                    </form>
                 </div>
                 
                 <div class="card flex-1">
@@ -462,6 +465,53 @@ subdomain.example.com {
         }
         </script>
 
+        {{else if eq .ActiveTab "logs"}}
+        <!-- Access log (Settings → Logs): snippet in the generated Caddyfile -->
+        <div class="settings-section">
+            <h2>📝 {{t .Lang "access_log_title"}}
+                {{if .AccessLog.Enabled}}<span class="badge badge-success">{{t .Lang "modules_enabled"}}</span>{{else}}<span class="badge badge-gray">{{t .Lang "modules_disabled"}}</span>{{end}}
+            </h2>
+            <p class="text-muted">{{t .Lang "access_log_intro"}}</p>
+            <form action="/settings/logs" method="POST" class="mt-4">
+                <input type="hidden" name="_csrf" value="{{$.CSRFToken}}">
+                <div class="form-group">
+                    <label class="toggle-label">
+                        <span class="toggle-text">{{t .Lang "access_log_enable"}}</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" name="enabled" {{if .AccessLog.Enabled}}checked{{end}}>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </label>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="roll_size_mb">{{t .Lang "access_log_roll_size"}}</label>
+                        <input type="number" id="roll_size_mb" name="roll_size_mb" min="1" max="{{.MaxRollSizeMB}}" value="{{.AccessLog.RollSizeMB}}">
+                    </div>
+                    <div class="form-group">
+                        <label for="roll_keep">{{t .Lang "access_log_roll_keep"}}</label>
+                        <input type="number" id="roll_keep" name="roll_keep" min="1" max="{{.MaxRollKeep}}" value="{{.AccessLog.RollKeep}}">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="toggle-label">
+                        <span class="toggle-text">{{t .Lang "access_log_mask_ips"}}</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" name="mask_ips" {{if .AccessLog.MaskIPs}}checked{{end}}>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </label>
+                    <div class="form-hint">{{t .Lang "access_log_mask_ips_hint"}}</div>
+                </div>
+                <div class="form-hint">{{t .Lang "access_log_file_hint"}} <code>{{.AccessLogPath}}</code></div>
+                <div class="form-hint">🔒 {{t .Lang "access_log_privacy_hint"}}</div>
+                <div class="form-actions mt-4">
+                    <button type="submit" class="btn btn-primary">💾 {{t .Lang "save"}}</button>
+                    {{if .AccessLog.Enabled}}<a href="/logs?view=access" class="btn btn-secondary">📝 {{t .Lang "access_log_open"}}</a>{{end}}
+                </div>
+            </form>
+        </div>
+
         {{else if eq .ActiveTab "modules"}}
         <!-- Modules: enable/configure/disable at runtime (caddy-config/modules.json) -->
         <div class="settings-section">
@@ -649,7 +699,10 @@ function showPasswordModal(username) {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
-                'X-CSRF-Token': csrfToken
+                'X-CSRF-Token': csrfToken,
+                // Answered with 200 + HX-Redirect (no followed redirect), so
+                // the flash is still there for the reload below.
+                'HX-Request': 'true'
             },
             body: `password=${encodeURIComponent(newPassword)}`
         }).then(async (resp) => {

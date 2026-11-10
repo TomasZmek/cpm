@@ -2,9 +2,10 @@ package handlers
 
 import (
 	"fmt"
+
 	"github.com/TomasZmek/cpm/internal/inventory"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
 // DashboardData contains data for the dashboard page
@@ -25,7 +26,7 @@ type Alert struct {
 }
 
 // Dashboard renders the dashboard page
-func (h *Handler) Dashboard(c *fiber.Ctx) error {
+func (h *Handler) Dashboard(c fiber.Ctx) error {
 	// Get stats
 	stats := h.caddyService.GetStats()
 	certStats := h.certService.GetStats()

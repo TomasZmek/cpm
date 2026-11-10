@@ -8,18 +8,18 @@ import (
 	"github.com/TomasZmek/cpm/internal/middleware"
 	"github.com/TomasZmek/cpm/internal/models"
 	"github.com/TomasZmek/cpm/internal/services"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
 // SettingsDocker renders the Docker Auto-Discovery settings tab.
-func (h *Handler) SettingsDocker(c *fiber.Ctx) error {
+func (h *Handler) SettingsDocker(c fiber.Ctx) error {
 	return h.renderSettingsTab(c, "docker")
 }
 
 // SettingsDiscoveryDetect suggests this Docker host's LAN IP as JSON. Inside a
 // container on a bridge network the host's address is not visible, so the
 // address the browser used to reach CPM is the fallback.
-func (h *Handler) SettingsDiscoveryDetect(c *fiber.Ctx) error {
+func (h *Handler) SettingsDiscoveryDetect(c fiber.Ctx) error {
 	if ip, err := services.DetectLocalIP(); err == nil {
 		return c.JSON(fiber.Map{"ip": ip})
 	}
@@ -30,10 +30,10 @@ func (h *Handler) SettingsDiscoveryDetect(c *fiber.Ctx) error {
 }
 
 // SettingsDiscoveryHostsSave saves the list of Docker discovery hosts.
-func (h *Handler) SettingsDiscoveryHostsSave(c *fiber.Ctx) error {
+func (h *Handler) SettingsDiscoveryHostsSave(c fiber.Ctx) error {
 	// Collect parallel arrays ip[] and label[] from the form.
 	var ips, labels []string
-	c.Context().PostArgs().VisitAll(func(key, value []byte) {
+	c.RequestCtx().PostArgs().VisitAll(func(key, value []byte) {
 		switch string(key) {
 		case "ip[]":
 			ips = append(ips, strings.TrimSpace(string(value)))
@@ -65,22 +65,22 @@ func (h *Handler) SettingsDiscoveryHostsSave(c *fiber.Ctx) error {
 	settings, err := h.settingsService.Get()
 	if err != nil {
 		setFlash(c, "error", tl(c, "msg_settings_load_failed")+": "+err.Error())
-		return c.Redirect("/settings/docker")
+		return redirectTo(c, "/settings/docker")
 	}
 
 	settings.DiscoveryHosts = hosts
 
 	if err := h.settingsService.Save(settings); err != nil {
 		setFlash(c, "error", tl(c, "msg_settings_save_failed")+": "+err.Error())
-		return c.Redirect("/settings/docker")
+		return redirectTo(c, "/settings/docker")
 	}
 
 	setFlash(c, "success", tl(c, "msg_discovery_hosts_saved"))
-	return c.Redirect("/settings/docker")
+	return redirectTo(c, "/settings/docker")
 }
 
 // SettingsPage renders the settings page
-func (h *Handler) SettingsPage(c *fiber.Ctx) error {
+func (h *Handler) SettingsPage(c fiber.Ctx) error {
 	// Without ?tab= this is the settings index: wide screens show the
 	// General tab, phones show the section list (list–detail navigation).
 	tab := c.Query("tab")
@@ -108,13 +108,14 @@ var settingsSections = []struct {
 	{SettingsSection{"backup", "/settings/backup", "💾", "settings_backup", "settings_desc_backup"}, "admin"},
 	{SettingsSection{"caddy", "/settings/caddy", "🔧", "settings_caddy", "settings_desc_caddy"}, "view"},
 	{SettingsSection{"wildcard", "/settings/wildcard", "🔐", "settings_wildcard", "settings_desc_wildcard"}, "admin"},
+	{SettingsSection{"logs", "/settings/logs", "📝", "settings_logs", "settings_desc_logs"}, "admin"},
 	{SettingsSection{"docker", "/settings/docker", "🐳", "settings_docker", "settings_desc_docker"}, "admin"},
 	{SettingsSection{"users", "/settings/users", "👥", "settings_users", "settings_desc_users"}, "admin"},
 	{SettingsSection{"modules", "/settings/modules", "🧩", "settings_modules", "settings_desc_modules"}, "admin"},
 }
 
 // visibleSettingsSections returns the sections the current user may open.
-func (h *Handler) visibleSettingsSections(c *fiber.Ctx) []SettingsSection {
+func (h *Handler) visibleSettingsSections(c fiber.Ctx) []SettingsSection {
 	var out []SettingsSection
 	for _, s := range settingsSections {
 		if s.Key == "docker" && !h.hasContainerSource() {
@@ -128,39 +129,39 @@ func (h *Handler) visibleSettingsSections(c *fiber.Ctx) []SettingsSection {
 }
 
 // SettingsGeneral renders the general settings tab
-func (h *Handler) SettingsGeneral(c *fiber.Ctx) error {
+func (h *Handler) SettingsGeneral(c fiber.Ctx) error {
 	return h.renderSettingsTab(c, "general")
 }
 
 // SettingsBackup renders the backup settings tab
-func (h *Handler) SettingsBackup(c *fiber.Ctx) error {
+func (h *Handler) SettingsBackup(c fiber.Ctx) error {
 	return h.renderSettingsTab(c, "backup")
 }
 
 // SettingsCaddy renders the Caddy settings tab
-func (h *Handler) SettingsCaddy(c *fiber.Ctx) error {
+func (h *Handler) SettingsCaddy(c fiber.Ctx) error {
 	return h.renderSettingsTab(c, "caddy")
 }
 
 // SettingsUsers renders the users settings tab
-func (h *Handler) SettingsUsers(c *fiber.Ctx) error {
+func (h *Handler) SettingsUsers(c fiber.Ctx) error {
 	return h.renderSettingsTab(c, "users")
 }
 
-func (h *Handler) renderSettingsTab(c *fiber.Ctx, tab string) error {
+func (h *Handler) renderSettingsTab(c fiber.Ctx, tab string) error {
 	return h.renderSettings(c, tab, false)
 }
 
-func (h *Handler) renderSettings(c *fiber.Ctx, tab string, index bool) error {
+func (h *Handler) renderSettings(c fiber.Ctx, tab string, index bool) error {
 	// Users and backup tabs expose sensitive data (user list, configuration
 	// with API tokens) and are reachable via ?tab=, so check here as well.
-	if (tab == "users" || tab == "backup" || tab == "docker" || tab == "modules") && !h.hasPermission(c, "admin") {
+	if (tab == "users" || tab == "backup" || tab == "docker" || tab == "modules" || tab == "logs") && !h.hasPermission(c, "admin") {
 		return fiber.NewError(fiber.StatusForbidden, "You do not have permission to view this page")
 	}
 
 	// Docker discovery hosts belong to the container-source modules.
 	if tab == "docker" && !h.hasContainerSource() {
-		return c.Redirect("/settings/modules")
+		return redirectTo(c, "/settings/modules")
 	}
 
 	flashType, flashMsg := getFlash(c)
@@ -213,13 +214,20 @@ func (h *Handler) renderSettings(c *fiber.Ctx, tab string, index bool) error {
 
 	case "modules":
 		data["Modules"] = h.moduleViews(c)
+
+	case "logs":
+		appSettings, _ := h.settingsService.Get()
+		data["AccessLog"] = appSettings.AccessLog.Normalized()
+		data["AccessLogPath"] = services.AccessLogCaddyDir + "/" + services.AccessLogFileName
+		data["MaxRollSizeMB"] = models.MaxAccessLogRollSizeMB
+		data["MaxRollKeep"] = models.MaxAccessLogRollKeep
 	}
 
 	return c.Render("pages/settings", data, "layouts/base")
 }
 
 // BackupCreate creates a backup
-func (h *Handler) BackupCreate(c *fiber.Ctx) error {
+func (h *Handler) BackupCreate(c fiber.Ctx) error {
 	data, filename, err := h.backupService.CreateBackup()
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
@@ -231,7 +239,7 @@ func (h *Handler) BackupCreate(c *fiber.Ctx) error {
 }
 
 // BackupRestore restores from a backup
-func (h *Handler) BackupRestore(c *fiber.Ctx) error {
+func (h *Handler) BackupRestore(c fiber.Ctx) error {
 	file, err := c.FormFile("backup")
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).SendString("No file uploaded")
@@ -262,16 +270,11 @@ func (h *Handler) BackupRestore(c *fiber.Ctx) error {
 		}
 	}
 
-	if c.Get("HX-Request") == "true" {
-		c.Set("HX-Redirect", "/settings?tab=backup")
-		return c.SendStatus(fiber.StatusOK)
-	}
-
-	return c.Redirect("/settings?tab=backup")
+	return redirectTo(c, "/settings?tab=backup")
 }
 
 // ImportRules imports rules from JSON
-func (h *Handler) ImportRules(c *fiber.Ctx) error {
+func (h *Handler) ImportRules(c fiber.Ctx) error {
 	file, err := c.FormFile("rules")
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).SendString("No file uploaded")
@@ -306,16 +309,11 @@ func (h *Handler) ImportRules(c *fiber.Ctx) error {
 		setFlash(c, "success", tl(c, "msg_import_result", imported))
 	}
 
-	if c.Get("HX-Request") == "true" {
-		c.Set("HX-Redirect", "/settings?tab=backup")
-		return c.SendStatus(fiber.StatusOK)
-	}
-
-	return c.Redirect("/settings?tab=backup")
+	return redirectTo(c, "/settings?tab=backup")
 }
 
 // ExportRules exports rules as JSON
-func (h *Handler) ExportRules(c *fiber.Ctx) error {
+func (h *Handler) ExportRules(c fiber.Ctx) error {
 	sites, err := h.caddyService.GetAllSites()
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).SendString(err.Error())

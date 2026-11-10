@@ -8,11 +8,11 @@ import (
 
 	"github.com/TomasZmek/cpm/internal/models"
 	"github.com/TomasZmek/cpm/internal/services"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
 // SnippetsList renders the snippets management page
-func (h *Handler) SnippetsList(c *fiber.Ctx) error {
+func (h *Handler) SnippetsList(c fiber.Ctx) error {
 	cfg, err := h.snippetsService.GetConfig()
 	if err != nil {
 		return err
@@ -33,7 +33,7 @@ func (h *Handler) SnippetsList(c *fiber.Ctx) error {
 }
 
 // SnippetUpdate updates a specific snippet configuration
-func (h *Handler) SnippetUpdate(c *fiber.Ctx) error {
+func (h *Handler) SnippetUpdate(c fiber.Ctx) error {
 	snippetName := c.Params("name")
 
 	cfg, err := h.snippetsService.GetConfig()
@@ -128,16 +128,11 @@ func (h *Handler) SnippetUpdate(c *fiber.Ctx) error {
 		setFlash(c, "success", tl(c, "msg_snippet_updated", snippetName))
 	}
 
-	if c.Get("HX-Request") == "true" {
-		c.Set("HX-Redirect", "/snippets")
-		return c.SendStatus(fiber.StatusOK)
-	}
-
-	return c.Redirect("/snippets")
+	return redirectTo(c, "/snippets")
 }
 
 // HTMXSnippetForm returns a snippet form as HTML partial
-func (h *Handler) HTMXSnippetForm(c *fiber.Ctx) error {
+func (h *Handler) HTMXSnippetForm(c fiber.Ctx) error {
 	snippetName := c.Params("name")
 	if !snippetFormNameRegex.MatchString(snippetName) {
 		return c.Status(fiber.StatusBadRequest).SendString("Invalid snippet name")
@@ -170,7 +165,7 @@ func parseNetworks(input string) []string {
 // cloudflareEnvWarning returns a translated warning when the Caddy container
 // does not define CF_API_TOKEN, which makes "{env.CF_API_TOKEN}" empty.
 // Returns "" when the variable is set or Docker cannot be queried.
-func (h *Handler) cloudflareEnvWarning(c *fiber.Ctx) string {
+func (h *Handler) cloudflareEnvWarning(c fiber.Ctx) string {
 	if h.dockerService == nil || !h.dockerService.IsAvailable() {
 		return ""
 	}
@@ -201,7 +196,7 @@ func isSafeHeaderValue(v string) bool {
 }
 
 // formInt parses form value as int with default
-func formInt(c *fiber.Ctx, key string, defaultVal int) int {
+func formInt(c fiber.Ctx, key string, defaultVal int) int {
 	if v := c.FormValue(key); v != "" {
 		if i, err := strconv.Atoi(v); err == nil {
 			return i

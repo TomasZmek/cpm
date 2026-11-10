@@ -23,6 +23,8 @@
                hx-get="/htmx/sites/list"
                hx-trigger="keyup changed delay:300ms"
                hx-target="#sites-list"
+               hx-select="#sites-list"
+               hx-swap="outerHTML"
                hx-include="[name='tag']">
     </div>
     
@@ -31,6 +33,8 @@
             hx-get="/htmx/sites/list"
             hx-trigger="change"
             hx-target="#sites-list"
+               hx-select="#sites-list"
+               hx-swap="outerHTML"
             hx-include="[name='search']">
         <option value="">{{t .Lang "sites_all_tags"}}</option>
         {{range .AllTags}}
@@ -60,6 +64,7 @@
                     {{end}}
                 </div>
                 <div class="site-card-actions">
+                    <a href="/logs?view=access&amp;site={{.Filename}}" class="btn btn-sm btn-secondary" title="{{t $.Lang "sites_show_logs"}}" aria-label="{{t $.Lang "sites_show_logs"}}">📝</a>
                     <a href="/sites/{{.Filename}}/edit" class="btn btn-sm btn-secondary">{{t $.Lang "edit"}}</a>
                     <button class="btn btn-sm btn-danger"
                             hx-post="/sites/{{.Filename}}/delete"
@@ -291,4 +296,7 @@ function loadSiteStatus() {
 }
 loadSiteStatus();
 setInterval(loadSiteStatus, 30000);
+document.body.addEventListener('htmx:afterSwap', function (e) {
+    if (e.target && e.target.id === 'sites-list') { loadSiteStatus(); }
+});
 </script>

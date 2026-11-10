@@ -20,15 +20,17 @@ import (
 	"github.com/TomasZmek/cpm/internal/modules/dockerlocal"
 	"github.com/TomasZmek/cpm/internal/services"
 	"github.com/TomasZmek/cpm/internal/views"
-	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/compress"
-	"github.com/gofiber/fiber/v2/middleware/csrf"
-	"github.com/gofiber/fiber/v2/middleware/logger"
-	"github.com/gofiber/fiber/v2/middleware/recover"
+	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/extractors"
+	"github.com/gofiber/fiber/v3/middleware/compress"
+	"github.com/gofiber/fiber/v3/middleware/csrf"
+	"github.com/gofiber/fiber/v3/middleware/logger"
+	"github.com/gofiber/fiber/v3/middleware/recover"
+	"github.com/gofiber/fiber/v3/middleware/static"
 )
 
 const (
-	Version   = "3.6.0"
+	Version   = "3.7.0"
 	BuildDate = "2026-11-10"
 )
 
@@ -63,6 +65,10 @@ func main() {
 	// Initialize CaddyfileManager for wildcard block management
 	caddyfileManager := services.NewCaddyfileManager(cfg, wildcardService, snippetsService)
 	caddyService.SetCaddyfileManager(caddyfileManager)
+	caddyfileManager.SetAccessLogSettings(func() models.AccessLogSettings {
+		st, _ := settingsService.Get()
+		return st.AccessLog
+	})
 
 	// Ensure directory structure exists
 	if err := caddyfileManager.EnsureDirectoryStructure(); err != nil {
@@ -122,47 +128,10 @@ func main() {
 		"eq":      func(a, b interface{}) bool { return a == b },
 	}, true) // reload templates from disk (development convenience)
 
-	// Create Fiber app
-	app := fiber.New(fiber.Config{
-		AppName:      "CPM - Caddy Proxy Manager",
-		ServerHeader: "CPM",
-		ErrorHandler: handlers.ErrorHandler,
-		Views:        engine,
-		// Values returned by Ctx (FormValue, Params, Cookies, ...) are copies,
-		// not views into the request buffer. Services keep some of them beyond
-		// the request (e.g. the username in a session); without this, a later
-		// request reusing the buffer silently changed them and logged users out.
-		Immutable: true,
-	})
-
-	// Global middleware
-	app.Use(recover.New())
-	app.Use(logger.New(logger.Config{
-		Format: "[${time}] ${status} - ${method} ${path} (${latency})\n",
-	}))
-	app.Use(compress.New())
-
-	// CSRF protection — accepts token from form field "_csrf" or header "X-CSRF-Token".
-	// Applies to API routes as well, since they are authenticated by the session cookie.
-	app.Use(csrf.New(csrf.Config{
-		Expiration:     24 * time.Hour,
-		CookieName:     "cpm_csrf",
-		CookieSameSite: "Lax",
-		CookieHTTPOnly: false,
-		ContextKey:     "csrf_token",
-		Extractor: func(c *fiber.Ctx) (string, error) {
-			if token := c.FormValue("_csrf"); token != "" {
-				return token, nil
-			}
-			if token := c.Get("X-CSRF-Token"); token != "" {
-				return token, nil
-			}
-			return "", csrf.ErrTokenNotFound
-		},
-	}))
+	app := newApp(cfg, engine)
 
 	// Basic hardening headers for the management UI itself
-	app.Use(func(c *fiber.Ctx) error {
+	app.Use(func(c fiber.Ctx) error {
 		c.Set("X-Frame-Options", "DENY")
 		c.Set("X-Content-Type-Options", "nosniff")
 		c.Set("Referrer-Policy", "same-origin")
@@ -170,12 +139,10 @@ func main() {
 	})
 
 	// Static files
-	app.Static("/static", "./web/static")
+	app.Get("/static*", static.New("./web/static"))
 
-	// Custom middleware
-	app.Use(middleware.Theme(cfg))
-	app.Use(middleware.I18n())
-	app.Use(func(c *fiber.Ctx) error {
+	// Custom middleware (theme and language are set up in newApp)
+	app.Use(func(c fiber.Ctx) error {
 		c.Locals("version", cfg.Version)
 		return c.Next()
 	})
@@ -194,6 +161,7 @@ func main() {
 	)
 
 	h.SetModules(moduleManager, inv)
+	h.SetAccessLog(services.NewAccessLogService(cfg.DataDir))
 
 	// Setup routes
 	setupRoutes(app, h, authService)
@@ -225,7 +193,7 @@ func setupRoutes(app *fiber.App, h *handlers.Handler, authService *services.Auth
 	app.Post("/logout", h.Logout)
 
 	// Health check (no auth)
-	app.Get("/health", func(c *fiber.Ctx) error {
+	app.Get("/health", func(c fiber.Ctx) error {
 		return c.JSON(fiber.Map{"status": "ok", "version": Version})
 	})
 
@@ -302,6 +270,8 @@ func setupRoutes(app *fiber.App, h *handlers.Handler, authService *services.Auth
 	protected.Post("/discovery/create", edit, h.DiscoveryCreate)
 	protected.Get("/settings/docker", admin, h.SettingsDocker)
 	protected.Get("/settings/modules", admin, h.SettingsModules)
+	protected.Get("/settings/logs", admin, h.SettingsLogs)
+	protected.Post("/settings/logs", admin, h.AccessLogSave)
 	protected.Post("/settings/modules/:id", admin, h.ModuleSave)
 	protected.Post("/settings/modules/:id/disable", admin, h.ModuleDisable)
 	protected.Post("/settings/fallback", admin, h.FallbackSave)
@@ -341,4 +311,67 @@ Caddy Proxy Manager v%s
 Build: %s
 `
 	fmt.Printf(banner, Version, BuildDate)
+}
+
+// newApp creates the Fiber app with the security-relevant configuration and
+// global middleware: proxy trust, body limit, compression, logging and CSRF.
+func newApp(cfg *config.Config, engine fiber.Views) *fiber.App {
+	// Behind a reverse proxy (Caddy terminates TLS and forwards plain HTTP)
+	// the scheme and host the browser used are only known from the
+	// X-Forwarded-* headers. They are honoured for TRUSTED_PROXIES (default:
+	// private and loopback addresses, where Caddy connects from); the CSRF
+	// origin check compares the browser's Origin against them.
+	trustProxy, proxies, trustPrivate, trustLoopback := cfg.ProxyTrust()
+
+	app := fiber.New(fiber.Config{
+		AppName:      "CPM - Caddy Proxy Manager",
+		ServerHeader: "CPM",
+		ErrorHandler: handlers.ErrorHandler,
+		Views:        engine,
+		// Values returned by Ctx (FormValue, Params, Cookies, ...) are copies,
+		// not views into the request buffer. Services keep some of them beyond
+		// the request (e.g. the username in a session); without this, a later
+		// request reusing the buffer silently changed them and logged users out.
+		Immutable: true,
+		// Backup restore and rule import upload files; multipart bodies are
+		// parsed within this limit (Fiber v3 no longer pre-parses them).
+		BodyLimit:  64 << 20,
+		TrustProxy: trustProxy,
+		TrustProxyConfig: fiber.TrustProxyConfig{
+			Proxies:  proxies,
+			Private:  trustPrivate,
+			Loopback: trustLoopback,
+		},
+		ProxyHeader: fiber.HeaderXForwardedFor,
+	})
+
+	// Global middleware
+	app.Use(recover.New())
+	app.Use(logger.New(logger.Config{
+		Format: "[${time}] ${status} - ${method} ${path} (${latency})\n",
+	}))
+	app.Use(compress.New())
+
+	// Theme and language before CSRF, so its error page is rendered in the
+	// user's theme and language.
+	app.Use(middleware.Theme(cfg))
+	app.Use(middleware.I18n())
+
+	// CSRF protection (double-submit cookie): the token comes from the form
+	// field "_csrf" or the "X-CSRF-Token" header (HTMX/fetch). Applies to the
+	// API too, since it is authenticated by the session cookie. Unsafe
+	// requests must also come from the page's own origin (Origin/Referer).
+	// The cookie name changed with Fiber v3 (new token format), so tokens of
+	// older versions are simply ignored.
+	app.Use(csrf.New(csrf.Config{
+		IdleTimeout:    24 * time.Hour,
+		CookieName:     "cpm_csrf_v3",
+		CookieSameSite: "Lax",
+		CookieHTTPOnly: false,
+		Extractor:      extractors.Chain(extractors.FromForm("_csrf"), extractors.FromHeader("X-CSRF-Token")),
+		TrustedOrigins: cfg.TrustedOrigins,
+		ErrorHandler:   handlers.CSRFError,
+	}))
+
+	return app
 }

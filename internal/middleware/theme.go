@@ -3,7 +3,7 @@ package middleware
 import (
 	"github.com/TomasZmek/cpm/internal/config"
 	"github.com/TomasZmek/cpm/internal/views"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
 // ThemeConfig holds theme configuration
@@ -46,7 +46,7 @@ func ThemeList() []ThemeConfig {
 
 // Theme middleware sets the current theme
 func Theme(cfg *config.Config) fiber.Handler {
-	return func(c *fiber.Ctx) error {
+	return func(c fiber.Ctx) error {
 		// Get theme from cookie or config
 		themeName := c.Cookies("cpm_theme", cfg.Theme)
 
@@ -59,7 +59,7 @@ func Theme(cfg *config.Config) fiber.Handler {
 
 		// Store theme in locals for templates and select the template set
 		c.Locals("theme", themeName)
-		c.Bind(fiber.Map{views.ThemeKey: themeName})
+		c.ViewBind(fiber.Map{views.ThemeKey: themeName})
 		c.Locals("themeCSS", theme.CSSPath)
 		c.Locals("themeName", theme.DisplayName)
 
@@ -68,7 +68,7 @@ func Theme(cfg *config.Config) fiber.Handler {
 }
 
 // SetTheme sets the theme cookie
-func SetTheme(c *fiber.Ctx, themeName string) {
+func SetTheme(c fiber.Ctx, themeName string) {
 	c.Cookie(&fiber.Cookie{
 		Name:     "cpm_theme",
 		Value:    themeName,

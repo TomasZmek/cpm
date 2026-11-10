@@ -11,7 +11,8 @@ import (
 	"github.com/TomasZmek/cpm/internal/models"
 	"github.com/TomasZmek/cpm/internal/modules"
 	"github.com/TomasZmek/cpm/internal/services"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/middleware/csrf"
 )
 
 // Handler contains all HTTP handlers
@@ -27,6 +28,12 @@ type Handler struct {
 	settingsService *services.SettingsService
 	modules         *modules.Manager
 	inventory       *inventory.Service
+	accessLog       *services.AccessLogService
+}
+
+// SetAccessLog attaches the access log reader.
+func (h *Handler) SetAccessLog(a *services.AccessLogService) {
+	h.accessLog = a
 }
 
 // SetModules attaches the module manager and the container inventory.
@@ -61,7 +68,7 @@ func New(
 }
 
 // ErrorHandler handles errors globally
-func ErrorHandler(c *fiber.Ctx, err error) error {
+func ErrorHandler(c fiber.Ctx, err error) error {
 	code := fiber.StatusInternalServerError
 
 	if e, ok := err.(*fiber.Error); ok {
@@ -92,30 +99,34 @@ func ErrorHandler(c *fiber.Ctx, err error) error {
 		themeCSS = css
 	}
 
-	return c.Status(code).Render("pages/error", fiber.Map{
+	if rerr := c.Status(code).Render("pages/error", fiber.Map{
 		"Code":     code,
 		"Message":  err.Error(),
 		"Title":    "Error",
 		"Lang":     lang,
 		"ThemeCSS": themeCSS,
 		"Version":  c.Locals("version"),
-	}, "layouts/base")
+	}, "layouts/base"); rerr != nil {
+		// Keep the status even when the error page cannot be rendered.
+		return c.Status(code).SendString(err.Error())
+	}
+	return nil
 }
 
 // isAPIRequest checks if request is an API request
-func isAPIRequest(c *fiber.Ctx) bool {
+func isAPIRequest(c fiber.Ctx) bool {
 	return c.Get("Accept") == "application/json" ||
 		strings.HasPrefix(c.Path(), "/api")
 }
 
 // getCurrentUser returns the current user from context
-func (h *Handler) getCurrentUser(c *fiber.Ctx) interface{} {
+func (h *Handler) getCurrentUser(c fiber.Ctx) interface{} {
 	return c.Locals("user")
 }
 
 // hasPermission reports whether the current request may perform actions
 // requiring the given permission. With authentication disabled everything is allowed.
-func (h *Handler) hasPermission(c *fiber.Ctx, permission string) bool {
+func (h *Handler) hasPermission(c fiber.Ctx, permission string) bool {
 	if !h.authService.IsEnabled() {
 		return true
 	}
@@ -125,7 +136,7 @@ func (h *Handler) hasPermission(c *fiber.Ctx, permission string) bool {
 
 // safeRedirectTarget returns the Referer path if it points back into this
 // application (relative path), otherwise "/". Prevents open redirects.
-func safeRedirectTarget(c *fiber.Ctx) string {
+func safeRedirectTarget(c fiber.Ctx) string {
 	ref := c.Get("Referer")
 	if ref == "" {
 		return "/"
@@ -134,7 +145,9 @@ func safeRedirectTarget(c *fiber.Ctx) string {
 	if err != nil {
 		return "/"
 	}
-	if u.Host != "" && u.Host != c.Hostname() {
+	// c.Host() keeps the port (c.Hostname() drops it in Fiber v3), as the
+	// Referer does when CPM is opened on e.g. :8501.
+	if u.Host != "" && !strings.EqualFold(u.Host, c.Host()) {
 		return "/"
 	}
 	path := u.EscapedPath()
@@ -148,7 +161,7 @@ func safeRedirectTarget(c *fiber.Ctx) string {
 }
 
 // baseData returns common template data
-func (h *Handler) baseData(c *fiber.Ctx, title string) fiber.Map {
+func (h *Handler) baseData(c fiber.Ctx, title string) fiber.Map {
 	lang := "en"
 	if l, ok := c.Locals("lang").(string); ok && l != "" {
 		lang = l
@@ -165,7 +178,7 @@ func (h *Handler) baseData(c *fiber.Ctx, title string) fiber.Map {
 		"ThemeCSS":           themeCSS,
 		"Version":            h.config.Version,
 		"User":               c.Locals("user"),
-		"CSRFToken":          c.Locals("csrf_token"),
+		"CSRFToken":          csrf.TokenFromContext(c),
 		"HasContainerSource": h.hasContainerSource(),
 	}
 }
@@ -180,7 +193,7 @@ func (h *Handler) hasContainerSource() bool {
 // header) when it is a usable LAN address — inside a container that is the
 // best hint for the Docker host's IP. Host names, loopback and Docker
 // bridge addresses are ignored.
-func requestHostIP(c *fiber.Ctx) string {
+func requestHostIP(c fiber.Ctx) string {
 	host := c.Get(fiber.HeaderHost)
 	if h, _, err := net.SplitHostPort(host); err == nil {
 		host = h
@@ -194,7 +207,7 @@ func requestHostIP(c *fiber.Ctx) string {
 }
 
 // getLang extracts the current language code from the request context.
-func getLang(c *fiber.Ctx) string {
+func getLang(c fiber.Ctx) string {
 	if lang, ok := c.Locals("lang").(string); ok && lang != "" {
 		return lang
 	}
@@ -202,29 +215,34 @@ func getLang(c *fiber.Ctx) string {
 }
 
 // tl is a shorthand for i18n.T using the request's language.
-func tl(c *fiber.Ctx, key string, args ...interface{}) string {
+func tl(c fiber.Ctx, key string, args ...interface{}) string {
 	return i18n.T(getLang(c), key, args...)
 }
 
 // Flash messages helper
-func setFlash(c *fiber.Ctx, msgType, message string) {
-	c.Cookie(&fiber.Cookie{
-		Name:  "flash_type",
-		Value: msgType,
-	})
-	c.Cookie(&fiber.Cookie{
-		Name:  "flash_message",
-		Value: message,
-	})
+// setFlash queues a message for the next page. It uses Fiber's flash
+// messages (a hex-encoded cookie, so any language is safe) and is delivered
+// by the redirect that follows — always end the handler with redirectTo.
+func setFlash(c fiber.Ctx, msgType, message string) {
+	c.Redirect().With("type", msgType).With("message", message)
 }
 
-func getFlash(c *fiber.Ctx) (string, string) {
-	msgType := c.Cookies("flash_type")
-	message := c.Cookies("flash_message")
+// getFlash returns the flash message set by the previous request.
+func getFlash(c fiber.Ctx) (string, string) {
+	return c.Redirect().Message("type").Value, c.Redirect().Message("message").Value
+}
 
-	// Clear flash cookies
-	c.Cookie(&fiber.Cookie{Name: "flash_type", Value: "", MaxAge: -1})
-	c.Cookie(&fiber.Cookie{Name: "flash_message", Value: "", MaxAge: -1})
-
-	return msgType, message
+// redirectTo redirects to a path and delivers pending flash messages. HTMX
+// requests get a 200 with HX-Redirect instead of a 303: an XHR would follow a
+// redirect itself and swap the whole page into the target element.
+func redirectTo(c fiber.Ctx, location string) error {
+	if err := c.Redirect().To(location); err != nil {
+		return err
+	}
+	if c.Get("HX-Request") == "true" {
+		c.Response().Header.Del(fiber.HeaderLocation)
+		c.Set("HX-Redirect", location)
+		return c.SendStatus(fiber.StatusOK)
+	}
+	return nil
 }

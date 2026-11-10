@@ -2,12 +2,12 @@ package middleware
 
 import (
 	"github.com/TomasZmek/cpm/internal/i18n"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
 // I18n middleware detects the user's language and stores it in c.Locals("lang").
 func I18n() fiber.Handler {
-	return func(c *fiber.Ctx) error {
+	return func(c fiber.Ctx) error {
 		lang := c.Cookies("cpm_lang", "")
 
 		if lang == "" {
@@ -27,7 +27,7 @@ func I18n() fiber.Handler {
 }
 
 // SetLanguage sets the language cookie for the given request context.
-func SetLanguage(c *fiber.Ctx, lang string) {
+func SetLanguage(c fiber.Ctx, lang string) {
 	if !i18n.IsValidLanguage(lang) {
 		lang = "en"
 	}

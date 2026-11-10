@@ -1,3 +1,37 @@
+# CPM v3.7.0 - Access log per rule
+
+Released 2026-11-10. Docker images: `perteus/caddy-ui:3.7.0` (Docker Hub), `ghcr.io/tomaszmek/cpm:3.7.0`; offline packages for amd64 and arm64 are attached to the GitHub release.
+
+## ⚠️ Upgrade notes
+
+- The access log is **off** after the upgrade; turn it on in **Settings → Logs**. It needs Caddy's data directory mounted at `/data` in the Caddy container (as in the official image and our `docker-compose.yml`) and the same directory as `/caddy-data` in CPM.
+- CPM behind a reverse proxy outside private networks (or opened through an origin it cannot see): set `TRUSTED_PROXIES` or `TRUSTED_ORIGINS`, otherwise forms are rejected (see *Under the hood*).
+- Forms open during the upgrade have to be submitted again.
+
+## ✨ New Features
+
+- **Access log per rule** ([#37](https://github.com/TomasZmek/cpm/issues/37)) — new **Settings → Logs** (admin, off by default). When enabled, Caddy writes every request as JSON to `/data/cpm-logs/access.log` (the Caddy data volume CPM already has mounted — no docker-compose change), rotated by size (default 10 MB, 5 old files kept), optionally with client IPs masked (IPv4 /24, IPv6 /48). CPM defines a `cpm_access_log` snippet in the generated Caddyfile and imports it into every standard rule and every wildcard `*.domain` block; turning it off removes the imports again. If Caddy rejects the configuration, the previous state is restored.
+- **Logs → Requests** — table of requests (time, status, method + path, host, duration, size, client IP; user agent on hover), filter by rule, status class (2xx–5xx, errors), text and count, and 24-hour stats (requests, 2xx/4xx/5xx, error rate, median and p95 response time). Rotated (gzipped) files are read too. **Logs → Caddy** is the previous view of the Caddy container output.
+- 📝 on each rule (rules list and detail) opens its requests.
+- Rule form → Advanced: **Do not log this rule** and **Paths not to log** (e.g. `/health* /metrics`), generated as `log_skip` — works for wildcard rules too.
+
+## 🔧 Under the hood
+
+- **Fiber v3** — CPM moved from the deprecated Fiber v2 to Fiber v3 (3.7). Binary +1.5 MB, image still ~7 MB.
+- **Flash messages** use Fiber's built-in flash (hex-encoded cookie), so Czech, Korean and other non-ASCII messages can no longer be dropped by stricter cookie handling.
+- **CSRF behind a reverse proxy** — Fiber v3 also checks that forms are submitted from the page's own origin. Behind Caddy (TLS at Caddy, plain HTTP to CPM) CPM now reads the original scheme/host from `X-Forwarded-*` of trusted proxies: new env `TRUSTED_PROXIES` (default `private,loopback`, i.e. Caddy on the same host or Docker network) and `TRUSTED_ORIGINS` (e.g. `https://cpm.example.com`) for proxies that cannot be trusted. Tested with Caddy 2.10 in front of CPM. A side effect: the login rate limit and logs now see the real client IP instead of Caddy's, and the session cookie gets `Secure` when CPM is opened over HTTPS through the proxy.
+- **Expired forms** (CSRF tokens live in memory and are lost on restart/upgrade) no longer end in a bare 403: CPM returns to the page with a message to submit again. The CSRF cookie was renamed (`cpm_csrf_v3`), so tokens of older versions are simply ignored.
+- Uploads (backup restore, rule import) are accepted up to 64 MB.
+
+## 🐛 Bug Fixes
+
+- **Rules search and tag filter** on the Proxy Rules page did nothing (the server answered with an error) — fixed.
+- **"Download backup"** did nothing (the link was a GET, the endpoint has required POST with a CSRF token since 3.1.2) — now a proper form.
+- After **changing a user's password** the success message was not shown.
+- Returning to the previous page (e.g. after reload/validate) went to the dashboard when CPM was opened with a port (`:8501`).
+
+---
+
 # CPM v3.6.0 - Dockhand module
 
 Released 2026-11-10. Docker images: `perteus/caddy-ui:3.6.0` (Docker Hub), `ghcr.io/tomaszmek/cpm:3.6.0`; offline packages for amd64 and arm64 are attached to the GitHub release.

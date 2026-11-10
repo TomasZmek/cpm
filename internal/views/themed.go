@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/template/html/v2"
+	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/template/html/v3"
 )
 
 // ThemeKey is the view-binding key that selects the theme for a render.

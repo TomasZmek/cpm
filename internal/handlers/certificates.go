@@ -7,11 +7,11 @@ import (
 
 	"github.com/TomasZmek/cpm/internal/models"
 	"github.com/TomasZmek/cpm/internal/services"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
 // CertificatesList renders the certificates page
-func (h *Handler) CertificatesList(c *fiber.Ctx) error {
+func (h *Handler) CertificatesList(c fiber.Ctx) error {
 	certs, err := h.certService.GetAllCertificates()
 	if err != nil {
 		return err
@@ -37,7 +37,7 @@ func (h *Handler) CertificatesList(c *fiber.Ctx) error {
 
 // CertificateDelete moves a certificate to the backups without restarting
 // Caddy (Caddy obtains a new one after its next restart if still needed).
-func (h *Handler) CertificateDelete(c *fiber.Ctx) error {
+func (h *Handler) CertificateDelete(c fiber.Ctx) error {
 	domain := c.Params("domain")
 
 	if _, err := h.certService.DeleteCertificate(domain, services.CertBackupReasonDelete); err != nil {
@@ -51,7 +51,7 @@ func (h *Handler) CertificateDelete(c *fiber.Ctx) error {
 // CertificateRenew moves a certificate to the backups and restarts Caddy so
 // it obtains a new one. A reload is not enough: Caddy keeps serving the
 // certificate from memory and never notices it is gone.
-func (h *Handler) CertificateRenew(c *fiber.Ctx) error {
+func (h *Handler) CertificateRenew(c fiber.Ctx) error {
 	domain := c.Params("domain")
 
 	if _, err := h.certService.DeleteCertificate(domain, services.CertBackupReasonRenew); err != nil {
@@ -68,7 +68,7 @@ func (h *Handler) CertificateRenew(c *fiber.Ctx) error {
 
 // CertificateBackupRestore puts a backed-up certificate back into Caddy's
 // storage and restarts Caddy to load it.
-func (h *Handler) CertificateBackupRestore(c *fiber.Ctx) error {
+func (h *Handler) CertificateBackupRestore(c fiber.Ctx) error {
 	b, err := h.certService.RestoreBackup(c.Params("id"))
 	if err != nil {
 		setFlash(c, "error", tl(c, "msg_cert_restore_failed")+": "+err.Error())
@@ -85,7 +85,7 @@ func (h *Handler) CertificateBackupRestore(c *fiber.Ctx) error {
 
 // restartCaddyForCertificates restarts Caddy and returns a translated error
 // message, or "" on success.
-func (h *Handler) restartCaddyForCertificates(c *fiber.Ctx) string {
+func (h *Handler) restartCaddyForCertificates(c fiber.Ctx) string {
 	result := h.caddyService.RestartForCertificates()
 	switch {
 	case result.Success:
@@ -98,7 +98,7 @@ func (h *Handler) restartCaddyForCertificates(c *fiber.Ctx) string {
 }
 
 // CertificateBackupDelete permanently removes a certificate backup.
-func (h *Handler) CertificateBackupDelete(c *fiber.Ctx) error {
+func (h *Handler) CertificateBackupDelete(c fiber.Ctx) error {
 	id := c.Params("id")
 	b, err := h.certService.GetBackup(id)
 	if err == nil {
@@ -114,7 +114,7 @@ func (h *Handler) CertificateBackupDelete(c *fiber.Ctx) error {
 
 // CertificatesRestartCaddy restarts Caddy after the bulk-renew progress UI
 // has moved certificates to the backups.
-func (h *Handler) CertificatesRestartCaddy(c *fiber.Ctx) error {
+func (h *Handler) CertificatesRestartCaddy(c fiber.Ctx) error {
 	result := h.caddyService.RestartForCertificates()
 	if result.Success {
 		return c.JSON(fiber.Map{"ok": true})
@@ -123,7 +123,7 @@ func (h *Handler) CertificatesRestartCaddy(c *fiber.Ctx) error {
 }
 
 // HTMXCertificatesList returns certificates list as HTML partial
-func (h *Handler) HTMXCertificatesList(c *fiber.Ctx) error {
+func (h *Handler) HTMXCertificatesList(c fiber.Ctx) error {
 	certs, _ := h.certService.GetAllCertificates()
 
 	return c.Render("partials/certificates_list", fiber.Map{
@@ -140,7 +140,7 @@ func (h *Handler) HTMXCertificatesList(c *fiber.Ctx) error {
 // Wildcard certificates are always excluded; renewing many certificates at
 // once can hit Let's Encrypt rate limits (#34). Renewal = move the cert to the
 // backups so Caddy obtains a new one after a restart.
-func (h *Handler) CertificatesRenewAll(c *fiber.Ctx) error {
+func (h *Handler) CertificatesRenewAll(c fiber.Ctx) error {
 	scope := c.FormValue("scope", "expiring")
 	if scope != "expiring" && scope != "expired" && scope != "all" {
 		return c.Status(fiber.StatusBadRequest).SendString("invalid scope")
@@ -202,18 +202,14 @@ func (h *Handler) CertificatesRenewAll(c *fiber.Ctx) error {
 }
 
 // certsRedirect returns the user to the certificates page (HX-aware).
-func certsRedirect(c *fiber.Ctx) error {
-	if c.Get("HX-Request") == "true" {
-		c.Set("HX-Redirect", "/certificates")
-		return c.SendStatus(fiber.StatusOK)
-	}
-	return c.Redirect("/certificates")
+func certsRedirect(c fiber.Ctx) error {
+	return redirectTo(c, "/certificates")
 }
 
 // CertificateRenewStep moves a single certificate to the backups WITHOUT
 // restarting Caddy. Used by the bulk-renew progress UI, which restarts once
 // at the end.
-func (h *Handler) CertificateRenewStep(c *fiber.Ctx) error {
+func (h *Handler) CertificateRenewStep(c fiber.Ctx) error {
 	domain := c.Params("domain")
 	if _, err := h.certService.DeleteCertificate(domain, services.CertBackupReasonRenew); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"ok": false, "error": err.Error()})
@@ -223,7 +219,7 @@ func (h *Handler) CertificateRenewStep(c *fiber.Ctx) error {
 
 // CertificatesCount returns the current number of certificates as JSON.
 // Used by the bulk-renew progress UI to wait until Caddy re-issues certs.
-func (h *Handler) CertificatesCount(c *fiber.Ctx) error {
+func (h *Handler) CertificatesCount(c fiber.Ctx) error {
 	certs, _ := h.certService.GetAllCertificates()
 	return c.JSON(fiber.Map{"count": len(certs)})
 }

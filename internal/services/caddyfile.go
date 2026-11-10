@@ -18,6 +18,21 @@ type CaddyfileManager struct {
 	config          *config.Config
 	wildcardService *WildcardService
 	snippetsService *SnippetsService
+	// accessLog returns the current access log settings (nil: disabled).
+	accessLog func() models.AccessLogSettings
+}
+
+// SetAccessLogSettings sets where the access log settings are read from.
+func (m *CaddyfileManager) SetAccessLogSettings(fn func() models.AccessLogSettings) {
+	m.accessLog = fn
+}
+
+// AccessLogSettings returns the current access log settings.
+func (m *CaddyfileManager) AccessLogSettings() models.AccessLogSettings {
+	if m == nil || m.accessLog == nil {
+		return models.AccessLogSettings{}
+	}
+	return m.accessLog().Normalized()
 }
 
 // NewCaddyfileManager creates a new CaddyfileManager
@@ -80,6 +95,13 @@ func (m *CaddyfileManager) GenerateCaddyfile() (string, error) {
 	lines = append(lines, "import /etc/caddy/snippets.caddy")
 	lines = append(lines, "")
 
+	accessLog := m.AccessLogSettings()
+	if accessLog.Enabled {
+		lines = append(lines, "# === ACCESS LOG (Settings → Logs) ===")
+		lines = append(lines, AccessLogSnippetBlock(accessLog))
+		lines = append(lines, "")
+	}
+
 	// Get wildcard domains
 	wildcardDomains, err := m.wildcardService.GetDomains()
 	if err != nil {
@@ -128,6 +150,9 @@ func (m *CaddyfileManager) generateWildcardBlock(wd models.WildcardDomain) strin
 	lines = append(lines, fmt.Sprintf("# --- %s ---", strings.ToUpper(wd.Domain)))
 	lines = append(lines, fmt.Sprintf("*.%s {", wd.Domain))
 	lines = append(lines, fmt.Sprintf("    import %s", snippetName))
+	if m.AccessLogSettings().Enabled {
+		lines = append(lines, "    import "+models.AccessLogSnippet)
+	}
 
 	lines = append(lines, "")
 	lines = append(lines, "    # Import site-specific handle blocks")
@@ -211,6 +236,7 @@ func (m *CaddyfileManager) MigrateSiteToNewStructure(site *models.Site) error {
 	newPath := filepath.Join(newDir, newFilename)
 
 	// Generate new content
+	site.AccessLog = m.AccessLogSettings().Enabled
 	content := site.ToCaddyfile()
 
 	// Write to new location

@@ -1508,3 +1508,138 @@ msgstr "Suggested host IP (address CPM was opened on):"
 
 msgid "msg_host_ip_not_detected"
 msgstr "The host's IP cannot be detected from inside the container. Enter the LAN address of the machine Docker runs on (e.g. your NAS)."
+
+msgid "msg_csrf_expired"
+msgstr "The page has expired (for example after CPM was restarted or updated). Please submit it again."
+
+msgid "msg_csrf_origin"
+msgstr "The request does not come from this site. If CPM runs behind a reverse proxy, set TRUSTED_PROXIES (or TRUSTED_ORIGINS, e.g. https://cpm.example.com)."
+
+msgid "settings_logs"
+msgstr "Logs"
+
+msgid "settings_desc_logs"
+msgstr "Access log of requests for each rule"
+
+msgid "sites_no_access_log"
+msgstr "Do not log this rule"
+
+msgid "help_no_access_log"
+msgstr "Requests to this rule are left out of the access log (Settings → Logs)."
+
+msgid "sites_log_skip_paths"
+msgstr "Paths not to log"
+
+msgid "help_log_skip_paths"
+msgstr "Space-separated paths left out of the access log, * as wildcard (e.g. /health* /metrics)."
+
+msgid "sites_show_logs"
+msgstr "Show requests (access log)"
+
+msgid "access_log_title"
+msgstr "Access log"
+
+msgid "access_log_intro"
+msgstr "Caddy writes every request to a JSON log file that CPM shows in Logs, filtered by rule. Changing these settings regenerates the Caddyfile and reloads Caddy."
+
+msgid "access_log_enable"
+msgstr "Write access log"
+
+msgid "access_log_roll_size"
+msgstr "Rotate at size (MB)"
+
+msgid "access_log_roll_keep"
+msgstr "Rotated files to keep"
+
+msgid "access_log_mask_ips"
+msgstr "Mask client IP addresses"
+
+msgid "access_log_mask_ips_hint"
+msgstr "IPv4 addresses are shortened to /24 and IPv6 to /48 before they are written."
+
+msgid "access_log_file_hint"
+msgstr "Log file in the Caddy container (Caddy data volume):"
+
+msgid "access_log_privacy_hint"
+msgstr "The access log contains client IP addresses and requested URLs. Where privacy matters (e.g. GDPR), consider IP masking and a short retention."
+
+msgid "access_log_open"
+msgstr "Open access log"
+
+msgid "msg_access_log_saved"
+msgstr "Access log settings saved and Caddy reloaded"
+
+msgid "msg_access_log_reverted"
+msgstr "Caddy rejected the configuration, the previous access log settings were restored"
+
+msgid "logs_tab_access"
+msgstr "Requests"
+
+msgid "logs_tab_caddy"
+msgstr "Caddy"
+
+msgid "access_log_disabled"
+msgstr "The access log is turned off, so no requests are recorded."
+
+msgid "access_log_enable_link"
+msgstr "Turn it on in Settings → Logs"
+
+msgid "access_log_rule_not_found"
+msgstr "Rule not found."
+
+msgid "access_log_rule"
+msgstr "Rule"
+
+msgid "access_log_all_rules"
+msgstr "All rules"
+
+msgid "access_log_status"
+msgstr "Status"
+
+msgid "access_log_errors"
+msgstr "Errors (4xx + 5xx)"
+
+msgid "access_log_search"
+msgstr "Path, host, IP or user agent…"
+
+msgid "access_log_apply"
+msgstr "Filter"
+
+msgid "access_log_rule_hosts"
+msgstr "Requests for"
+
+msgid "access_log_requests_24h"
+msgstr "Requests (24 h)"
+
+msgid "access_log_latency"
+msgstr "Response time median / p95 (24 h)"
+
+msgid "access_log_time"
+msgstr "Time"
+
+msgid "access_log_request"
+msgstr "Request"
+
+msgid "access_log_host"
+msgstr "Host"
+
+msgid "access_log_duration"
+msgstr "Duration"
+
+msgid "access_log_size"
+msgstr "Size"
+
+msgid "access_log_client"
+msgstr "Client"
+
+msgid "access_log_newest_first"
+msgstr "newest first"
+
+msgid "access_log_no_entries"
+msgstr "No requests match the filter."
+
+msgid "access_log_no_file"
+msgstr "The log file does not exist yet. Caddy creates it with the first request."
+
+msgid "msg_access_log_saved_no_reload"
+msgstr "Access log settings saved, but Caddy was not reloaded"

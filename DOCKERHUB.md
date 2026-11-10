@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-3.6.0-blue" alt="Version">
+  <img src="https://img.shields.io/badge/version-3.7.0-blue" alt="Version">
   <img src="https://img.shields.io/badge/Go-1.26-00ADD8?logo=go" alt="Go">
   <img src="https://img.shields.io/badge/image_size-~6MB-green" alt="Image Size">
   <img src="https://img.shields.io/badge/platforms-amd64%20%7C%20arm64-lightgrey" alt="Platforms">
@@ -52,7 +52,7 @@
 | 🔐 **Wildcard SSL** | Manage wildcard certificates with DNS challenge |
 | ⚙️ **Snippets** | Cloudflare DNS, security headers, rate limiting |
 | 📜 **Certificates** | SSL overview with expiration warnings, bulk renewal |
-| 📄 **Logs** | Parsed Caddy logs with level filter and search |
+| 📄 **Logs** | Access log of requests per rule (status, latency, client) with 24 h stats, plus parsed Caddy logs with level filter and search |
 | 👥 **Multi-User** | Role-based access (Admin, Editor, Viewer) |
 | 💾 **Backup** | Full config backup & restore |
 | 🏠 **Internal-only** | Restrict sites to internal network only |
@@ -68,7 +68,7 @@
 
 ```bash
 docker pull perteus/caddy-ui:latest
-docker pull perteus/caddy-ui:3.6.0
+docker pull perteus/caddy-ui:3.7.0
 ```
 
 ### Docker Compose
@@ -89,7 +89,7 @@ services:
       - ./caddy-data:/data
 
   cpm:
-    image: perteus/caddy-ui:3.6.0
+    image: perteus/caddy-ui:3.7.0
     container_name: cpm
     ports:
       - "8501:8501"
@@ -108,7 +108,7 @@ On Synology add `privileged: true` for Docker socket access.
 
 ```yaml
 cpm:
-  image: perteus/caddy-ui:3.6.0
+  image: perteus/caddy-ui:3.7.0
   privileged: true
   volumes:
     - /volume1/docker/caddy-config:/caddy-config
@@ -126,6 +126,8 @@ cpm:
 | `CONTAINER_NAME` | `caddy` | Caddy container name |
 | `DEFAULT_IP` | `192.168.1.1` | Default target IP |
 | `THEME` | `classic` | Default UI theme (`classic` or `modern`) |
+| `TRUSTED_PROXIES` | `private,loopback` | Reverse proxies whose `X-Forwarded-*` headers are trusted (`none` to disable) |
+| `TRUSTED_ORIGINS` | - | Extra origins allowed to submit forms, e.g. `https://cpm.example.com` |
 | `CF_API_TOKEN` | - | Cloudflare API token (for wildcard SSL) |
 
 ---
@@ -134,6 +136,7 @@ cpm:
 
 | Version | Notes |
 |---------|-------|
+| **3.7.0** | 📝 Access log per rule — requests, status and response times for each rule; Fiber v3 |
 | **3.6.0** | ⚓ Dockhand module — backend status and discovery for containers on all Docker hosts |
 | **3.5.1** | 🔒 Security patch — Go 1.26.10, fasthttp, compress, x/crypto (31 known vulnerabilities fixed) |
 | **3.5.0** | 🧩 Modules, backend status for IP rules, discovery per host, host IP detection fix |
@@ -150,6 +153,13 @@ cpm:
 | **3.0.1** | 🔐 Wildcard SSL, migration tools, UI improvements |
 | **3.0.0** | 🎉 Complete Go rewrite (794MB → 6MB) |
 | 2.x | Python version (deprecated) |
+
+### v3.7.0 - Access log per rule
+- ✅ **Access log** — turn it on in Settings → Logs; Caddy writes every request to `/data/cpm-logs/access.log` (Caddy data volume, no compose change), rotated by size, optional IP masking
+- ✅ **Logs → Requests** — requests per rule with status, response time, size and client, filters and 24 h stats; 📝 on each rule opens its requests
+- ✅ **Do not log** a rule or selected paths (e.g. `/health*`), works for wildcard rules too
+- 🔧 **Fiber v3**, CSRF that works behind Caddy (`TRUSTED_PROXIES` / `TRUSTED_ORIGINS`), flash messages in any language
+- 🐛 Rules search and tag filter, "Download backup", password-change message, return to the previous page on a non-standard port
 
 ### v3.6.0 - Dockhand module
 - ✅ **Dockhand module** — reads containers of all environments managed by [Dockhand](https://dockhand.pro) (local host and remote hosts via Hawser), so backend status and Docker discovery cover every machine

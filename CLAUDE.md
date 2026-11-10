@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-**CPM - Caddy Proxy Manager** — a lightweight Go web UI for managing a Caddy reverse proxy. Distributed as a ~6 MB Docker image (`perteus/caddy-ui` on Docker Hub). Current released version: **3.6.0**.
+**CPM - Caddy Proxy Manager** — a lightweight Go web UI for managing a Caddy reverse proxy. Distributed as a ~6 MB Docker image (`perteus/caddy-ui` on Docker Hub). Current released version: **3.7.0**.
 
 - GitHub: https://github.com/TomasZmek/cpm
 - Docker Hub: `perteus/caddy-ui`
@@ -41,7 +41,7 @@ Version is authoritative in `cmd/cpm/main.go` constants `Version` and `BuildDate
 ## Tech stack
 
 - **Go 1.26** (module: `github.com/TomasZmek/cpm`)
-- **Fiber v2** — HTTP framework
+- **Fiber v3** — HTTP framework (`fiber.Ctx` is an interface: handlers take `c fiber.Ctx`; redirects are `c.Redirect().To()`, view bindings `c.ViewBind()`, the fasthttp context `c.RequestCtx()`)
 - **gofiber/template/html** — HTML template engine (Go `html/template`-compatible)
 - **HTMX** — frontend interactivity (no build step, CDN)
 - **SweetAlert2** — dialogs
@@ -73,7 +73,8 @@ All services are constructed in `main.go` and injected into `handlers.Handler` a
 | `AuthService` | `services/auth.go` | Users, roles, in-memory sessions |
 | `BackupService` | `services/backup.go` | ZIP backup/restore, JSON import/export of rules |
 | `CertificateService` | `services/certificates.go` | Reads/deletes certificates from Caddy data dir |
-| `SettingsService` | `services/settings.go` | App settings (`settings.json`), Docker discovery hosts |
+| `SettingsService` | `services/settings.go` | App settings (`settings.json`), Docker discovery hosts, access log settings |
+| `AccessLogService` | `services/accesslog.go` | Reads Caddy's JSON access log (`<data>/cpm-logs/access.log` + rotated `.gz`), filters by rule hosts/status/text, 24 h stats; also the `cpm_access_log` snippet and `SyncAccessLogImports` |
 | Discovery | `services/discovery.go` | Docker Auto-Discovery — turns inventory containers into rows paired with proxy rules |
 | `modules.Manager` | `modules/manager.go` | Registered modules, enable/configure/disable at runtime, `caddy-config/modules.json` (0600) |
 | `inventory.Service` | `inventory/inventory.go` | Background refresh (30 s) of containers from active modules + TCP probe; backend status of rules |
@@ -128,7 +129,9 @@ caddy-config/
     └── standard/          # standard domain blocks
 ```
 
-In the Caddy data dir CPM only touches `caddy/certificates/` and `cpm-cert-backups/`: renewing or deleting a certificate moves its files (incl. private key, 0600) into a backup there (`services/cert_backups.go`), and renewal/restore restart the Caddy container — a reload keeps certificates cached in memory.
+**Access log** (Settings → Logs, off by default): while enabled, `GenerateCaddyfile` defines the `cpm_access_log` snippet (`log { output file /data/cpm-logs/access.log … }`) and imports it in every wildcard block; standard site files get `import cpm_access_log` after their address line (`Site.AccessLog`, set by `CaddyService` before writing, and `SyncAccessLogImports` when the setting changes). While disabled, neither the snippet nor the imports exist, so files stay as before. Per rule, `NoAccessLog` / `LogSkipPaths` generate `log_skip` (a `log` directive cannot be inside `handle`, `log_skip` can).
+
+In the Caddy data dir CPM reads `cpm-logs/` (written by Caddy) and only touches `caddy/certificates/` and `cpm-cert-backups/`: renewing or deleting a certificate moves its files (incl. private key, 0600) into a backup there (`services/cert_backups.go`), and renewal/restore restart the Caddy container — a reload keeps certificates cached in memory.
 
 ### Authentication
 
@@ -152,7 +155,7 @@ Roles are enforced per route in `setupRoutes` (`cmd/cpm/main.go`) via `middlewar
 - **File paths**: site filenames from URL params, forms or imports go through `ValidateSiteFilename` (`services/caddy.go`). Backup restore accepts only paths that `CreateBackup` produces.
 - **Output**: HTML built by hand in handlers must use `escapeHTML`; redirects to the Referer go through `safeRedirectTarget`.
 - **Secrets**: files containing tokens or password hashes are written with `0600`.
-- **CSRF**: forms include `<input type="hidden" name="_csrf" value="{{.CSRFToken}}">`; HTMX/fetch requests send the `X-CSRF-Token` header (set globally in `layouts/base.html`).
+- **CSRF**: forms include `<input type="hidden" name="_csrf" value="{{.CSRFToken}}">`; HTMX/fetch requests send the `X-CSRF-Token` header (set globally in `layouts/base.html`). The token is `csrf.TokenFromContext(c)`. Fiber v3 also checks that unsafe requests come from the page's own origin (`Origin`/`Referer` against scheme + host). Behind a reverse proxy that terminates TLS (Caddy) the scheme/host come from `X-Forwarded-*`, honoured only for `TRUSTED_PROXIES` (env, default `private,loopback`); `TRUSTED_ORIGINS` adds allowed origins. App and middleware setup live in `newApp` (`cmd/cpm/main.go`), tested in `cmd/cpm/app_test.go` incl. the Caddy cases. A rejected token (e.g. after a restart, tokens are in memory) redirects back with a flash (`handlers.CSRFError`).
 
 ### UI themes
 
@@ -164,7 +167,7 @@ On narrow screens both layouts switch the sidebar to an off-canvas drawer opened
 
 ### Flash messages
 
-Handlers call `setFlash(c, type, msg)` (`handlers/handlers.go`), which stores the message in `flash_type` / `flash_message` cookies; page handlers read them with `getFlash(c)`, pass them as `FlashType` / `FlashMessage`, and `layouts/base.html` renders them. Use `tl(c, key, args...)` for translated messages.
+Handlers call `setFlash(c, type, msg)` (`handlers/handlers.go`), which queues Fiber's built-in flash messages (`c.Redirect().With`, hex-encoded cookie, safe for any language), and **must then return `redirectTo(c, url)`** — the flash cookie is only written by the redirect; `redirectTo` answers HTMX requests with 200 + `HX-Redirect`. Page handlers read them with `getFlash(c)`, pass them as `FlashType` / `FlashMessage`, and `layouts/base.html` renders them. Use `tl(c, key, args...)` for translated messages.
 
 ## Tests
 

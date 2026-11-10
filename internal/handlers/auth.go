@@ -9,7 +9,8 @@ import (
 	"github.com/TomasZmek/cpm/internal/models"
 	"github.com/TomasZmek/cpm/internal/services"
 	"github.com/TomasZmek/cpm/internal/utils"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/middleware/csrf"
 )
 
 const (
@@ -67,11 +68,11 @@ func (l *rateLimiter) reset(ip string) {
 }
 
 // LoginPage renders the login page
-func (h *Handler) LoginPage(c *fiber.Ctx) error {
+func (h *Handler) LoginPage(c fiber.Ctx) error {
 	// If already logged in, redirect to dashboard
 	if token := c.Cookies(utils.SessionCookieName); token != "" {
 		if user := h.authService.ValidateSession(token); user != nil {
-			return c.Redirect("/")
+			return redirectTo(c, "/")
 		}
 	}
 
@@ -83,7 +84,7 @@ func (h *Handler) LoginPage(c *fiber.Ctx) error {
 		"Error":      c.Query("error"),
 		"Version":    h.config.Version,
 		"Lang":       getLang(c),
-		"CSRFToken":  c.Locals("csrf_token"),
+		"CSRFToken":  csrf.TokenFromContext(c),
 	}
 
 	// Login page has its own HTML structure, no layout needed
@@ -91,7 +92,7 @@ func (h *Handler) LoginPage(c *fiber.Ctx) error {
 }
 
 // Login handles the login form submission
-func (h *Handler) Login(c *fiber.Ctx) error {
+func (h *Handler) Login(c fiber.Ctx) error {
 	ip := c.IP()
 
 	if !loginLimiter.isAllowed(ip) {
@@ -100,7 +101,7 @@ func (h *Handler) Login(c *fiber.Ctx) error {
 			"NeedsSetup": !h.authService.HasUsers(),
 			"Version":    h.config.Version,
 			"Lang":       getLang(c),
-			"CSRFToken":  c.Locals("csrf_token"),
+			"CSRFToken":  csrf.TokenFromContext(c),
 		})
 	}
 
@@ -112,7 +113,7 @@ func (h *Handler) Login(c *fiber.Ctx) error {
 		// Create first admin user and enable authentication
 		if err := h.authService.CreateInitialAdmin(username, password); err != nil {
 			loginLimiter.recordFailure(ip)
-			return c.Redirect("/login?error=" + url.QueryEscape("Failed to create user: "+err.Error()))
+			return redirectTo(c, "/login?error="+url.QueryEscape("Failed to create user: "+err.Error()))
 		}
 	}
 
@@ -120,7 +121,7 @@ func (h *Handler) Login(c *fiber.Ctx) error {
 	token, err := h.authService.Authenticate(username, password)
 	if err != nil {
 		loginLimiter.recordFailure(ip)
-		return c.Redirect("/login?error=Invalid+credentials")
+		return redirectTo(c, "/login?error=Invalid+credentials")
 	}
 
 	loginLimiter.reset(ip)
@@ -135,11 +136,11 @@ func (h *Handler) Login(c *fiber.Ctx) error {
 		MaxAge:   int(h.authService.SessionTimeout().Seconds()),
 	})
 
-	return c.Redirect("/")
+	return redirectTo(c, "/")
 }
 
 // Logout handles logout
-func (h *Handler) Logout(c *fiber.Ctx) error {
+func (h *Handler) Logout(c fiber.Ctx) error {
 	token := c.Cookies(utils.SessionCookieName)
 	if token != "" {
 		h.authService.Logout(token)
@@ -153,21 +154,17 @@ func (h *Handler) Logout(c *fiber.Ctx) error {
 		HTTPOnly: true,
 	})
 
-	return c.Redirect("/login")
+	return redirectTo(c, "/login")
 }
 
 // redirectFlash sets a flash and redirects (HX-Redirect for HTMX requests).
-func redirectFlash(c *fiber.Ctx, typ, msg, to string) error {
+func redirectFlash(c fiber.Ctx, typ, msg, to string) error {
 	setFlash(c, typ, msg)
-	if c.Get("HX-Request") == "true" {
-		c.Set("HX-Redirect", to)
-		return c.SendStatus(fiber.StatusOK)
-	}
-	return c.Redirect(to)
+	return redirectTo(c, to)
 }
 
 // UserCreate creates a new user (settings page)
-func (h *Handler) UserCreate(c *fiber.Ctx) error {
+func (h *Handler) UserCreate(c fiber.Ctx) error {
 	username := c.FormValue("username")
 	password := c.FormValue("password")
 	role := models.Role(c.FormValue("role"))
@@ -178,16 +175,11 @@ func (h *Handler) UserCreate(c *fiber.Ctx) error {
 
 	setFlash(c, "success", tl(c, "msg_user_created_name", username))
 
-	if c.Get("HX-Request") == "true" {
-		c.Set("HX-Redirect", "/settings/users")
-		return c.SendStatus(fiber.StatusOK)
-	}
-
-	return c.Redirect("/settings/users")
+	return redirectTo(c, "/settings/users")
 }
 
 // UserDelete deletes a user
-func (h *Handler) UserDelete(c *fiber.Ctx) error {
+func (h *Handler) UserDelete(c fiber.Ctx) error {
 	username := c.Params("username")
 
 	// Can't delete yourself (only matters when auth is enabled).
@@ -206,16 +198,11 @@ func (h *Handler) UserDelete(c *fiber.Ctx) error {
 
 	setFlash(c, "success", tl(c, "msg_user_deleted_name", username))
 
-	if c.Get("HX-Request") == "true" {
-		c.Set("HX-Redirect", "/settings/users")
-		return c.SendStatus(fiber.StatusOK)
-	}
-
-	return c.Redirect("/settings/users")
+	return redirectTo(c, "/settings/users")
 }
 
 // UserUpdateRole updates a user's role
-func (h *Handler) UserUpdateRole(c *fiber.Ctx) error {
+func (h *Handler) UserUpdateRole(c fiber.Ctx) error {
 	username := c.Params("username")
 	role := models.Role(c.FormValue("role"))
 
@@ -227,19 +214,13 @@ func (h *Handler) UserUpdateRole(c *fiber.Ctx) error {
 	}
 
 	setFlash(c, "success", tl(c, "msg_role_updated"))
-
-	if c.Get("HX-Request") == "true" {
-		// Reload the page so the flash message is shown (returning plain text
-		// would be swapped into the role <select>)
-		c.Set("HX-Redirect", "/settings/users")
-		return c.SendStatus(fiber.StatusOK)
-	}
-
-	return c.Redirect("/settings/users")
+	// Reloads the page so the flash is shown (plain text would be swapped
+	// into the role <select>).
+	return redirectTo(c, "/settings/users")
 }
 
 // UserUpdatePassword updates a user's password
-func (h *Handler) UserUpdatePassword(c *fiber.Ctx) error {
+func (h *Handler) UserUpdatePassword(c fiber.Ctx) error {
 	username := c.Params("username")
 	password := c.FormValue("password")
 
@@ -248,16 +229,11 @@ func (h *Handler) UserUpdatePassword(c *fiber.Ctx) error {
 	}
 
 	setFlash(c, "success", tl(c, "msg_password_updated"))
-
-	if c.Get("HX-Request") == "true" {
-		return c.SendString("OK")
-	}
-
-	return c.Redirect("/settings/users")
+	return redirectTo(c, "/settings/users")
 }
 
 // ToggleAuth enables or disables authentication
-func (h *Handler) ToggleAuth(c *fiber.Ctx) error {
+func (h *Handler) ToggleAuth(c fiber.Ctx) error {
 	enabled := c.FormValue("enabled") == "true" || c.FormValue("enabled") == "on"
 
 	var err error
@@ -272,7 +248,7 @@ func (h *Handler) ToggleAuth(c *fiber.Ctx) error {
 			return c.Status(fiber.StatusBadRequest).SendString(err.Error())
 		}
 		setFlash(c, "error", err.Error())
-		return c.Redirect("/settings/users")
+		return redirectTo(c, "/settings/users")
 	}
 
 	if enabled {
@@ -281,10 +257,5 @@ func (h *Handler) ToggleAuth(c *fiber.Ctx) error {
 		setFlash(c, "success", tl(c, "msg_auth_disabled"))
 	}
 
-	if c.Get("HX-Request") == "true" {
-		c.Set("HX-Redirect", "/settings/users")
-		return c.SendStatus(fiber.StatusOK)
-	}
-
-	return c.Redirect("/settings/users")
+	return redirectTo(c, "/settings/users")
 }

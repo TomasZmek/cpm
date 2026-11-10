@@ -1508,3 +1508,138 @@ msgstr "Navrhovaná IP hosta (adresa, přes kterou máte CPM otevřené):"
 
 msgid "msg_host_ip_not_detected"
 msgstr "IP adresu hosta nejde zevnitř kontejneru zjistit. Zadejte adresu stroje v síti, na kterém běží Docker (např. NAS)."
+
+msgid "msg_csrf_expired"
+msgstr "Platnost stránky vypršela (třeba po restartu nebo aktualizaci CPM). Odešlete ji prosím znovu."
+
+msgid "msg_csrf_origin"
+msgstr "Požadavek nepochází z této stránky. Pokud CPM běží za reverzní proxy, nastavte TRUSTED_PROXIES (nebo TRUSTED_ORIGINS, např. https://cpm.example.com)."
+
+msgid "settings_logs"
+msgstr "Logy"
+
+msgid "settings_desc_logs"
+msgstr "Access log požadavků pro jednotlivá pravidla"
+
+msgid "sites_no_access_log"
+msgstr "Nelogovat toto pravidlo"
+
+msgid "help_no_access_log"
+msgstr "Požadavky na toto pravidlo se nezapisují do access logu (Nastavení → Logy)."
+
+msgid "sites_log_skip_paths"
+msgstr "Nelogovat cesty"
+
+msgid "help_log_skip_paths"
+msgstr "Cesty oddělené mezerou, které se nezapisují do access logu, * jako zástupný znak (např. /health* /metrics)."
+
+msgid "sites_show_logs"
+msgstr "Zobrazit požadavky (access log)"
+
+msgid "access_log_title"
+msgstr "Access log"
+
+msgid "access_log_intro"
+msgstr "Caddy zapisuje každý požadavek do JSON souboru, který CPM zobrazuje v Logech s filtrem podle pravidla. Změna nastavení přegeneruje Caddyfile a znovu načte Caddy."
+
+msgid "access_log_enable"
+msgstr "Zapisovat access log"
+
+msgid "access_log_roll_size"
+msgstr "Rotovat při velikosti (MB)"
+
+msgid "access_log_roll_keep"
+msgstr "Počet ponechaných starších souborů"
+
+msgid "access_log_mask_ips"
+msgstr "Maskovat IP adresy klientů"
+
+msgid "access_log_mask_ips_hint"
+msgstr "IPv4 adresy se před zápisem zkrátí na /24 a IPv6 na /48."
+
+msgid "access_log_file_hint"
+msgstr "Soubor logu v kontejneru Caddy (svazek s daty Caddy):"
+
+msgid "access_log_privacy_hint"
+msgstr "Access log obsahuje IP adresy klientů a požadované adresy URL. S ohledem na ochranu osobních údajů (např. GDPR) zvažte maskování IP a krátkou dobu uchování."
+
+msgid "access_log_open"
+msgstr "Otevřít access log"
+
+msgid "msg_access_log_saved"
+msgstr "Nastavení access logu uloženo a Caddy znovu načten"
+
+msgid "msg_access_log_reverted"
+msgstr "Caddy konfiguraci odmítl, předchozí nastavení access logu bylo obnoveno"
+
+msgid "logs_tab_access"
+msgstr "Požadavky"
+
+msgid "logs_tab_caddy"
+msgstr "Caddy"
+
+msgid "access_log_disabled"
+msgstr "Access log je vypnutý, požadavky se nezaznamenávají."
+
+msgid "access_log_enable_link"
+msgstr "Zapnout v Nastavení → Logy"
+
+msgid "access_log_rule_not_found"
+msgstr "Pravidlo nebylo nalezeno."
+
+msgid "access_log_rule"
+msgstr "Pravidlo"
+
+msgid "access_log_all_rules"
+msgstr "Všechna pravidla"
+
+msgid "access_log_status"
+msgstr "Stav"
+
+msgid "access_log_errors"
+msgstr "Chyby (4xx + 5xx)"
+
+msgid "access_log_search"
+msgstr "Cesta, host, IP nebo user agent…"
+
+msgid "access_log_apply"
+msgstr "Filtrovat"
+
+msgid "access_log_rule_hosts"
+msgstr "Požadavky pro"
+
+msgid "access_log_requests_24h"
+msgstr "Požadavků (24 h)"
+
+msgid "access_log_latency"
+msgstr "Doba odpovědi medián / p95 (24 h)"
+
+msgid "access_log_time"
+msgstr "Čas"
+
+msgid "access_log_request"
+msgstr "Požadavek"
+
+msgid "access_log_host"
+msgstr "Host"
+
+msgid "access_log_duration"
+msgstr "Doba"
+
+msgid "access_log_size"
+msgstr "Velikost"
+
+msgid "access_log_client"
+msgstr "Klient"
+
+msgid "access_log_newest_first"
+msgstr "nejnovější nahoře"
+
+msgid "access_log_no_entries"
+msgstr "Filtru neodpovídá žádný požadavek."
+
+msgid "access_log_no_file"
+msgstr "Soubor logu zatím neexistuje. Caddy ho vytvoří s prvním požadavkem."
+
+msgid "msg_access_log_saved_no_reload"
+msgstr "Nastavení access logu uloženo, ale Caddy nebyl znovu načten"
