@@ -11,6 +11,9 @@ package main
 //
 //	docker build --build-arg CPM_MODULES="github.com/you/cpm-module@v0.1.0" .
 //
-// Example:
-//
-//	import _ "github.com/TomasZmek/cpm-dockhand"
+// Modules maintained in this repository (each a separate Go module under
+// modules/, replaced locally in go.mod):
+
+import (
+	_ "github.com/TomasZmek/cpm/modules/dockhand"
+)

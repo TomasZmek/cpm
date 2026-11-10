@@ -1,3 +1,12 @@
+# CPM - Unreleased
+
+## ✨ New Features
+
+- **Dockhand module** — reads containers of all environments managed by [Dockhand](https://dockhand.pro) (local socket and remote hosts via Hawser, including Edge mode) through its REST API, so backend status and Docker discovery work for containers on other machines too. Settings: Dockhand URL, API token (`dh_…`), optional host IP per environment and environment filter; the host IP defaults to the environment's *Public IP* in Dockhand. After a rejected token CPM pauses for 5 minutes (Dockhand blocks an IP after 10 failed attempts). Lives in `modules/dockhand/` as a separate Go module.
+- Containers reported by more than one module (e.g. Docker (local) and Dockhand's local environment) are listed once.
+
+---
+
 # CPM v3.5.1 - Security Patch
 
 Released 2026-11-10. Docker images: `perteus/caddy-ui:3.5.1` (Docker Hub), `ghcr.io/tomaszmek/cpm:3.5.1`; offline packages for amd64 and arm64 are attached to the GitHub release.

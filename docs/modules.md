@@ -104,8 +104,22 @@ Without Docker, add a blank import to `cmd/cpm/modules.go`
 (`import _ "github.com/you/cpm-dockhand"`), run `go get` and build as usual.
 A module adds only its own code to the binary (a few kB).
 
-## Built-in modules
+## Modules in this repository
 
 | ID | Module | Settings |
 |---|---|---|
 | `docker` | Docker (local): the Docker daemon behind the mounted socket | `host_ip`: IP of this host as used in proxy rules (default: the host marked as local in Settings → Docker) |
+| `dockhand` | [Dockhand](https://dockhand.pro): containers of all its environments (local socket, remote hosts via Hawser incl. Edge mode) through its REST API — `modules/dockhand/` | `url`; `token` (Dockhand → Profile → API tokens, `dh_…`; not needed with Dockhand auth off); `host_ips` (optional `ID=IP` per environment); `environments` (optional ID filter) |
+
+### Dockhand
+
+The host IP of each environment (needed to match `IP:port` rules) is, in this
+order: the `host_ips` mapping, the environment's **Public IP** set in
+Dockhand (environment settings), or the address Dockhand connects to (direct
+/ Hawser standard). Environments in Hawser Edge mode or on a local socket
+need a Public IP in Dockhand or a `host_ips` entry. After Dockhand rejects the
+token CPM pauses for 5 minutes, because Dockhand blocks an IP after 10 failed
+token attempts.
+
+When both *Docker (local)* and *Dockhand* are enabled, containers reported by
+both are listed once (matched by container ID).

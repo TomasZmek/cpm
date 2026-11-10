@@ -146,6 +146,7 @@ Modules extend CPM without code changes. Open **Settings → Modules** (admin) t
 | Module | What it does |
 |--------|--------------|
 | 🐳 **Docker (local)** | Reads containers from the mounted Docker socket. Set **Docker host IP** to the LAN address of the machine Docker runs on (e.g. your NAS) so rules like `192.168.1.10:8080` are matched to the container publishing that port. |
+| ⚓ **Dockhand** | Reads containers of all [Dockhand](https://dockhand.pro) environments — the local host and remote hosts via Hawser — through Dockhand's API (URL + API token). Each environment's host IP comes from its *Public IP* in Dockhand. |
 
 With a container source enabled, CPM shows for every proxy rule whether its backend is **running / stopped** (with container name and host) or, for targets no module knows, **reachable / unreachable** (TCP check). Containers are refreshed in the background every 30 s.
 

@@ -45,8 +45,11 @@ require (
 )
 
 require (
+	github.com/TomasZmek/cpm/modules/dockhand v0.0.0
 	github.com/TomasZmek/cpm/sdk v0.0.0
 	github.com/leonelquinteros/gotext v1.7.2
 )
 
 replace github.com/TomasZmek/cpm/sdk => ./sdk
+
+replace github.com/TomasZmek/cpm/modules/dockhand => ./modules/dockhand

@@ -91,3 +91,29 @@ func TestStatusAndProbe(t *testing.T) {
 		t.Fatalf("sources = %+v", srcs)
 	}
 }
+
+type dupSource struct{}
+
+func (dupSource) Containers(context.Context) ([]sdk.Container, error) {
+	return []sdk.Container{
+		{ID: "0123456789abcdef", Name: "anki-sync", State: "running", HostIP: "192.168.50.222"},
+		{ID: "0123456789ab", Name: "anki-sync", State: "running", HostIP: "192.168.50.222"},
+		{Name: "noid", State: "running"},
+		{Name: "noid", State: "running"},
+	}, nil
+}
+
+func TestDuplicateContainersMerged(t *testing.T) {
+	sdk.Register(sdk.Module{ID: "invdup", New: func(sdk.Config) (sdk.Source, error) { return dupSource{}, nil }})
+	dir := t.TempDir()
+	mods, _ := modules.NewManager(dir)
+	mods.Disable("invtest")
+	if err := mods.Enable("invdup", nil); err != nil {
+		t.Fatal(err)
+	}
+	inv := New(mods, func() []*models.Site { return nil })
+	inv.Refresh(context.Background())
+	if n := len(inv.Containers()); n != 3 {
+		t.Fatalf("got %d containers, want 3 (same ID merged, no-ID kept)", n)
+	}
+}

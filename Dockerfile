@@ -6,9 +6,10 @@ WORKDIR /app
 # Install build dependencies
 RUN apk add --no-cache git ca-certificates tzdata
 
-# Copy go mod files (the module SDK is a separate Go module, replaced locally)
+# Copy go mod files (the module SDK and in-repo modules are separate Go modules, replaced locally)
 COPY go.mod go.sum ./
 COPY sdk/go.mod ./sdk/
+COPY modules/dockhand/go.mod ./modules/dockhand/
 RUN go mod download
 
 # Copy source code
