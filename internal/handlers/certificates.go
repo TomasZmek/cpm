@@ -122,15 +122,6 @@ func (h *Handler) CertificatesRestartCaddy(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"ok": false, "error": result.Error})
 }
 
-// HTMXCertificatesList returns certificates list as HTML partial
-func (h *Handler) HTMXCertificatesList(c *fiber.Ctx) error {
-	certs, _ := h.certService.GetAllCertificates()
-
-	return c.Render("partials/certificates_list", fiber.Map{
-		"Certificates": certs,
-	})
-}
-
 // CertificatesRenewAll renews certificates in bulk based on a scope:
 //
 //	expiring (default) -> expiring, critical or already-expired certificates

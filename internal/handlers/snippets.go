@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"net/netip"
-	"regexp"
 	"strconv"
 	"strings"
 
@@ -135,25 +134,6 @@ func (h *Handler) SnippetUpdate(c *fiber.Ctx) error {
 
 	return c.Redirect("/snippets")
 }
-
-// HTMXSnippetForm returns a snippet form as HTML partial
-func (h *Handler) HTMXSnippetForm(c *fiber.Ctx) error {
-	snippetName := c.Params("name")
-	if !snippetFormNameRegex.MatchString(snippetName) {
-		return c.Status(fiber.StatusBadRequest).SendString("Invalid snippet name")
-	}
-
-	cfg, err := h.snippetsService.GetConfig()
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
-	}
-
-	return c.Render("partials/snippet_form_"+snippetName, fiber.Map{
-		"Config": cfg,
-	})
-}
-
-var snippetFormNameRegex = regexp.MustCompile(`^[a-z_]+$`)
 
 // parseNetworks parses networks from form input
 func parseNetworks(input string) []string {

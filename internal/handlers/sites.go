@@ -326,19 +326,6 @@ func (h *Handler) HTMXSitesList(c *fiber.Ctx) error {
 	})
 }
 
-// HTMXSiteCard returns a single site card as HTML partial
-func (h *Handler) HTMXSiteCard(c *fiber.Ctx) error {
-	filename := c.Params("id")
-	site, err := h.caddyService.GetSite(filename)
-	if err != nil {
-		return c.Status(fiber.StatusNotFound).SendString("Site not found")
-	}
-
-	return c.Render("partials/site_card", fiber.Map{
-		"Site": site,
-	})
-}
-
 // HTMXSitePreview returns site config preview
 func (h *Handler) HTMXSitePreview(c *fiber.Ctx) error {
 	filename := c.Params("id")

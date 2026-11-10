@@ -257,13 +257,11 @@ func setupRoutes(app *fiber.App, h *handlers.Handler, authService *services.Auth
 	// HTMX partials for sites
 	protected.Get("/htmx/sites/list", h.HTMXSitesList)
 	protected.Get("/htmx/sites/status", h.SitesStatus)
-	protected.Get("/htmx/sites/:id/card", h.HTMXSiteCard)
 	protected.Get("/htmx/sites/:id/preview", h.HTMXSitePreview)
 
 	// Snippets
 	protected.Get("/snippets", h.SnippetsList)
 	protected.Post("/snippets/:name", edit, h.SnippetUpdate)
-	protected.Get("/htmx/snippets/:name/form", edit, h.HTMXSnippetForm)
 
 	// Certificates
 	protected.Get("/certificates", h.CertificatesList)
@@ -275,7 +273,6 @@ func setupRoutes(app *fiber.App, h *handlers.Handler, authService *services.Auth
 	protected.Post("/certificates/backups/:id/restore", edit, h.CertificateBackupRestore)
 	protected.Post("/certificates/backups/:id/delete", edit, h.CertificateBackupDelete)
 	protected.Get("/certificates/count", h.CertificatesCount)
-	protected.Get("/htmx/certificates/list", h.HTMXCertificatesList)
 
 	// Logs
 	protected.Get("/logs", h.LogsPage)
