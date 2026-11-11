@@ -22,23 +22,22 @@
 ## 📸 Screenshots
 
 <p align="center">
-  <img src="img/dashboard.png" alt="CPM Dashboard" width="800">
-  <br><em>Dashboard — system overview, alerts, quick actions</em>
+  <img src="img/modern/dashboard.png" alt="CPM Dashboard" width="800">
+  <br><em>Dashboard — backend status, alerts, certificates, quick actions</em>
 </p>
 
 <p align="center">
-  <img src="img/settings.png" alt="CPM Settings" width="800">
-  <br><em>Settings — language, theme, wildcard SSL, users</em>
+  <img src="img/modern/proxy-rules.png" alt="CPM Proxy Rules" width="800">
+  <br><em>Proxy Rules — backend status, tags, wildcard certificates</em>
 </p>
 
 <p align="center">
-  <img src="img/edit-rules.png" alt="CPM Proxy Rules" width="800">
-  <br><em>Proxy Rules — visual editor for reverse proxy configuration</em>
+  <img src="img/modern/dashboard-dark.png" alt="CPM Dashboard (dark mode)" width="800">
+  <br><em>Modern theme in dark mode</em>
 </p>
 
 <p align="center">
-  <img src="img/certificates.png" alt="CPM Certificates" width="800">
-  <br><em>Certificates — SSL overview with expiration status</em>
+  📷 <a href="img/README.md"><strong>More screenshots</strong></a> — rule editor, certificates, Docker discovery, logs, settings; Modern and Classic themes
 </p>
 
 ---
