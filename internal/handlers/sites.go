@@ -270,49 +270,11 @@ func (h *Handler) SiteDelete(c fiber.Ctx) error {
 	return redirectTo(c, "/sites")
 }
 
-// SiteDuplicate duplicates a site
-func (h *Handler) SiteDuplicate(c fiber.Ctx) error {
-	filename := c.Params("id")
-	newDomains := services.CleanDomains(c.FormValue("domains"))
-
-	if len(newDomains) == 0 {
-		return c.Status(fiber.StatusBadRequest).SendString("New domains are required")
-	}
-
-	newSite, err := h.caddyService.DuplicateSite(filename, newDomains)
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
-	}
-
-	// Reload Caddy
-	result := h.caddyService.ReloadWithValidation()
-	if !result.Success {
-		setFlash(c, "warning", tl(c, "msg_rule_dup_reload_failed")+": "+result.Error)
-	} else {
-		setFlash(c, "success", tl(c, "msg_rule_created_name", newSite.PrimaryDomain()))
-	}
-
-	return redirectTo(c, "/sites")
-}
-
 // HTMXSitesList serves the live search and tag filter of the rules page.
 func (h *Handler) HTMXSitesList(c fiber.Ctx) error {
 	// The rules page already filters by ?search= and ?tag=; the search box
 	// and tag filter pick its #sites-list with hx-select.
 	return h.SitesList(c)
-}
-
-// HTMXSiteCard returns a single site card as HTML partial
-func (h *Handler) HTMXSiteCard(c fiber.Ctx) error {
-	filename := c.Params("id")
-	site, err := h.caddyService.GetSite(filename)
-	if err != nil {
-		return c.Status(fiber.StatusNotFound).SendString("Site not found")
-	}
-
-	return c.Render("partials/site_card", fiber.Map{
-		"Site": site,
-	})
 }
 
 // HTMXSitePreview returns site config preview

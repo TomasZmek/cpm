@@ -379,39 +379,6 @@ func (c *CaddyService) DeleteSite(filename string) error {
 	return fmt.Errorf("site not found: %s", filename)
 }
 
-// DuplicateSite creates a copy of a site with new domains
-func (c *CaddyService) DuplicateSite(sourceFilename string, newDomains []string) (*models.Site, error) {
-	source, err := c.GetSite(sourceFilename)
-	if err != nil {
-		return nil, fmt.Errorf("failed to load source site: %w", err)
-	}
-
-	// Create new site with same settings
-	newSite := &models.Site{
-		Domains:            newDomains,
-		TargetIP:           source.TargetIP,
-		TargetPort:         source.TargetPort,
-		IsHTTPSBackend:     source.IsHTTPSBackend,
-		IsInternal:         source.IsInternal,
-		Snippets:           source.Snippets,
-		Tags:               source.Tags,
-		AdditionalBackends: source.AdditionalBackends,
-		LBPolicy:           source.LBPolicy,
-		EnableWebSocket:    source.EnableWebSocket,
-		HealthCheckPath:    source.HealthCheckPath,
-		TimeoutSeconds:     source.TimeoutSeconds,
-		BasicAuthEnabled:   source.BasicAuthEnabled,
-		BasicAuthUsers:     source.BasicAuthUsers,
-		ExtraConfig:        source.ExtraConfig,
-	}
-
-	if err := c.CreateSite(newSite); err != nil {
-		return nil, err
-	}
-
-	return newSite, nil
-}
-
 // Reload reloads Caddy configuration
 func (c *CaddyService) Reload() *ReloadResult {
 	output, err := c.dockerService.ReloadCaddyWithOutput()
