@@ -802,8 +802,11 @@ msgstr "마이그레이션 정보를 가져오는 데 실패했습니다"
 msgid "msg_wildcard_migrate_backup_failed"
 msgstr "마이그레이션 전 백업 생성에 실패했습니다"
 
-msgid "msg_wildcard_migrate_errors"
-msgstr "마이그레이션이 오류와 함께 완료되었습니다. 로그를 확인하세요."
+msgid "msg_wildcard_migrate_done"
+msgstr "마이그레이션이 완료되었습니다. 마이그레이션된 규칙: %d, 백업으로 이동된 인증서: %d."
+
+msgid "msg_wildcard_migrate_errors_detail"
+msgstr "마이그레이션이 오류와 함께 완료되었습니다"
 
 msgid "msg_wildcard_delete_failed"
 msgstr "와일드카드 도메인 삭제에 실패했습니다"

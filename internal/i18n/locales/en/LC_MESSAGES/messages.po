@@ -800,8 +800,11 @@ msgstr "Failed to get migration info"
 msgid "msg_wildcard_migrate_backup_failed"
 msgstr "Failed to create backup before migration"
 
-msgid "msg_wildcard_migrate_errors"
-msgstr "Migration completed with errors. Check logs."
+msgid "msg_wildcard_migrate_done"
+msgstr "Migration completed. Rules migrated: %d, certificates moved to backups: %d."
+
+msgid "msg_wildcard_migrate_errors_detail"
+msgstr "Migration completed with errors"
 
 msgid "msg_wildcard_delete_failed"
 msgstr "Failed to delete wildcard domain"

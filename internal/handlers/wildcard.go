@@ -191,16 +191,9 @@ func (h *Handler) WildcardMigrateExecute(c fiber.Ctx) error {
 
 	// Build result message
 	if len(errors) > 0 {
-		setFlash(c, "warning", tl(c, "msg_wildcard_migrate_errors"))
+		setFlash(c, "warning", tl(c, "msg_wildcard_migrate_errors_detail")+": "+strings.Join(errors, "; "))
 	} else {
-		msg := "Migration completed successfully!"
-		if migratedCount > 0 {
-			msg += fmt.Sprintf(" %d sites migrated.", migratedCount)
-		}
-		if deletedCount > 0 {
-			msg += fmt.Sprintf(" %d certificates deleted.", deletedCount)
-		}
-		setFlash(c, "success", msg)
+		setFlash(c, "success", tl(c, "msg_wildcard_migrate_done", migratedCount, deletedCount))
 	}
 
 	return redirectTo(c, "/settings/wildcard")

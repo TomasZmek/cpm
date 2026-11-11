@@ -800,8 +800,11 @@ msgstr "Nepodařilo se získat informace o migraci"
 msgid "msg_wildcard_migrate_backup_failed"
 msgstr "Nepodařilo se vytvořit zálohu před migrací"
 
-msgid "msg_wildcard_migrate_errors"
-msgstr "Migrace dokončena s chybami. Zkontrolujte logy."
+msgid "msg_wildcard_migrate_done"
+msgstr "Migrace dokončena. Převedená pravidla: %d, certifikáty přesunuté do záloh: %d."
+
+msgid "msg_wildcard_migrate_errors_detail"
+msgstr "Migrace dokončena s chybami"
 
 msgid "msg_wildcard_delete_failed"
 msgstr "Nepodařilo se smazat wildcard doménu"
