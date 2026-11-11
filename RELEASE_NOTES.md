@@ -1,3 +1,13 @@
+# Unreleased
+
+## 🐛 Fixes
+
+- Modern theme: editing a rule whose target is an IP address opened the form in *Service name* mode; it now selects *IP address*.
+
+## 📝 Docs
+
+- New reference screenshots (English) in `img/modern/` (incl. dark mode) and `img/classic/`, with a gallery in `img/README.md`; README and Docker Hub show three Modern screenshots and link to the gallery.
+
 # CPM v3.7.0 - Access log per rule
 
 Released 2026-11-10. Docker images: `perteus/caddy-ui:3.7.0` (Docker Hub), `ghcr.io/tomaszmek/cpm:3.7.0`; offline packages for amd64 and arm64 are attached to the GitHub release.
