@@ -1,4 +1,6 @@
-# CPM v3.7.1 - Unreleased
+# CPM v3.7.1 - Bug fixes
+
+Released 2026-11-11. Docker images: `perteus/caddy-ui:3.7.1` (Docker Hub), `ghcr.io/tomaszmek/cpm:3.7.1`; offline packages for amd64 and arm64 are attached to the GitHub release.
 
 ## 🐛 Fixes
 
@@ -17,6 +19,7 @@
 
 ## 📝 Docs
 
+- **Develop test builds** are now named after the version being prepared (pre-release `v3.7.1-dev`, image `:3.7.1-dev`) instead of `develop`.
 - New reference screenshots (English) in `img/modern/` (incl. dark mode) and `img/classic/`, with a gallery in `img/README.md`; README and Docker Hub show three Modern screenshots and link to the gallery.
 
 ---

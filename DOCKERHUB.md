@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-3.7.0-blue" alt="Version">
+  <img src="https://img.shields.io/badge/version-3.7.1-blue" alt="Version">
   <img src="https://img.shields.io/badge/Go-1.26-00ADD8?logo=go" alt="Go">
   <img src="https://img.shields.io/badge/image_size-~6MB-green" alt="Image Size">
   <img src="https://img.shields.io/badge/platforms-amd64%20%7C%20arm64-lightgrey" alt="Platforms">
@@ -67,7 +67,7 @@
 
 ```bash
 docker pull perteus/caddy-ui:latest
-docker pull perteus/caddy-ui:3.7.0
+docker pull perteus/caddy-ui:3.7.1
 ```
 
 ### Docker Compose
@@ -88,7 +88,7 @@ services:
       - ./caddy-data:/data
 
   cpm:
-    image: perteus/caddy-ui:3.7.0
+    image: perteus/caddy-ui:3.7.1
     container_name: cpm
     ports:
       - "8501:8501"
@@ -107,7 +107,7 @@ On Synology add `privileged: true` for Docker socket access.
 
 ```yaml
 cpm:
-  image: perteus/caddy-ui:3.7.0
+  image: perteus/caddy-ui:3.7.1
   privileged: true
   volumes:
     - /volume1/docker/caddy-config:/caddy-config
@@ -135,6 +135,7 @@ cpm:
 
 | Version | Notes |
 |---------|-------|
+| **3.7.1** | 🐛 Bug fixes — saving a rule no longer changes its imports, form errors shown in the form, delete on rule detail |
 | **3.7.0** | 📝 Access log per rule — requests, status and response times for each rule; Fiber v3 |
 | **3.6.0** | ⚓ Dockhand module — backend status and discovery for containers on all Docker hosts |
 | **3.5.1** | 🔒 Security patch — Go 1.26.10, fasthttp, compress, x/crypto (31 known vulnerabilities fixed) |
@@ -152,6 +153,13 @@ cpm:
 | **3.0.1** | 🔐 Wildcard SSL, migration tools, UI improvements |
 | **3.0.0** | 🎉 Complete Go rewrite (794MB → 6MB) |
 | 2.x | Python version (deprecated) |
+
+### v3.7.1 - Bug fixes
+- 🐛 **Saving a rule from the form** no longer adds `import cloudflare_dns` or removes custom imports (e.g. `import logging`)
+- 🐛 **Rule form errors** (domain already used, missing port, …) are shown in the form, the input stays
+- 🐛 **Delete** on the rule detail page works; errors of certificate/rule actions and of backup restore without a file are shown as messages
+- 🐛 Wildcard domains with a hyphen on migrated rules; Modern theme opens IP targets in *IP address* mode
+- 📸 New screenshots of both themes
 
 ### v3.7.0 - Access log per rule
 - ✅ **Access log** — turn it on in Settings → Logs; Caddy writes every request to `/data/cpm-logs/access.log` (Caddy data volume, no compose change), rotated by size, optional IP masking
