@@ -776,9 +776,6 @@ msgstr "Pravidlo '{0}' bylo úspěšně smazáno"
 msgid "msg_rule_delete_reload_failed"
 msgstr "Pravidlo smazáno, ale reload selhal"
 
-msgid "msg_rule_dup_reload_failed"
-msgstr "Pravidlo zduplikováno, ale reload selhal"
-
 msgid "msg_wildcard_unavailable"
 msgstr "Wildcard služba není dostupná"
 
@@ -801,7 +798,7 @@ msgid "msg_wildcard_migrate_backup_failed"
 msgstr "Nepodařilo se vytvořit zálohu před migrací"
 
 msgid "msg_wildcard_migrate_done"
-msgstr "Migrace dokončena. Převedená pravidla: %d, certifikáty přesunuté do záloh: %d."
+msgstr "Migrace dokončena. Převedená pravidla: {0}, certifikáty přesunuté do záloh: {1}."
 
 msgid "msg_wildcard_migrate_errors_detail"
 msgstr "Migrace dokončena s chybami"
@@ -1646,3 +1643,37 @@ msgstr "Soubor logu zatím neexistuje. Caddy ho vytvoří s prvním požadavkem.
 
 msgid "msg_access_log_saved_no_reload"
 msgstr "Nastavení access logu uloženo, ale Caddy nebyl znovu načten"
+
+# Errors shown as flash messages (3.7.1)
+msgid "msg_cert_delete_failed"
+msgstr "Certifikát se nepodařilo smazat"
+
+msgid "msg_cert_renew_failed"
+msgstr "Obnovu certifikátu se nepodařilo spustit"
+
+msgid "msg_rule_not_found"
+msgstr "Pravidlo nenalezeno"
+
+msgid "msg_rule_delete_failed"
+msgstr "Pravidlo se nepodařilo smazat"
+
+msgid "msg_rule_save_failed"
+msgstr "Pravidlo se nepodařilo uložit"
+
+msgid "msg_rule_domain_required"
+msgstr "Zadejte alespoň jednu doménu."
+
+msgid "msg_rule_port_required"
+msgstr "Zadejte port backendu."
+
+msgid "msg_rule_exists"
+msgstr "Pravidlo pro {0} už existuje."
+
+msgid "msg_no_file_selected"
+msgstr "Nejdřív vyberte soubor."
+
+msgid "msg_file_read_failed"
+msgstr "Soubor se nepodařilo načíst"
+
+msgid "msg_rules_import_failed"
+msgstr "Pravidla se nepodařilo importovat"

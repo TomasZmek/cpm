@@ -240,20 +240,9 @@ func (h *Handler) BackupCreate(c fiber.Ctx) error {
 
 // BackupRestore restores from a backup
 func (h *Handler) BackupRestore(c fiber.Ctx) error {
-	file, err := c.FormFile("backup")
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).SendString("No file uploaded")
-	}
-
-	f, err := file.Open()
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).SendString("Failed to open file")
-	}
-	defer f.Close()
-
-	data, err := io.ReadAll(f)
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).SendString("Failed to read file")
+	data, msg := readUploadedFile(c, "backup")
+	if msg != "" {
+		return redirectFlash(c, "error", msg, "/settings?tab=backup")
 	}
 
 	result := h.backupService.RestoreBackup(data)
@@ -275,27 +264,16 @@ func (h *Handler) BackupRestore(c fiber.Ctx) error {
 
 // ImportRules imports rules from JSON
 func (h *Handler) ImportRules(c fiber.Ctx) error {
-	file, err := c.FormFile("rules")
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).SendString("No file uploaded")
-	}
-
-	f, err := file.Open()
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).SendString("Failed to open file")
-	}
-	defer f.Close()
-
-	data, err := io.ReadAll(f)
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).SendString("Failed to read file")
+	data, msg := readUploadedFile(c, "rules")
+	if msg != "" {
+		return redirectFlash(c, "error", msg, "/settings?tab=backup")
 	}
 
 	skipExisting := c.FormValue("skip_existing") == "on"
 
 	imported, skipped, err := h.backupService.ImportRules(data, h.caddyService, skipExisting)
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).SendString(err.Error())
+		return redirectFlash(c, "error", tl(c, "msg_rules_import_failed")+": "+err.Error(), "/settings?tab=backup")
 	}
 
 	// Reload Caddy
@@ -310,6 +288,25 @@ func (h *Handler) ImportRules(c fiber.Ctx) error {
 	}
 
 	return redirectTo(c, "/settings?tab=backup")
+}
+
+// readUploadedFile reads an uploaded form file. On failure it returns a
+// translated message for a flash instead of the data.
+func readUploadedFile(c fiber.Ctx, field string) ([]byte, string) {
+	file, err := c.FormFile(field)
+	if err != nil {
+		return nil, tl(c, "msg_no_file_selected")
+	}
+	f, err := file.Open()
+	if err != nil {
+		return nil, tl(c, "msg_file_read_failed")
+	}
+	defer f.Close()
+	data, err := io.ReadAll(f)
+	if err != nil {
+		return nil, tl(c, "msg_file_read_failed")
+	}
+	return data, ""
 }
 
 // ExportRules exports rules as JSON

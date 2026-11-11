@@ -1,6 +1,7 @@
 package services
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -116,6 +117,10 @@ func (c *CaddyService) GetAllSites() ([]*models.Site, error) {
 
 	return sites, nil
 }
+
+// ErrSiteExists is returned by CreateSite when a rule file with the same
+// name already exists.
+var ErrSiteExists = errors.New("site already exists")
 
 // ValidateSiteFilename ensures a site filename is a plain file name that
 // cannot escape the sites directory (no path separators, no "..").
@@ -244,7 +249,7 @@ func (c *CaddyService) CreateSite(site *models.Site) error {
 
 	// Check if file already exists
 	if _, err := os.Stat(site.Filepath); err == nil {
-		return fmt.Errorf("site already exists: %s", site.Filename)
+		return fmt.Errorf("%w: %s", ErrSiteExists, site.Filename)
 	}
 
 	// Ensure sites directory exists

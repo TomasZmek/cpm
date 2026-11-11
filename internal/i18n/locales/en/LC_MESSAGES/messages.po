@@ -776,9 +776,6 @@ msgstr "Rule '{0}' deleted successfully"
 msgid "msg_rule_delete_reload_failed"
 msgstr "Rule deleted but reload failed"
 
-msgid "msg_rule_dup_reload_failed"
-msgstr "Rule duplicated but reload failed"
-
 msgid "msg_wildcard_unavailable"
 msgstr "Wildcard service not available"
 
@@ -801,7 +798,7 @@ msgid "msg_wildcard_migrate_backup_failed"
 msgstr "Failed to create backup before migration"
 
 msgid "msg_wildcard_migrate_done"
-msgstr "Migration completed. Rules migrated: %d, certificates moved to backups: %d."
+msgstr "Migration completed. Rules migrated: {0}, certificates moved to backups: {1}."
 
 msgid "msg_wildcard_migrate_errors_detail"
 msgstr "Migration completed with errors"
@@ -1646,3 +1643,37 @@ msgstr "The log file does not exist yet. Caddy creates it with the first request
 
 msgid "msg_access_log_saved_no_reload"
 msgstr "Access log settings saved, but Caddy was not reloaded"
+
+# Errors shown as flash messages (3.7.1)
+msgid "msg_cert_delete_failed"
+msgstr "Certificate could not be deleted"
+
+msgid "msg_cert_renew_failed"
+msgstr "Certificate renewal could not be started"
+
+msgid "msg_rule_not_found"
+msgstr "Rule not found"
+
+msgid "msg_rule_delete_failed"
+msgstr "Rule could not be deleted"
+
+msgid "msg_rule_save_failed"
+msgstr "Rule could not be saved"
+
+msgid "msg_rule_domain_required"
+msgstr "Enter at least one domain."
+
+msgid "msg_rule_port_required"
+msgstr "Enter the backend port."
+
+msgid "msg_rule_exists"
+msgstr "A rule for {0} already exists."
+
+msgid "msg_no_file_selected"
+msgstr "Choose a file first."
+
+msgid "msg_file_read_failed"
+msgstr "The file could not be read"
+
+msgid "msg_rules_import_failed"
+msgstr "Rules could not be imported"

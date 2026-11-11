@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"errors"
 	"sort"
 	"strings"
 
@@ -51,16 +52,6 @@ func (h *Handler) SitesList(c fiber.Ctx) error {
 
 // SiteNew renders the new site form
 func (h *Handler) SiteNew(c fiber.Ctx) error {
-	availableSnippets, _ := h.snippetsService.GetAvailableSnippets()
-	templates := models.GetServiceTemplates()
-	categories := models.GetTemplateCategories()
-
-	// Get wildcard domains for TLS selection
-	var wildcardDomains []models.WildcardDomain
-	if h.wildcardService != nil {
-		wildcardDomains, _ = h.wildcardService.GetDomains()
-	}
-
 	site := &models.Site{TLSMode: "auto"}
 	if qIP := c.Query("ip"); qIP != "" {
 		site.TargetIP = qIP
@@ -71,24 +62,56 @@ func (h *Handler) SiteNew(c fiber.Ctx) error {
 	if qName := c.Query("name"); qName != "" {
 		site.Domains = []string{qName}
 	}
+	return h.renderSiteForm(c, site, true, "")
+}
+
+// renderSiteForm renders the rule form for a new (isNew) or existing rule.
+// With formError it is shown again after a failed submit: the submitted
+// values stay in the form and the error is shown as a flash message.
+func (h *Handler) renderSiteForm(c fiber.Ctx, site *models.Site, isNew bool, formError string) error {
+	availableSnippets, _ := h.snippetsService.GetAvailableSnippets()
+
+	// Get wildcard domains for TLS selection
+	var wildcardDomains []models.WildcardDomain
+	if h.wildcardService != nil {
+		wildcardDomains, _ = h.wildcardService.GetDomains()
+	}
 
 	appSettings, _ := h.settingsService.Get()
 
-	containers := h.discoverableContainers()
-
-	data := h.baseData(c, "New Proxy Rule")
-	data["IsNew"] = true
+	title := "New Proxy Rule"
+	if !isNew {
+		title = "Edit: " + site.PrimaryDomain()
+	}
+	data := h.baseData(c, title)
+	data["IsNew"] = isNew
 	data["Site"] = site
 	data["DefaultIP"] = h.config.DefaultIP
 	data["AvailableSnippets"] = availableSnippets
 	data["WildcardDomains"] = wildcardDomains
-	data["Containers"] = containers
-	data["Templates"] = templates
-	data["Categories"] = categories
+	data["Containers"] = h.discoverableContainers()
 	data["DiscoveryHosts"] = appSettings.DiscoveryHosts
 	data["Active"] = "sites"
+	if isNew {
+		data["Templates"] = models.GetServiceTemplates()
+		data["Categories"] = models.GetTemplateCategories()
+	}
+	if formError != "" {
+		data["FlashType"] = "error"
+		data["FlashMessage"] = formError
+		c.Status(fiber.StatusBadRequest)
+	}
 
 	return c.Render("pages/site_form", data, "layouts/base")
+}
+
+// siteFormError returns a translated message for an error of CreateSite /
+// UpdateSite.
+func siteFormError(c fiber.Ctx, site *models.Site, err error) string {
+	if errors.Is(err, services.ErrSiteExists) {
+		return tl(c, "msg_rule_exists", site.PrimaryDomain())
+	}
+	return tl(c, "msg_rule_save_failed") + ": " + err.Error()
 }
 
 // SiteCreate creates a new site
@@ -120,15 +143,17 @@ func (h *Handler) SiteCreate(c fiber.Ctx) error {
 
 	// Validation
 	if len(site.Domains) == 0 {
-		return c.Status(fiber.StatusBadRequest).SendString("At least one domain is required")
+		return h.renderSiteForm(c, site, true, tl(c, "msg_rule_domain_required"))
 	}
 	if site.TargetPort == "" {
-		return c.Status(fiber.StatusBadRequest).SendString("Port is required")
+		return h.renderSiteForm(c, site, true, tl(c, "msg_rule_port_required"))
 	}
 
 	// Create site
 	if err := h.caddyService.CreateSite(site); err != nil {
-		return c.Status(fiber.StatusBadRequest).SendString(err.Error())
+		// CreateSite may have set a filename derived from the domain.
+		site.Filename, site.Filepath = "", ""
+		return h.renderSiteForm(c, site, true, siteFormError(c, site, err))
 	}
 
 	// Reload Caddy
@@ -161,36 +186,11 @@ func (h *Handler) SiteDetail(c fiber.Ctx) error {
 
 // SiteEdit renders the edit form
 func (h *Handler) SiteEdit(c fiber.Ctx) error {
-	filename := c.Params("id")
-
-	site, err := h.caddyService.GetSite(filename)
+	site, err := h.caddyService.GetSite(c.Params("id"))
 	if err != nil {
 		return fiber.NewError(fiber.StatusNotFound, "Site not found")
 	}
-
-	availableSnippets, _ := h.snippetsService.GetAvailableSnippets()
-
-	// Get wildcard domains for TLS selection
-	var wildcardDomains []models.WildcardDomain
-	if h.wildcardService != nil {
-		wildcardDomains, _ = h.wildcardService.GetDomains()
-	}
-
-	appSettings, _ := h.settingsService.Get()
-
-	containers := h.discoverableContainers()
-
-	data := h.baseData(c, "Edit: "+site.PrimaryDomain())
-	data["IsNew"] = false
-	data["Site"] = site
-	data["DefaultIP"] = h.config.DefaultIP
-	data["AvailableSnippets"] = availableSnippets
-	data["WildcardDomains"] = wildcardDomains
-	data["Containers"] = containers
-	data["DiscoveryHosts"] = appSettings.DiscoveryHosts
-	data["Active"] = "sites"
-
-	return c.Render("pages/site_form", data, "layouts/base")
+	return h.renderSiteForm(c, site, false, "")
 }
 
 // SiteUpdate updates an existing site
@@ -205,7 +205,8 @@ func (h *Handler) SiteUpdate(c fiber.Ctx) error {
 	// Check for raw mode
 	if rawContent := c.FormValue("raw_content"); rawContent != "" {
 		if err := h.caddyService.UpdateSiteRaw(filename, rawContent); err != nil {
-			return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
+			site.RawContent = rawContent
+			return h.renderSiteForm(c, site, false, siteFormError(c, site, err))
 		}
 	} else {
 		// Update from form
@@ -230,8 +231,11 @@ func (h *Handler) SiteUpdate(c fiber.Ctx) error {
 		site.Tags = splitList(c.FormValue("tags"))
 		readLogSkipForm(c, site)
 
+		if len(site.Domains) == 0 {
+			return h.renderSiteForm(c, site, false, tl(c, "msg_rule_domain_required"))
+		}
 		if err := h.caddyService.UpdateSite(site); err != nil {
-			return c.Status(fiber.StatusBadRequest).SendString(err.Error())
+			return h.renderSiteForm(c, site, false, siteFormError(c, site, err))
 		}
 	}
 
@@ -252,11 +256,13 @@ func (h *Handler) SiteDelete(c fiber.Ctx) error {
 
 	site, err := h.caddyService.GetSite(filename)
 	if err != nil {
-		return fiber.NewError(fiber.StatusNotFound, "Site not found")
+		setFlash(c, "error", tl(c, "msg_rule_not_found"))
+		return redirectTo(c, "/sites")
 	}
 
 	if err := h.caddyService.DeleteSite(filename); err != nil {
-		return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
+		setFlash(c, "error", tl(c, "msg_rule_delete_failed")+": "+err.Error())
+		return redirectTo(c, "/sites")
 	}
 
 	// Reload Caddy
