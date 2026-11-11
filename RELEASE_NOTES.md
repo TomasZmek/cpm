@@ -2,7 +2,18 @@
 
 ## 🐛 Fixes
 
+- **Saving a rule from the form changed its file**: a rule without a known snippet got `import cloudflare_dns` added (switching it to the DNS challenge), and custom imports such as `import logging` were removed. Custom imports now stay in *Extra config* and nothing is added.
+- **Rule form errors** (domain already used, invalid value, missing domain or port) showed a bare English text page and the input was lost. The form is shown again with the values and a translated message.
+- **Delete on the rule detail page** did nothing (both themes).
+- Restoring a backup or importing rules **without choosing a file** showed a bare text page; now a message on Settings → Backup.
+- Errors when deleting or renewing a certificate or deleting a rule were not shown at all; now they are shown as a message.
+- Rules migrated to a **wildcard domain with a hyphen** (e.g. `my-home.cz`) showed a wrong wildcard domain (`my.home.cz`) and could turn back into standard rules when edited.
+- The wildcard migration result is translated.
 - Modern theme: editing a rule whose target is an IP address opened the form in *Service name* mode; it now selects *IP address*.
+
+## 🔧 Under the hood
+
+- Removed unused endpoints that answered 500 (`/htmx/certificates/list`, `/htmx/sites/:id/card`, `/htmx/snippets/:name/form`) and the unused `/sites/:id/duplicate`.
 
 ## 📝 Docs
 
