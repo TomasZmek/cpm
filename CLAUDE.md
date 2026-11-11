@@ -183,7 +183,7 @@ Types: `feat`, `fix`, `docs`, `refactor`, `chore`
 ## Release process
 
 1. Update `Version` and `BuildDate` constants in `cmd/cpm/main.go`
-2. Update `RELEASE_NOTES.md`
+2. Update `RELEASE_NOTES.md`: rename the `# CPM vVERSION - Unreleased` heading to `# CPM vVERSION - <title>` and add the release date
 3. Update version badges in `README.md` and `DOCKERHUB.md`
 4. Build and push Docker image (multi-platform amd64 + arm64):
    ```bash
@@ -206,7 +206,7 @@ Types: `feat`, `fix`, `docs`, `refactor`, `chore`
 
 ### Test builds of `develop`
 
-Every push to `develop` runs the **Develop build** workflow (`.github/workflows/develop.yml`): multi-arch images `perteus/caddy-ui:develop` + `:develop-<short sha>` (Docker Hub) and the same tags on `ghcr.io/tomaszmek/cpm`, never `latest`, plus a GitHub pre-release `develop` (replaced on every run, not marked latest) with offline packages and the "Unreleased" section of `RELEASE_NOTES.md`. Use these for testing instead of hand-built images.
+Every push to `develop` runs the **Develop build** workflow (`.github/workflows/develop.yml`): multi-arch images `perteus/caddy-ui:develop`, `:NEXT-dev` and `:develop-<short sha>` (Docker Hub) and the same tags on `ghcr.io/tomaszmek/cpm`, never `latest`, plus a GitHub pre-release `vNEXT-dev` (replaced on every run, not marked latest; older `-dev` pre-releases are removed) with offline packages and the Unreleased section of `RELEASE_NOTES.md`. NEXT is the version being prepared, taken from the `# CPM vNEXT - Unreleased` heading at the top of `RELEASE_NOTES.md` (falls back to the next patch version); that section ends with `---` like the others. Never create a tag named `develop` — it makes `git push origin develop` ambiguous. Use these for testing instead of hand-built images.
 
 ## i18n
 

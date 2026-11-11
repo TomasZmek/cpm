@@ -1,8 +1,12 @@
 # Test builds of the develop branch, never tagged "latest":
-#   Docker Hub: perteus/caddy-ui:develop and :develop-<short sha>
-#   ghcr.io:    ghcr.io/tomaszmek/cpm:develop and :develop-<short sha>
-#   GitHub:     pre-release "develop" (rebuilt on every run) with offline
+#   Docker Hub: perteus/caddy-ui:develop, :<next>-dev and :develop-<short sha>
+#   ghcr.io:    ghcr.io/tomaszmek/cpm:develop, :<next>-dev and :develop-<short sha>
+#   GitHub:     pre-release "v<next>-dev" (rebuilt on every run) with offline
 #               packages for amd64 and arm64
+# <next> is the version being prepared: from the "# CPM v<next> - Unreleased"
+# heading of RELEASE_NOTES.md, else the patch release after the current one.
+# The tag is never just "develop": a tag named like the branch makes
+# "git push origin develop" ambiguous.
 # Runs on every push to develop and can be started manually.
 name: Develop build
 
@@ -32,7 +36,14 @@ jobs:
         run: |
           echo "SHORT=${GITHUB_SHA::7}" >> "$GITHUB_ENV"
           echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
-          echo "APP_VERSION=$(sed -n 's/^[[:space:]]*Version[[:space:]]*= "\(.*\)"/\1/p' cmd/cpm/main.go)" >> "$GITHUB_ENV"
+          APP_VERSION=$(sed -n 's/^[[:space:]]*Version[[:space:]]*= "\(.*\)"/\1/p' cmd/cpm/main.go)
+          NEXT=$(sed -n 's/^# CPM v\([0-9][0-9.]*\) - Unreleased.*/\1/p' RELEASE_NOTES.md | head -n1)
+          if [ -z "$NEXT" ]; then
+            NEXT=$(echo "$APP_VERSION" | awk -F. '{ printf "%d.%d.%d", $1, $2, $3 + 1 }')
+          fi
+          echo "APP_VERSION=$APP_VERSION" >> "$GITHUB_ENV"
+          echo "NEXT_VERSION=$NEXT" >> "$GITHUB_ENV"
+          echo "DEV_TAG=v$NEXT-dev" >> "$GITHUB_ENV"
 
       - uses: docker/setup-qemu-action@v3
       - uses: docker/setup-buildx-action@v3
@@ -55,9 +66,11 @@ jobs:
           {
             echo "list<<EOF"
             echo "$IMAGE:develop"
+            echo "$IMAGE:$NEXT_VERSION-dev"
             echo "$IMAGE:develop-$SHORT"
             if [ "$HAS_DOCKERHUB" = "true" ]; then
               echo "$DOCKERHUB_IMAGE:develop"
+              echo "$DOCKERHUB_IMAGE:$NEXT_VERSION-dev"
               echo "$DOCKERHUB_IMAGE:develop-$SHORT"
             fi
             echo "EOF"
@@ -72,7 +85,7 @@ jobs:
           tags: ${{ steps.tags.outputs.list }}
           labels: |
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
-            org.opencontainers.image.version=develop-${{ env.SHORT }}
+            org.opencontainers.image.version=${{ env.NEXT_VERSION }}-dev+${{ env.SHORT }}
             org.opencontainers.image.revision=${{ github.sha }}
             org.opencontainers.image.title=CPM - Caddy Proxy Manager (develop)
 
@@ -87,12 +100,12 @@ jobs:
 
       - name: Release notes
         run: |
-          awk 'index($0, "# CPM - Unreleased") == 1 { on = 1; next } on && /^---/ { exit } on { print }' RELEASE_NOTES.md > unreleased.md
+          awk '/^# CPM (v[0-9.]+ )?- Unreleased/ { on = 1; next } on && /^---/ { exit } on { print }' RELEASE_NOTES.md > unreleased.md
           cat > notes.md <<NOTES
-          ⚠️ **Test build of the \`develop\` branch** (commit [\`$SHORT\`](https://github.com/$GITHUB_REPOSITORY/commit/$GITHUB_SHA), based on v$APP_VERSION). Not a release — may change or break; replaced by every push to develop.
+          ⚠️ **Test build of v$NEXT_VERSION from the \`develop\` branch** (commit [\`$SHORT\`](https://github.com/$GITHUB_REPOSITORY/commit/$GITHUB_SHA), based on v$APP_VERSION). Not a release — may change or break; replaced by every push to develop.
 
-          - **Docker Hub:** \`$DOCKERHUB_IMAGE:develop\` (always the newest) or \`$DOCKERHUB_IMAGE:develop-$SHORT\` (this build)
-          - **GitHub Container Registry:** \`$IMAGE:develop\` / \`$IMAGE:develop-$SHORT\`
+          - **Docker Hub:** \`$DOCKERHUB_IMAGE:develop\` or \`$DOCKERHUB_IMAGE:$NEXT_VERSION-dev\` (always the newest) or \`$DOCKERHUB_IMAGE:develop-$SHORT\` (this build)
+          - **GitHub Container Registry:** \`$IMAGE:develop\` / \`$IMAGE:$NEXT_VERSION-dev\` / \`$IMAGE:develop-$SHORT\`
           - **Offline:** \`cpm-develop-$SHORT-amd64.tar\` / \`-arm64.tar\` below, \`docker load -i <file>\` (tagged \`perteus/caddy-ui:develop-$SHORT\`)
 
           ## Changes since v$APP_VERSION
@@ -103,10 +116,19 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release delete develop --cleanup-tag --yes >/dev/null 2>&1 || true
-          git push origin ":refs/tags/develop" >/dev/null 2>&1 || true
-          gh release create develop dist/* \
+          # Remove earlier test builds: this version's, older "-dev" ones and
+          # the former "develop" tag (it clashed with the branch name).
+          gh release list --limit 100 --json tagName,isPrerelease \
+            --jq '.[] | select(.isPrerelease) | .tagName' |
+            { grep -E '^(develop|v[0-9.]+-dev)$' || true; } |
+            while read -r tag; do
+              gh release delete "$tag" --cleanup-tag --yes >/dev/null 2>&1 || true
+            done
+          for tag in develop "$DEV_TAG"; do
+            git push origin ":refs/tags/$tag" >/dev/null 2>&1 || true
+          done
+          gh release create "$DEV_TAG" dist/* \
             --target "$GITHUB_SHA" \
-            --title "Develop build $SHORT (test)" \
+            --title "v$NEXT_VERSION-dev (develop build $SHORT)" \
             --notes-file notes.md \
             --prerelease --latest=false

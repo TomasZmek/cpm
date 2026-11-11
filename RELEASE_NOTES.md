@@ -1,4 +1,4 @@
-# Unreleased
+# CPM v3.7.1 - Unreleased
 
 ## 🐛 Fixes
 
@@ -18,6 +18,8 @@
 ## 📝 Docs
 
 - New reference screenshots (English) in `img/modern/` (incl. dark mode) and `img/classic/`, with a gallery in `img/README.md`; README and Docker Hub show three Modern screenshots and link to the gallery.
+
+---
 
 # CPM v3.7.0 - Access log per rule
 
