@@ -301,7 +301,8 @@ func (s *WildcardService) GetMigrationInfo(domain string, sitesDir string, certs
 }
 
 // MigrateSiteConfig migrates a single site config to use wildcard TLS
-func (s *WildcardService) MigrateSiteConfig(sitePath string, snippetName string) error {
+func (s *WildcardService) MigrateSiteConfig(sitePath string, domain string) error {
+	snippetName := GetSnippetName(domain)
 	content, err := os.ReadFile(sitePath)
 	if err != nil {
 		return err
@@ -345,6 +346,12 @@ func (s *WildcardService) MigrateSiteConfig(sitePath string, snippetName string)
 	}
 
 	modified = strings.Join(newLines, "\n")
+
+	// Record the wildcard domain for the parser; it cannot be derived from
+	// the snippet name reliably (hyphens in the domain).
+	if !strings.Contains(modified, "@tls:") {
+		modified = "# @tls: wildcard:" + domain + "\n" + modified
+	}
 
 	// Add import after first {
 	// Find the first site block opening

@@ -153,7 +153,6 @@ func (h *Handler) WildcardMigrateExecute(c fiber.Ctx) error {
 	}
 	log.Printf("Backup created: %s", backupName)
 
-	snippetName := services.GetSnippetName(domain)
 	var migratedCount, deletedCount int
 	var errors []string
 
@@ -162,7 +161,7 @@ func (h *Handler) WildcardMigrateExecute(c fiber.Ctx) error {
 		info, _ := h.wildcardService.GetMigrationInfo(domain, h.config.SitesDir, h.config.DataDir)
 		for _, siteFile := range info.MatchingSites {
 			sitePath := filepath.Join(h.config.SitesDir, "standard", siteFile)
-			if err := h.wildcardService.MigrateSiteConfig(sitePath, snippetName); err != nil {
+			if err := h.wildcardService.MigrateSiteConfig(sitePath, domain); err != nil {
 				log.Printf("Error migrating site %s: %v", siteFile, err)
 				errors = append(errors, "Site "+siteFile+": "+err.Error())
 			} else {

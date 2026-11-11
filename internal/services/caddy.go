@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 	"time"
@@ -153,6 +154,38 @@ func (c *CaddyService) GetSite(filename string) (*models.Site, error) {
 	return nil, fmt.Errorf("site not found: %s", filename)
 }
 
+// wildcardTLSImportRe matches the wildcard TLS snippet import of a legacy
+// (migrated) standard site.
+var wildcardTLSImportRe = regexp.MustCompile(`(?m)^\s*import\s+(wildcard-tls-[a-zA-Z0-9-]+)\s*$`)
+
+// resolveWildcardTLS fixes the TLS mode of a rule that refers to its wildcard
+// domain only through "import wildcard-tls-<domain>" (no "# @tls:" comment).
+// The parser turns every "-" of the snippet name into ".", which is wrong for
+// domains containing a hyphen (wildcard-tls-my-home-cz is my-home.cz, not
+// my.home.cz), so the snippet is matched against the configured domains.
+func (c *CaddyService) resolveWildcardTLS(site *models.Site, content string) {
+	if !site.IsWildcard() || strings.Contains(content, "@tls:") {
+		return
+	}
+	if c.caddyfileManager == nil || c.caddyfileManager.wildcardService == nil {
+		return
+	}
+	m := wildcardTLSImportRe.FindStringSubmatch(content)
+	if m == nil {
+		return
+	}
+	domains, err := c.caddyfileManager.wildcardService.GetDomains()
+	if err != nil {
+		return
+	}
+	for _, d := range domains {
+		if GetSnippetName(d.Domain) == m[1] {
+			site.TLSMode = "wildcard:" + d.Domain
+			return
+		}
+	}
+}
+
 // loadSite loads a site from file
 func (c *CaddyService) loadSite(filepath string) (*models.Site, error) {
 	content, err := os.ReadFile(filepath)
@@ -171,6 +204,7 @@ func (c *CaddyService) loadSite(filepath string) (*models.Site, error) {
 	site := c.parser.Parse(string(content), filename)
 	site.Filepath = filepath
 	site.Filename = filename
+	c.resolveWildcardTLS(site, string(content))
 
 	// Get modification time
 	info, err := os.Stat(filepath)
