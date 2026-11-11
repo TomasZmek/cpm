@@ -389,13 +389,14 @@ document.addEventListener('DOMContentLoaded', function () {
     var radios = document.querySelectorAll('input[name="target_type"]');
     radios.forEach(function (r) { r.addEventListener('change', function () { cpmApplyTargetType(); cpmApplyPicked(); }); });
 
-    // If an existing target is not an IPv4 literal, assume it is a service name.
+    // An existing target that is an IPv4 literal is an IP address; anything
+    // else is a service name (the default for new rules).
     var input = document.getElementById('target_ip');
     var v = input ? (input.value || '').trim() : '';
     var isIp = /^\d{1,3}(\.\d{1,3}){3}$/.test(v);
-    if (v && !isIp) {
-        var svc = document.querySelector('input[name="target_type"][value="service"]');
-        if (svc) svc.checked = true;
+    if (v) {
+        var mode = document.querySelector('input[name="target_type"][value="' + (isIp ? 'ip' : 'service') + '"]');
+        if (mode) mode.checked = true;
     }
     cpmApplyTargetType();
 });

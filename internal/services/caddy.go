@@ -1,10 +1,12 @@
 package services
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 	"time"
@@ -116,6 +118,10 @@ func (c *CaddyService) GetAllSites() ([]*models.Site, error) {
 	return sites, nil
 }
 
+// ErrSiteExists is returned by CreateSite when a rule file with the same
+// name already exists.
+var ErrSiteExists = errors.New("site already exists")
+
 // ValidateSiteFilename ensures a site filename is a plain file name that
 // cannot escape the sites directory (no path separators, no "..").
 func ValidateSiteFilename(filename string) error {
@@ -153,6 +159,38 @@ func (c *CaddyService) GetSite(filename string) (*models.Site, error) {
 	return nil, fmt.Errorf("site not found: %s", filename)
 }
 
+// wildcardTLSImportRe matches the wildcard TLS snippet import of a legacy
+// (migrated) standard site.
+var wildcardTLSImportRe = regexp.MustCompile(`(?m)^\s*import\s+(wildcard-tls-[a-zA-Z0-9-]+)\s*$`)
+
+// resolveWildcardTLS fixes the TLS mode of a rule that refers to its wildcard
+// domain only through "import wildcard-tls-<domain>" (no "# @tls:" comment).
+// The parser turns every "-" of the snippet name into ".", which is wrong for
+// domains containing a hyphen (wildcard-tls-my-home-cz is my-home.cz, not
+// my.home.cz), so the snippet is matched against the configured domains.
+func (c *CaddyService) resolveWildcardTLS(site *models.Site, content string) {
+	if !site.IsWildcard() || strings.Contains(content, "@tls:") {
+		return
+	}
+	if c.caddyfileManager == nil || c.caddyfileManager.wildcardService == nil {
+		return
+	}
+	m := wildcardTLSImportRe.FindStringSubmatch(content)
+	if m == nil {
+		return
+	}
+	domains, err := c.caddyfileManager.wildcardService.GetDomains()
+	if err != nil {
+		return
+	}
+	for _, d := range domains {
+		if GetSnippetName(d.Domain) == m[1] {
+			site.TLSMode = "wildcard:" + d.Domain
+			return
+		}
+	}
+}
+
 // loadSite loads a site from file
 func (c *CaddyService) loadSite(filepath string) (*models.Site, error) {
 	content, err := os.ReadFile(filepath)
@@ -171,6 +209,7 @@ func (c *CaddyService) loadSite(filepath string) (*models.Site, error) {
 	site := c.parser.Parse(string(content), filename)
 	site.Filepath = filepath
 	site.Filename = filename
+	c.resolveWildcardTLS(site, string(content))
 
 	// Get modification time
 	info, err := os.Stat(filepath)
@@ -210,7 +249,7 @@ func (c *CaddyService) CreateSite(site *models.Site) error {
 
 	// Check if file already exists
 	if _, err := os.Stat(site.Filepath); err == nil {
-		return fmt.Errorf("site already exists: %s", site.Filename)
+		return fmt.Errorf("%w: %s", ErrSiteExists, site.Filename)
 	}
 
 	// Ensure sites directory exists
@@ -343,39 +382,6 @@ func (c *CaddyService) DeleteSite(filename string) error {
 	}
 
 	return fmt.Errorf("site not found: %s", filename)
-}
-
-// DuplicateSite creates a copy of a site with new domains
-func (c *CaddyService) DuplicateSite(sourceFilename string, newDomains []string) (*models.Site, error) {
-	source, err := c.GetSite(sourceFilename)
-	if err != nil {
-		return nil, fmt.Errorf("failed to load source site: %w", err)
-	}
-
-	// Create new site with same settings
-	newSite := &models.Site{
-		Domains:            newDomains,
-		TargetIP:           source.TargetIP,
-		TargetPort:         source.TargetPort,
-		IsHTTPSBackend:     source.IsHTTPSBackend,
-		IsInternal:         source.IsInternal,
-		Snippets:           source.Snippets,
-		Tags:               source.Tags,
-		AdditionalBackends: source.AdditionalBackends,
-		LBPolicy:           source.LBPolicy,
-		EnableWebSocket:    source.EnableWebSocket,
-		HealthCheckPath:    source.HealthCheckPath,
-		TimeoutSeconds:     source.TimeoutSeconds,
-		BasicAuthEnabled:   source.BasicAuthEnabled,
-		BasicAuthUsers:     source.BasicAuthUsers,
-		ExtraConfig:        source.ExtraConfig,
-	}
-
-	if err := c.CreateSite(newSite); err != nil {
-		return nil, err
-	}
-
-	return newSite, nil
 }
 
 // Reload reloads Caddy configuration

@@ -30,8 +30,8 @@ import (
 )
 
 const (
-	Version   = "3.7.0"
-	BuildDate = "2026-11-10"
+	Version   = "3.7.1"
+	BuildDate = "2026-11-11"
 )
 
 func main() {
@@ -220,18 +220,15 @@ func setupRoutes(app *fiber.App, h *handlers.Handler, authService *services.Auth
 	protected.Get("/sites/:id/edit", edit, h.SiteEdit)
 	protected.Post("/sites/:id", edit, h.SiteUpdate)
 	protected.Post("/sites/:id/delete", edit, h.SiteDelete)
-	protected.Post("/sites/:id/duplicate", edit, h.SiteDuplicate)
 
 	// HTMX partials for sites
 	protected.Get("/htmx/sites/list", h.HTMXSitesList)
 	protected.Get("/htmx/sites/status", h.SitesStatus)
-	protected.Get("/htmx/sites/:id/card", h.HTMXSiteCard)
 	protected.Get("/htmx/sites/:id/preview", h.HTMXSitePreview)
 
 	// Snippets
 	protected.Get("/snippets", h.SnippetsList)
 	protected.Post("/snippets/:name", edit, h.SnippetUpdate)
-	protected.Get("/htmx/snippets/:name/form", edit, h.HTMXSnippetForm)
 
 	// Certificates
 	protected.Get("/certificates", h.CertificatesList)
@@ -243,7 +240,6 @@ func setupRoutes(app *fiber.App, h *handlers.Handler, authService *services.Auth
 	protected.Post("/certificates/backups/:id/restore", edit, h.CertificateBackupRestore)
 	protected.Post("/certificates/backups/:id/delete", edit, h.CertificateBackupDelete)
 	protected.Get("/certificates/count", h.CertificatesCount)
-	protected.Get("/htmx/certificates/list", h.HTMXCertificatesList)
 
 	// Logs
 	protected.Get("/logs", h.LogsPage)

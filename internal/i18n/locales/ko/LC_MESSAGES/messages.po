@@ -778,9 +778,6 @@ msgstr "규칙 '{0}'이(가) 성공적으로 삭제되었습니다"
 msgid "msg_rule_delete_reload_failed"
 msgstr "규칙이 삭제되었지만 재로드에 실패했습니다"
 
-msgid "msg_rule_dup_reload_failed"
-msgstr "규칙이 복제되었지만 재로드에 실패했습니다"
-
 msgid "msg_wildcard_unavailable"
 msgstr "와일드카드 서비스를 사용할 수 없습니다"
 
@@ -802,8 +799,11 @@ msgstr "마이그레이션 정보를 가져오는 데 실패했습니다"
 msgid "msg_wildcard_migrate_backup_failed"
 msgstr "마이그레이션 전 백업 생성에 실패했습니다"
 
-msgid "msg_wildcard_migrate_errors"
-msgstr "마이그레이션이 오류와 함께 완료되었습니다. 로그를 확인하세요."
+msgid "msg_wildcard_migrate_done"
+msgstr "마이그레이션이 완료되었습니다. 마이그레이션된 규칙: {0}, 백업으로 이동된 인증서: {1}."
+
+msgid "msg_wildcard_migrate_errors_detail"
+msgstr "마이그레이션이 오류와 함께 완료되었습니다"
 
 msgid "msg_wildcard_delete_failed"
 msgstr "와일드카드 도메인 삭제에 실패했습니다"
@@ -1645,3 +1645,37 @@ msgstr "로그 파일이 아직 없습니다. Caddy가 첫 요청 때 만듭니�
 
 msgid "msg_access_log_saved_no_reload"
 msgstr "액세스 로그 설정을 저장했지만 Caddy를 다시 로드하지 못했습니다"
+
+# Errors shown as flash messages (3.7.1)
+msgid "msg_cert_delete_failed"
+msgstr "인증서를 삭제하지 못했습니다"
+
+msgid "msg_cert_renew_failed"
+msgstr "인증서 갱신을 시작하지 못했습니다"
+
+msgid "msg_rule_not_found"
+msgstr "규칙을 찾을 수 없습니다"
+
+msgid "msg_rule_delete_failed"
+msgstr "규칙을 삭제하지 못했습니다"
+
+msgid "msg_rule_save_failed"
+msgstr "규칙을 저장하지 못했습니다"
+
+msgid "msg_rule_domain_required"
+msgstr "도메인을 하나 이상 입력하세요."
+
+msgid "msg_rule_port_required"
+msgstr "백엔드 포트를 입력하세요."
+
+msgid "msg_rule_exists"
+msgstr "{0} 규칙이 이미 존재합니다."
+
+msgid "msg_no_file_selected"
+msgstr "먼저 파일을 선택하세요."
+
+msgid "msg_file_read_failed"
+msgstr "파일을 읽지 못했습니다"
+
+msgid "msg_rules_import_failed"
+msgstr "규칙을 가져오지 못했습니다"

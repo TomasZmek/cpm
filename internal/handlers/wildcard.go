@@ -153,7 +153,6 @@ func (h *Handler) WildcardMigrateExecute(c fiber.Ctx) error {
 	}
 	log.Printf("Backup created: %s", backupName)
 
-	snippetName := services.GetSnippetName(domain)
 	var migratedCount, deletedCount int
 	var errors []string
 
@@ -162,7 +161,7 @@ func (h *Handler) WildcardMigrateExecute(c fiber.Ctx) error {
 		info, _ := h.wildcardService.GetMigrationInfo(domain, h.config.SitesDir, h.config.DataDir)
 		for _, siteFile := range info.MatchingSites {
 			sitePath := filepath.Join(h.config.SitesDir, "standard", siteFile)
-			if err := h.wildcardService.MigrateSiteConfig(sitePath, snippetName); err != nil {
+			if err := h.wildcardService.MigrateSiteConfig(sitePath, domain); err != nil {
 				log.Printf("Error migrating site %s: %v", siteFile, err)
 				errors = append(errors, "Site "+siteFile+": "+err.Error())
 			} else {
@@ -192,16 +191,9 @@ func (h *Handler) WildcardMigrateExecute(c fiber.Ctx) error {
 
 	// Build result message
 	if len(errors) > 0 {
-		setFlash(c, "warning", tl(c, "msg_wildcard_migrate_errors"))
+		setFlash(c, "warning", tl(c, "msg_wildcard_migrate_errors_detail")+": "+strings.Join(errors, "; "))
 	} else {
-		msg := "Migration completed successfully!"
-		if migratedCount > 0 {
-			msg += fmt.Sprintf(" %d sites migrated.", migratedCount)
-		}
-		if deletedCount > 0 {
-			msg += fmt.Sprintf(" %d certificates deleted.", deletedCount)
-		}
-		setFlash(c, "success", msg)
+		setFlash(c, "success", tl(c, "msg_wildcard_migrate_done", migratedCount, deletedCount))
 	}
 
 	return redirectTo(c, "/settings/wildcard")

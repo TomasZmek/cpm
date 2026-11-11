@@ -41,7 +41,8 @@ func (h *Handler) CertificateDelete(c fiber.Ctx) error {
 	domain := c.Params("domain")
 
 	if _, err := h.certService.DeleteCertificate(domain, services.CertBackupReasonDelete); err != nil {
-		return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
+		setFlash(c, "error", tl(c, "msg_cert_delete_failed")+": "+err.Error())
+		return certsRedirect(c)
 	}
 
 	setFlash(c, "success", tl(c, "msg_cert_deleted", domain))
@@ -55,7 +56,8 @@ func (h *Handler) CertificateRenew(c fiber.Ctx) error {
 	domain := c.Params("domain")
 
 	if _, err := h.certService.DeleteCertificate(domain, services.CertBackupReasonRenew); err != nil {
-		return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
+		setFlash(c, "error", tl(c, "msg_cert_renew_failed")+": "+err.Error())
+		return certsRedirect(c)
 	}
 
 	if failed := h.restartCaddyForCertificates(c); failed != "" {
@@ -120,15 +122,6 @@ func (h *Handler) CertificatesRestartCaddy(c fiber.Ctx) error {
 		return c.JSON(fiber.Map{"ok": true})
 	}
 	return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"ok": false, "error": result.Error})
-}
-
-// HTMXCertificatesList returns certificates list as HTML partial
-func (h *Handler) HTMXCertificatesList(c fiber.Ctx) error {
-	certs, _ := h.certService.GetAllCertificates()
-
-	return c.Render("partials/certificates_list", fiber.Map{
-		"Certificates": certs,
-	})
 }
 
 // CertificatesRenewAll renews certificates in bulk based on a scope:

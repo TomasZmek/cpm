@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-3.7.0-blue" alt="Version">
+  <img src="https://img.shields.io/badge/version-3.7.1-blue" alt="Version">
   <img src="https://img.shields.io/badge/Go-1.26-00ADD8?logo=go" alt="Go">
   <img src="https://img.shields.io/badge/Docker-ready-2496ED?logo=docker" alt="Docker">
   <img src="https://img.shields.io/badge/platforms-amd64%20%7C%20arm64-lightgrey" alt="Platforms">
@@ -69,9 +69,9 @@
 ### Docker Hub / GitHub
 
 ```bash
-# Multi-arch image also on GitHub Container Registry: ghcr.io/tomaszmek/cpm:3.7.0
+# Multi-arch image also on GitHub Container Registry: ghcr.io/tomaszmek/cpm:3.7.1
 # Offline packages (docker load -i …): https://github.com/TomasZmek/cpm/releases
-docker pull perteus/caddy-ui:3.7.0
+docker pull perteus/caddy-ui:3.7.1
 docker pull perteus/caddy-ui:latest
 ```
 
@@ -94,7 +94,7 @@ services:
       - ./caddy-data:/data
 
   cpm:
-    image: perteus/caddy-ui:3.7.0
+    image: perteus/caddy-ui:3.7.1
     container_name: cpm
     ports:
       - "8501:8501"
@@ -124,7 +124,7 @@ services:
       - ./caddy-data:/data
 
   cpm:
-    image: perteus/caddy-ui:3.7.0
+    image: perteus/caddy-ui:3.7.1
     container_name: cpm
     privileged: true  # Required for Synology
     ports:
@@ -233,7 +233,7 @@ For Synology Docker, use `privileged: true` to allow Docker socket access:
 
 ```yaml
 cpm:
-  image: perteus/caddy-ui:3.7.0
+  image: perteus/caddy-ui:3.7.1
   privileged: true
   volumes:
     - /volume1/docker/caddy-config:/caddy-config
@@ -275,8 +275,8 @@ go build -o cpm ./cmd/cpm
 ### Docker Build
 
 ```bash
-docker build -t perteus/caddy-ui:3.7.0 --no-cache .
-docker push perteus/caddy-ui:3.7.0
+docker build -t perteus/caddy-ui:3.7.1 --no-cache .
+docker push perteus/caddy-ui:3.7.1
 docker push perteus/caddy-ui:latest
 ```
 
@@ -286,6 +286,7 @@ docker push perteus/caddy-ui:latest
 
 | Version | Date | Notes |
 |---------|------|-------|
+| **3.7.1** | 2026-11-11 | 🐛 Bug fixes — saving a rule no longer changes its imports, form errors shown in the form, delete on rule detail |
 | **3.7.0** | 2026-11-10 | 📝 Access log per rule — requests, status and response times for each rule; Fiber v3 |
 | **3.6.0** | 2026-11-10 | ⚓ Dockhand module — backend status and discovery for containers on all Docker hosts |
 | **3.5.1** | 2026-11-10 | 🔒 Security patch — Go 1.26.10, fasthttp, compress, x/crypto (31 known vulnerabilities fixed) |
@@ -303,6 +304,13 @@ docker push perteus/caddy-ui:latest
 | **3.0.1** | 2026-01 | 🔐 Wildcard SSL, migration tools, UI improvements |
 | **3.0.0** | 2026-01 | 🎉 Complete Go rewrite (794MB → 6MB) |
 | 2.2.1 | 2025-12 | Python version (deprecated) |
+
+### v3.7.1 - Bug fixes
+- 🐛 **Saving a rule from the form** no longer adds `import cloudflare_dns` or removes custom imports (e.g. `import logging`)
+- 🐛 **Rule form errors** (domain already used, missing port, …) are shown in the form, the input stays
+- 🐛 **Delete** on the rule detail page works; errors of certificate/rule actions and of backup restore without a file are shown as messages
+- 🐛 Wildcard domains with a hyphen on migrated rules; Modern theme opens IP targets in *IP address* mode
+- 📸 New screenshots of both themes
 
 ### v3.7.0 - Access log per rule
 - ✅ **Access log** — turn it on in Settings → Logs; Caddy writes every request to `/data/cpm-logs/access.log` (Caddy data volume, no compose change), rotated by size, optional IP masking
