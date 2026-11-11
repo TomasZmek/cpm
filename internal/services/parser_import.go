@@ -80,19 +80,20 @@ func (p *ParserService) parseMainSiteBlock(blockText, address string) *models.Si
 	// health checks, timeouts, load balancing, tags and generic extra config.
 	site := p.Parse(parseText, defaultDomain)
 
-	// Parse() defaults every site to the cloudflare_dns snippet. For a faithful
-	// migration, only keep it when the original block actually used Cloudflare
-	// DNS (either via "import cloudflare_dns" or an inline tls block).
+	// Only keep the cloudflare_dns snippet when the original block actually
+	// used Cloudflare DNS (either via "import cloudflare_dns" or an inline tls
+	// block).
 	if !hadCloudflareImport && !hasInlineCF {
 		site.Snippets = removeString(site.Snippets, "cloudflare_dns")
 	}
 
-	// Custom snippet imports -> ExtraConfig. Parse() keeps only known snippets
-	// and drops every "import" line from ExtraConfig, so unknown imports would
-	// otherwise be lost.
+	// Custom snippet imports -> ExtraConfig. Parse() keeps imports of the
+	// rule's block body there; this also covers imports it does not see
+	// (e.g. on the address line's block opening).
 	for _, name := range importedNames {
-		if !containsString(p.knownSnippets, name) {
-			site.ExtraConfig = appendConfigLine(site.ExtraConfig, "import "+name)
+		line := "import " + name
+		if !containsString(p.knownSnippets, name) && !containsString(strings.Split(site.ExtraConfig, "\n"), line) {
+			site.ExtraConfig = appendConfigLine(site.ExtraConfig, line)
 		}
 	}
 

@@ -195,8 +195,10 @@ func (p *ParserService) parseSnippets(content string) []string {
 		}
 	}
 
-	if len(snippets) == 0 {
-		return []string{"cloudflare_dns"}
+	// No default: a rule without "import cloudflare_dns" must not get it
+	// added when it is saved from the form.
+	if snippets == nil {
+		snippets = []string{}
 	}
 	return snippets
 }
@@ -335,6 +337,14 @@ func (p *ParserService) parseExtraConfig(content string) string {
 			continue
 		}
 
+		// Imports of known snippets, the access log snippet and wildcard TLS
+		// snippets are generated from the rule's settings; any other import
+		// (a custom snippet) is kept so saving the form does not drop it.
+		if strings.HasPrefix(trimmed, "import ") && !p.isGeneratedImport(trimmed) {
+			extraLines = append(extraLines, trimmed)
+			continue
+		}
+
 		// Check if standard line
 		isStandard := false
 		for _, pattern := range skipPatterns {
@@ -350,6 +360,19 @@ func (p *ParserService) parseExtraConfig(content string) string {
 	}
 
 	return strings.Join(extraLines, "\n")
+}
+
+// isGeneratedImport reports whether an "import <name>" line is written by
+// CPM from the rule's settings (and therefore not part of ExtraConfig).
+func (p *ParserService) isGeneratedImport(line string) bool {
+	fields := strings.Fields(line)
+	if len(fields) != 2 {
+		return false
+	}
+	name := fields[1]
+	return utils.Contains(p.knownSnippets, name) ||
+		name == models.AccessLogSnippet ||
+		strings.HasPrefix(name, "wildcard-tls-")
 }
 
 var (
