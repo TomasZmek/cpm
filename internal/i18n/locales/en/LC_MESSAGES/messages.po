@@ -1680,6 +1680,37 @@ msgstr "A note for you and other admins. It is shown in the rules list and on th
 msgid "sites_has_note"
 msgstr "Note"
 
+# Own password
+msgid "my_password"
+msgstr "My password"
+
+msgid "my_password_desc"
+msgstr "Change the password you sign in with. Your other sessions are signed out."
+
+msgid "current_password"
+msgstr "Current password"
+
+msgid "new_password"
+msgstr "New password"
+
+msgid "confirm_password"
+msgstr "Confirm new password"
+
+msgid "change_password"
+msgstr "Change password"
+
+msgid "msg_password_mismatch"
+msgstr "The new passwords do not match."
+
+msgid "msg_password_too_short"
+msgstr "The password must be at least {0} characters long."
+
+msgid "msg_password_wrong_current"
+msgstr "The current password is wrong."
+
+msgid "msg_own_password_no_auth"
+msgstr "Authentication is off, there is no password to change."
+
 # Plural forms (i18n.TN / {{tn}}): msgid_plural is the key with "_plural"
 
 msgid "count_rules"

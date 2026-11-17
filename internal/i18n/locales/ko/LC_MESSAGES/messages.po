@@ -1682,6 +1682,37 @@ msgstr "본인과 다른 관리자를 위한 메모입니다. 규칙 목록과 �
 msgid "sites_has_note"
 msgstr "메모"
 
+# Own password
+msgid "my_password"
+msgstr "내 비밀번호"
+
+msgid "my_password_desc"
+msgstr "로그인에 사용하는 비밀번호를 변경합니다. 다른 세션은 로그아웃됩니다."
+
+msgid "current_password"
+msgstr "현재 비밀번호"
+
+msgid "new_password"
+msgstr "새 비밀번호"
+
+msgid "confirm_password"
+msgstr "새 비밀번호 확인"
+
+msgid "change_password"
+msgstr "비밀번호 변경"
+
+msgid "msg_password_mismatch"
+msgstr "새 비밀번호가 일치하지 않습니다."
+
+msgid "msg_password_too_short"
+msgstr "비밀번호는 {0}자 이상이어야 합니다."
+
+msgid "msg_password_wrong_current"
+msgstr "현재 비밀번호가 올바르지 않습니다."
+
+msgid "msg_own_password_no_auth"
+msgstr "인증이 꺼져 있어 변경할 비밀번호가 없습니다."
+
 # Plural forms (i18n.TN / {{tn}}): msgid_plural is the key with "_plural"
 
 msgid "count_rules"

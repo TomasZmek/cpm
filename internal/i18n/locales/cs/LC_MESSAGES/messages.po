@@ -1680,6 +1680,37 @@ msgstr "Poznámka pro vás a ostatní správce. Zobrazí se v seznamu pravidel a
 msgid "sites_has_note"
 msgstr "Poznámka"
 
+# Own password
+msgid "my_password"
+msgstr "Moje heslo"
+
+msgid "my_password_desc"
+msgstr "Změna hesla, kterým se přihlašujete. Ostatní vaše přihlášení budou odhlášena."
+
+msgid "current_password"
+msgstr "Současné heslo"
+
+msgid "new_password"
+msgstr "Nové heslo"
+
+msgid "confirm_password"
+msgstr "Nové heslo znovu"
+
+msgid "change_password"
+msgstr "Změnit heslo"
+
+msgid "msg_password_mismatch"
+msgstr "Nová hesla se neshodují."
+
+msgid "msg_password_too_short"
+msgstr "Heslo musí mít alespoň {0} znaků."
+
+msgid "msg_password_wrong_current"
+msgstr "Současné heslo není správné."
+
+msgid "msg_own_password_no_auth"
+msgstr "Přihlašování je vypnuté, není co měnit."
+
 # Plural forms (i18n.TN / {{tn}}): msgid_plural is the key with "_plural"
 
 msgid "count_rules"

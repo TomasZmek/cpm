@@ -259,6 +259,7 @@ func setupRoutes(app *fiber.App, h *handlers.Handler, authService *services.Auth
 	protected.Post("/settings/users/:username/delete", admin, h.UserDelete)
 	protected.Post("/settings/users/:username/role", admin, h.UserUpdateRole)
 	protected.Post("/settings/users/:username/password", admin, h.UserUpdatePassword)
+	protected.Post("/settings/password", h.ChangeOwnPassword) // any signed-in user, own password only
 	protected.Post("/settings/auth/toggle", admin, h.ToggleAuth)
 
 	// Docker Auto-Discovery
