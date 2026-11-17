@@ -1,14 +1,6 @@
 module github.com/TomasZmek/cpm
 
-go 1.26.0
-
-require (
-	github.com/gofiber/fiber/v3 v3.7.0
-	github.com/gofiber/template/html/v3 v3.1.0
-	github.com/moby/moby/api v1.54.2
-	github.com/moby/moby/client v0.4.1
-	golang.org/x/crypto v0.58.1-0.20261009181718-2f1f834330b2
-)
+go 1.27
 
 require (
 	github.com/Microsoft/go-winio v0.6.2 // indirect
@@ -16,7 +8,7 @@ require (
 	github.com/containerd/errdefs v1.0.0 // indirect
 	github.com/containerd/errdefs/pkg v0.3.0 // indirect
 	github.com/distribution/reference v0.6.0 // indirect
-	github.com/docker/go-connections v0.7.0 // indirect
+	github.com/docker/go-connections v0.8.2 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/felixge/httpsnoop v1.1.0 // indirect
 	github.com/go-logr/logr v1.4.4 // indirect
@@ -43,14 +35,19 @@ require (
 	go.opentelemetry.io/otel/metric v1.47.0 // indirect
 	go.opentelemetry.io/otel/trace v1.47.0 // indirect
 	golang.org/x/net v0.62.0 // indirect
-	golang.org/x/sys v0.49.0 // indirect
-	golang.org/x/text v0.43.0 // indirect
+	golang.org/x/sys v0.50.0 // indirect
+	golang.org/x/text v0.44.0 // indirect
 )
 
 require (
 	github.com/TomasZmek/cpm/modules/dockhand v0.0.0
 	github.com/TomasZmek/cpm/sdk v0.0.0
-	github.com/leonelquinteros/gotext v1.7.2
+	github.com/gofiber/fiber/v3 v3.7.0
+	github.com/gofiber/template/html/v3 v3.1.0
+	github.com/leonelquinteros/gotext v1.8.0
+	github.com/moby/moby/api v1.57.0
+	github.com/moby/moby/client v0.6.3
+	golang.org/x/crypto v0.59.0
 )
 
 replace github.com/TomasZmek/cpm/sdk => ./sdk
