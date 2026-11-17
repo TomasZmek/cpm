@@ -139,6 +139,7 @@ func (h *Handler) SiteCreate(c fiber.Ctx) error {
 
 	// Parse tags
 	site.Tags = splitList(c.FormValue("tags"))
+	site.Note = models.NormalizeNote(c.FormValue("note"))
 	readLogSkipForm(c, site)
 
 	// Validation
@@ -229,6 +230,7 @@ func (h *Handler) SiteUpdate(c fiber.Ctx) error {
 		site.IsInternal = utils.Contains(site.Snippets, "internal_only")
 
 		site.Tags = splitList(c.FormValue("tags"))
+		site.Note = models.NormalizeNote(c.FormValue("note"))
 		readLogSkipForm(c, site)
 
 		if len(site.Domains) == 0 {
@@ -433,6 +435,11 @@ func filterSites(sites []*models.Site, search, tag string) []*models.Site {
 
 			// Search in filename
 			if !matches && strings.Contains(strings.ToLower(site.Filename), search) {
+				matches = true
+			}
+
+			// Search in note
+			if !matches && strings.Contains(strings.ToLower(site.Note), search) {
 				matches = true
 			}
 

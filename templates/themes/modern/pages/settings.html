@@ -73,6 +73,32 @@
             </div>
         </div>
         
+        {{if .User}}
+        <div class="settings-section">
+            <h2>🔑 {{t .Lang "my_password"}}</h2>
+            <p class="text-muted">{{t .Lang "my_password_desc"}}</p>
+            <form action="/settings/password" method="POST" class="own-password-form">
+                <input type="hidden" name="_csrf" value="{{.CSRFToken}}">
+                <input type="text" name="username" value="{{.User.Username}}" autocomplete="username" hidden>
+                <div class="form-group">
+                    <label for="current_password">{{t .Lang "current_password"}}</label>
+                    <input type="password" id="current_password" name="current_password" autocomplete="current-password" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="new_password">{{t .Lang "new_password"}}</label>
+                        <input type="password" id="new_password" name="new_password" autocomplete="new-password" minlength="8" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="confirm_password">{{t .Lang "confirm_password"}}</label>
+                        <input type="password" id="confirm_password" name="confirm_password" autocomplete="new-password" minlength="8" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary mt-3">{{t .Lang "change_password"}}</button>
+            </form>
+        </div>
+        {{end}}
+
         <div class="settings-section">
             <h2>ℹ️ {{t .Lang "about"}}</h2>
             <div class="info-grid">

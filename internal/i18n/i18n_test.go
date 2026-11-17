@@ -57,3 +57,63 @@ func TestPluralHeadersMatchRules(t *testing.T) {
 		}
 	}
 }
+
+func TestPluralForms(t *testing.T) {
+	if err := Init(); err != nil {
+		t.Fatal(err)
+	}
+	cases := []struct {
+		lang string
+		n    int
+		want string
+	}{
+		{"en", 1, "1 rule"},
+		{"en", 0, "0 rules"},
+		{"en", 5, "5 rules"},
+		{"cs", 1, "1 pravidlo"},
+		{"cs", 3, "3 pravidla"},
+		{"cs", 5, "5 pravidel"},
+		{"cs", 0, "0 pravidel"},
+		{"ko", 1, "규칙 1개"},
+		{"ko", 7, "규칙 7개"},
+		{"de", 2, "2 rules"}, // untranslated language falls back to English
+	}
+	for _, tc := range cases {
+		if got := TN(tc.lang, "count_rules", "count_rules_plural", tc.n, tc.n); got != tc.want {
+			t.Errorf("TN(%s, %d) = %q, want %q", tc.lang, tc.n, got, tc.want)
+		}
+	}
+}
+
+// Every plural key in English must exist in cs and ko with all forms of the
+// language's plural rule.
+func TestPluralKeysComplete(t *testing.T) {
+	if err := Init(); err != nil {
+		t.Fatal(err)
+	}
+	en := locales["en"]
+	if len(en.plural) == 0 {
+		t.Fatal("no plural keys in en")
+	}
+	for _, code := range []string{"en", "cs", "ko"} {
+		ld := locales[code]
+		nforms := 0
+		for n := 0; n < 200; n++ {
+			if f := ld.selectN(n) + 1; f > nforms {
+				nforms = f
+			}
+		}
+		for key := range en.plural {
+			forms, ok := ld.plural[key]
+			if !ok {
+				t.Errorf("%s: plural key %q missing", code, key)
+				continue
+			}
+			for f := 0; f < nforms; f++ {
+				if forms[f] == "" {
+					t.Errorf("%s: plural key %q has no form %d", code, key, f)
+				}
+			}
+		}
+	}
+}

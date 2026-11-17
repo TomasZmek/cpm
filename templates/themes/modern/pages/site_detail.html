@@ -47,6 +47,12 @@
                         {{if .Site.IsHTTPSBackend}}<span class="badge badge-success">HTTPS Backend</span>{{end}}
                     </td>
                 </tr>
+                {{if .Site.Note}}
+                <tr>
+                    <th>{{t .Lang "sites_note"}}</th>
+                    <td class="site-note">{{.Site.Note}}</td>
+                </tr>
+                {{end}}
                 {{if .Site.Tags}}
                 <tr>
                     <th>{{t .Lang "tags"}}</th>

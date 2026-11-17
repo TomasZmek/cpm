@@ -37,7 +37,7 @@
                 <div class="form-group mt-3">
                     <label class="checkbox-label">
                         <input type="checkbox" name="migrate_sites" checked>
-                        {{t .Lang "migrate_sites_checkbox"}} ({{len .MigrationInfo.MatchingSites}} {{t .Lang "files"}})
+                        {{t .Lang "migrate_sites_checkbox"}} ({{tn .Lang "count_files" "count_files_plural" (len .MigrationInfo.MatchingSites) (len .MigrationInfo.MatchingSites)}})
                     </label>
                 </div>
                 {{else}}
@@ -61,7 +61,7 @@
                 <div class="form-group mt-3">
                     <label class="checkbox-label">
                         <input type="checkbox" name="delete_certs" checked>
-                        {{t .Lang "migrate_certs_checkbox"}} ({{len .MigrationInfo.Certificates}} {{t .Lang "certificates"}})
+                        {{t .Lang "migrate_certs_checkbox"}} ({{tn .Lang "count_certificates" "count_certificates_plural" (len .MigrationInfo.Certificates) (len .MigrationInfo.Certificates)}})
                     </label>
                 </div>
                 {{else}}

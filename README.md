@@ -202,6 +202,7 @@ adguard.zrnek.cz {
 | `TRUSTED_PROXIES` | Reverse proxies (e.g. Caddy) whose `X-Forwarded-*` headers are trusted: `private`, `loopback`, IPs/CIDRs (comma-separated), or `none` | `private,loopback` |
 | `TRUSTED_ORIGINS` | Extra origins allowed to submit forms, e.g. `https://cpm.example.com` (when the proxy cannot be trusted) | – |
 | `CF_API_TOKEN` | Cloudflare API token (for wildcard SSL) | - |
+| `CPM_DEV` | Development: reload templates from disk on every request (`true`/`false`) | `false` |
 
 ---
 

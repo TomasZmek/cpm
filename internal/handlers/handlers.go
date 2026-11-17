@@ -219,6 +219,13 @@ func tl(c fiber.Ctx, key string, args ...interface{}) string {
 	return i18n.T(getLang(c), key, args...)
 }
 
+// tln translates a plural message: key and key+"_plural" (msgid /
+// msgid_plural in the PO files), form chosen by n. n is placeholder {0}, args
+// follow as {1}, {2}, …
+func tln(c fiber.Ctx, key string, n int, args ...interface{}) string {
+	return i18n.TN(getLang(c), key, key+"_plural", n, append([]interface{}{n}, args...)...)
+}
+
 // Flash messages helper
 // setFlash queues a message for the next page. It uses Fiber's flash
 // messages (a hex-encoded cookie, so any language is safe) and is delivered

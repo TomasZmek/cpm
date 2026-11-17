@@ -3,6 +3,7 @@ package services
 import (
 	"archive/zip"
 	"bytes"
+	"errors"
 	"net"
 	"os"
 	"path/filepath"
@@ -221,5 +222,39 @@ func TestIsDockerBridgeIP(t *testing.T) {
 		if got := IsDockerBridgeIP(net.ParseIP(ip)); got != want {
 			t.Errorf("IsDockerBridgeIP(%s) = %v, want %v", ip, got, want)
 		}
+	}
+}
+
+func TestChangeOwnPassword(t *testing.T) {
+	a := NewAuthService(t.TempDir())
+	if err := a.CreateInitialAdmin("admin", "password123"); err != nil {
+		t.Fatal(err)
+	}
+	current, _ := a.Authenticate("admin", "password123")
+	other, _ := a.Authenticate("admin", "password123")
+
+	if err := a.ChangeOwnPassword(current, "wrong-password", "newpassword123"); !errors.Is(err, ErrWrongPassword) {
+		t.Fatalf("wrong current password: err = %v", err)
+	}
+	if err := a.ChangeOwnPassword(current, "password123", "short"); err == nil {
+		t.Fatal("short password accepted")
+	}
+	if err := a.ChangeOwnPassword("no-such-token", "password123", "newpassword123"); err == nil {
+		t.Fatal("unknown session accepted")
+	}
+	if err := a.ChangeOwnPassword(current, "password123", "newpassword123"); err != nil {
+		t.Fatal(err)
+	}
+	if a.ValidateSession(current) == nil {
+		t.Error("the session that changed the password should stay valid")
+	}
+	if a.ValidateSession(other) != nil {
+		t.Error("other sessions should be signed out")
+	}
+	if _, err := a.Authenticate("admin", "newpassword123"); err != nil {
+		t.Errorf("new password does not work: %v", err)
+	}
+	if _, err := a.Authenticate("admin", "password123"); err == nil {
+		t.Error("old password still works")
 	}
 }

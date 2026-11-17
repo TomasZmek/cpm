@@ -42,8 +42,9 @@ func (p *ParserService) Parse(content, filenameDomain string) *models.Site {
 	// Detect format: wildcard handle block vs standard domain block
 	isWildcardFormat := p.isWildcardHandleFormat(content)
 
-	// Parse tags from comment
+	// Parse tags and note from comments
 	site.Tags = p.parseTags(content)
+	site.Note = p.parseNote(content)
 
 	// Parse TLS mode from comment or import
 	site.TLSMode = p.parseTLSMode(content)
@@ -123,6 +124,17 @@ func (p *ParserService) parseDomainsFromHandleBlock(content, defaultDomain strin
 		}
 	}
 	return []string{defaultDomain}
+}
+
+var noteRegex = regexp.MustCompile(`(?m)^[ \t]*#[ \t]*@note:[ ]?(.*?)[ \t]*\r?$`)
+
+// parseNote joins all "# @note:" comment lines into the rule's note.
+func (p *ParserService) parseNote(content string) string {
+	var lines []string
+	for _, m := range noteRegex.FindAllStringSubmatch(content, -1) {
+		lines = append(lines, m[1])
+	}
+	return models.NormalizeNote(strings.Join(lines, "\n"))
 }
 
 // parseTags extracts tags from # @tags: comment

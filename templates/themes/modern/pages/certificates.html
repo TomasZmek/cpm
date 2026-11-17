@@ -1,7 +1,7 @@
 <div class="page-header">
     <div class="page-header-title">
         <h1>📜 {{t .Lang "certs_title"}}</h1>
-        <span class="badge">{{.Stats.total}} {{t .Lang "certs_count"}}</span>
+        <span class="badge">{{tn .Lang "count_certificates" "count_certificates_plural" .Stats.total .Stats.total}}</span>
     </div>
     {{if .Certificates}}
     <div class="page-header-actions">
