@@ -240,6 +240,7 @@ func (b *BackupService) ExportRules(sites []*models.Site) ([]byte, error) {
 		IsInternal         bool     `json:"is_internal"`
 		Snippets           []string `json:"snippets"`
 		Tags               []string `json:"tags"`
+		Note               string   `json:"note,omitempty"`
 		AdditionalBackends []string `json:"additional_backends"`
 		LBPolicy           string   `json:"lb_policy"`
 		EnableWebSocket    bool     `json:"enable_websocket"`
@@ -260,6 +261,7 @@ func (b *BackupService) ExportRules(sites []*models.Site) ([]byte, error) {
 			IsInternal:         site.IsInternal,
 			Snippets:           site.Snippets,
 			Tags:               site.Tags,
+			Note:               site.Note,
 			AdditionalBackends: site.AdditionalBackends,
 			LBPolicy:           site.LBPolicy,
 			EnableWebSocket:    site.EnableWebSocket,
@@ -337,6 +339,10 @@ func (b *BackupService) ImportRules(data []byte, caddyService *CaddyService, ski
 					site.Snippets = append(site.Snippets, ss)
 				}
 			}
+		}
+
+		if note, ok := rule["note"].(string); ok {
+			site.Note = models.NormalizeNote(note)
 		}
 
 		if tags, ok := rule["tags"].([]interface{}); ok {

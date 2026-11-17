@@ -1664,6 +1664,22 @@ msgstr "Soubor se nepodařilo načíst"
 msgid "msg_rules_import_failed"
 msgstr "Pravidla se nepodařilo importovat"
 
+# Rule notes
+msgid "sites_note"
+msgstr "Poznámka"
+
+msgid "note_hint"
+msgstr "Nepovinné, např. co je to za službu nebo koho se zeptat. Uloží se jako komentář v souboru pravidla; Caddy ji ignoruje."
+
+msgid "note_placeholder"
+msgstr "např. Home Assistant na NASu, před změnou se zeptat Petra"
+
+msgid "help_note"
+msgstr "Poznámka pro vás a ostatní správce. Zobrazí se v seznamu pravidel a v detailu pravidla a prohledává ji vyhledávání pravidel."
+
+msgid "sites_has_note"
+msgstr "Poznámka"
+
 # Plural forms (i18n.TN / {{tn}}): msgid_plural is the key with "_plural"
 
 msgid "count_rules"

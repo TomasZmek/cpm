@@ -1666,6 +1666,22 @@ msgstr "파일을 읽지 못했습니다"
 msgid "msg_rules_import_failed"
 msgstr "규칙을 가져오지 못했습니다"
 
+# Rule notes
+msgid "sites_note"
+msgstr "메모"
+
+msgid "note_hint"
+msgstr "선택 사항입니다. 예: 어떤 서비스인지, 누구에게 문의할지. 규칙 파일에 주석으로 저장되며 Caddy는 무시합니다."
+
+msgid "note_placeholder"
+msgstr "예: NAS의 Home Assistant, 변경 전 담당자에게 문의"
+
+msgid "help_note"
+msgstr "본인과 다른 관리자를 위한 메모입니다. 규칙 목록과 규칙 상세에 표시되며 규칙 검색 대상에 포함됩니다."
+
+msgid "sites_has_note"
+msgstr "메모"
+
 # Plural forms (i18n.TN / {{tn}}): msgid_plural is the key with "_plural"
 
 msgid "count_rules"

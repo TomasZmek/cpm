@@ -1664,6 +1664,22 @@ msgstr "The file could not be read"
 msgid "msg_rules_import_failed"
 msgstr "Rules could not be imported"
 
+# Rule notes
+msgid "sites_note"
+msgstr "Note"
+
+msgid "note_hint"
+msgstr "Optional, e.g. what the service is or whom to ask. Stored as a comment in the rule's file; Caddy ignores it."
+
+msgid "note_placeholder"
+msgstr "e.g. Home Assistant on the NAS, ask Peter before changing"
+
+msgid "help_note"
+msgstr "A note for you and other admins. It is shown in the rules list and on the rule detail, and searched by the rules search."
+
+msgid "sites_has_note"
+msgstr "Note"
+
 # Plural forms (i18n.TN / {{tn}}): msgid_plural is the key with "_plural"
 
 msgid "count_rules"

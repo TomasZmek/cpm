@@ -11,16 +11,19 @@ import (
 
 // Site represents a proxy rule
 type Site struct {
-	Filename           string   `json:"filename"`
-	Filepath           string   `json:"filepath"`
-	Domains            []string `json:"domains"`
-	TargetIP           string   `json:"target_ip"`
-	TargetPort         string   `json:"target_port"`
-	IsHTTPSBackend     bool     `json:"is_https_backend"`
-	IsInternal         bool     `json:"is_internal"`
-	TLSMode            string   `json:"tls_mode"` // "auto" or "wildcard:domain.com"
-	Snippets           []string `json:"snippets"`
-	Tags               []string `json:"tags"`
+	Filename       string   `json:"filename"`
+	Filepath       string   `json:"filepath"`
+	Domains        []string `json:"domains"`
+	TargetIP       string   `json:"target_ip"`
+	TargetPort     string   `json:"target_port"`
+	IsHTTPSBackend bool     `json:"is_https_backend"`
+	IsInternal     bool     `json:"is_internal"`
+	TLSMode        string   `json:"tls_mode"` // "auto" or "wildcard:domain.com"
+	Snippets       []string `json:"snippets"`
+	Tags           []string `json:"tags"`
+	// Note is a free-text note about the rule (several lines allowed),
+	// stored as "# @note:" comment lines at the top of the rule's file.
+	Note               string   `json:"note,omitempty"`
 	AdditionalBackends []string `json:"additional_backends"`
 	LBPolicy           string   `json:"lb_policy"`
 	EnableWebSocket    bool     `json:"enable_websocket"`
@@ -114,6 +117,14 @@ func (s *Site) Validate() error {
 			return fmt.Errorf("invalid tag: %q", t)
 		}
 	}
+	if len(s.Note) > MaxNoteLength {
+		return fmt.Errorf("note is too long (max %d characters)", MaxNoteLength)
+	}
+	for _, l := range strings.Split(s.Note, "\n") {
+		if !isSafeLine(l) {
+			return fmt.Errorf("invalid note")
+		}
+	}
 	for _, u := range s.BasicAuthUsers {
 		if !isSafeLine(u) || strings.ContainsAny(u, "{}#") {
 			return fmt.Errorf("invalid basic auth entry")
@@ -123,6 +134,39 @@ func (s *Site) Validate() error {
 }
 
 var snippetNameRegex = regexp.MustCompile(`^[A-Za-z0-9_.-]+$`)
+
+// MaxNoteLength is the maximum length of a rule note in bytes.
+const MaxNoteLength = 2000
+
+// NormalizeNote turns a note from a form or import into the stored form:
+// Unix line breaks, tabs as spaces, no trailing spaces and no leading or
+// trailing empty lines.
+func NormalizeNote(note string) string {
+	note = strings.ReplaceAll(note, "\r\n", "\n")
+	note = strings.ReplaceAll(note, "\r", "\n")
+	note = strings.ReplaceAll(note, "\t", "    ")
+	lines := strings.Split(note, "\n")
+	for i, l := range lines {
+		lines[i] = strings.TrimRight(l, " ")
+	}
+	return strings.Trim(strings.Join(lines, "\n"), "\n")
+}
+
+// noteLines returns the note as "# @note:" comment lines.
+func (s *Site) noteLines() []string {
+	if s.Note == "" {
+		return nil
+	}
+	var lines []string
+	for _, l := range strings.Split(s.Note, "\n") {
+		if l == "" {
+			lines = append(lines, "# @note:")
+		} else {
+			lines = append(lines, "# @note: "+l)
+		}
+	}
+	return lines
+}
 
 // PrimaryDomain returns the first domain
 func (s *Site) PrimaryDomain() string {
@@ -240,6 +284,7 @@ func (s *Site) ToCaddyfileWildcard() string {
 	var lines []string
 
 	// Metadata as comments
+	lines = append(lines, s.noteLines()...)
 	if len(s.Tags) > 0 {
 		lines = append(lines, fmt.Sprintf("# @tags: %s", strings.Join(s.Tags, ", ")))
 	}
@@ -288,7 +333,8 @@ func (s *Site) ToCaddyfileWildcard() string {
 func (s *Site) ToCaddyfileStandard() string {
 	var lines []string
 
-	// Tags as comment
+	// Note and tags as comments
+	lines = append(lines, s.noteLines()...)
 	if len(s.Tags) > 0 {
 		lines = append(lines, fmt.Sprintf("# @tags: %s", strings.Join(s.Tags, ", ")))
 	}

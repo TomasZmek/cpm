@@ -62,6 +62,9 @@
                     {{if .IsWildcard}}
                     <span class="badge badge-wildcard" title="Wildcard TLS: *.{{.WildcardDomain}}">🌟</span>
                     {{end}}
+                    {{if .Note}}
+                    <span class="badge badge-note" tabindex="0" title="{{.Note}}" aria-label="{{t $.Lang "sites_has_note"}}: {{.Note}}">🗒️</span>
+                    {{end}}
                 </div>
                 <div class="site-card-actions">
                     <a href="/logs?view=access&amp;site={{.Filename}}" class="btn btn-sm btn-secondary" title="{{t $.Lang "sites_show_logs"}}" aria-label="{{t $.Lang "sites_show_logs"}}">📝</a>
@@ -79,6 +82,10 @@
                     <span class="label">{{t $.Lang "sites_target"}}:</span>
                     <code>{{.TargetURL}}</code>
                 </div>
+
+                {{if .Note}}
+                <div class="site-card-note" title="{{.Note}}">{{.Note}}</div>
+                {{end}}
                 
                 {{if .Tags}}
                 <div class="site-card-tags">
