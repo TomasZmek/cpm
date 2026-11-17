@@ -30,8 +30,8 @@ import (
 )
 
 const (
-	Version   = "3.7.1"
-	BuildDate = "2026-11-11"
+	Version   = "3.8.0"
+	BuildDate = "2026-11-17"
 )
 
 func main() {
@@ -126,7 +126,7 @@ func main() {
 		"replace": strings.ReplaceAll,
 		"sub":     func(a, b int) int { return a - b },
 		"eq":      func(a, b interface{}) bool { return a == b },
-	}, true) // reload templates from disk (development convenience)
+	}, cfg.DevMode) // CPM_DEV=true: reload templates from disk on every request
 
 	app := newApp(cfg, engine)
 
@@ -259,6 +259,7 @@ func setupRoutes(app *fiber.App, h *handlers.Handler, authService *services.Auth
 	protected.Post("/settings/users/:username/delete", admin, h.UserDelete)
 	protected.Post("/settings/users/:username/role", admin, h.UserUpdateRole)
 	protected.Post("/settings/users/:username/password", admin, h.UserUpdatePassword)
+	protected.Post("/settings/password", h.ChangeOwnPassword) // any signed-in user, own password only
 	protected.Post("/settings/auth/toggle", admin, h.ToggleAuth)
 
 	// Docker Auto-Discovery

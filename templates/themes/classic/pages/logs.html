@@ -151,7 +151,7 @@
         </tbody>
     </table>
 </div>
-<p class="text-muted alog-count">{{len .Entries}} · {{t $.Lang "access_log_newest_first"}}</p>
+<p class="text-muted alog-count">{{tn $.Lang "count_requests" "count_requests_plural" (len .Entries) (len .Entries)}} · {{t $.Lang "access_log_newest_first"}}</p>
 {{else if .Available}}
 <div class="alog-empty">{{t $.Lang "access_log_no_entries"}}</div>
 {{else if $.AccessLogEnabled}}

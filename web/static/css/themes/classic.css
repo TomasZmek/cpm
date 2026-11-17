@@ -1372,3 +1372,18 @@ details.mt-2 summary {
 .badge.badge-warning { background: #FEF3C7; color: #92400E; }
 .badge.badge-error { background: #FEE2E2; color: #991B1B; }
 .badge.badge-info { background: #DBEAFE; color: #1E40AF; }
+
+/* Rule notes (#16) */
+.site-card-note {
+    color: #555;
+    margin: 6px 0;
+    font-size: .85rem;
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.site-note { white-space: pre-line; overflow-wrap: anywhere; }
+.badge-note { cursor: help; }

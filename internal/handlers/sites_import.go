@@ -92,7 +92,7 @@ func (h *Handler) SitesImport(c fiber.Ctx) error {
 		if !result.Success && result.DockerUnreachable {
 			// Nothing was validated; keep the import (consistent with other
 			// saves) and tell the user to reload once Docker is reachable.
-			return redirectFlash(c, "warning", tl(c, "msg_import_done", len(res.Imported))+" "+result.Error, "/sites")
+			return redirectFlash(c, "warning", tln(c, "msg_import_done_n", len(res.Imported))+" "+result.Error, "/sites")
 		}
 		if !result.Success {
 			if rbErr := res.Rollback(); rbErr != nil {
@@ -102,9 +102,9 @@ func (h *Handler) SitesImport(c fiber.Ctx) error {
 		}
 	}
 
-	msg := tl(c, "msg_import_done", len(res.Imported)) + " " + tl(c, "msg_import_backup_saved", filepath.Base(backupPath))
+	msg := tln(c, "msg_import_done_n", len(res.Imported)) + " " + tl(c, "msg_import_backup_saved", filepath.Base(backupPath))
 	if len(res.Failed) > 0 {
-		msg += " " + tl(c, "msg_import_skipped", len(res.Failed), strings.Join(res.Failed, ", "))
+		msg += " " + tln(c, "msg_import_skipped_n", len(res.Failed), strings.Join(res.Failed, ", "))
 		return redirectFlash(c, "warning", msg, "/sites")
 	}
 	return redirectFlash(c, "success", msg, "/sites")

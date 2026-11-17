@@ -986,3 +986,19 @@ details[open] summary::before { transform: rotate(90deg); }
 /* Settings → Modules */
 .module-card h2 { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
 .module-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+
+/* Rule notes (#16) */
+.site-card-note {
+    color: var(--text-muted, inherit);
+    margin: 6px 0;
+    font-size: .85rem;
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.site-note { white-space: pre-line; overflow-wrap: anywhere; }
+.badge-note { cursor: help; }
+#sites-list.list-view .site-card-note { display: none; }

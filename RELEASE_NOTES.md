@@ -1,3 +1,26 @@
+# CPM v3.8.0 - Rule notes
+
+Released 2026-11-17. Docker images: `perteus/caddy-ui:3.8.0` (Docker Hub), `ghcr.io/tomaszmek/cpm:3.8.0`; offline packages for amd64 and arm64 are attached to the GitHub release.
+
+## ✨ New Features
+
+- **Notes for proxy rules** ([#16](https://github.com/TomasZmek/cpm/issues/16)) — optional multi-line note in the rule form (e.g. what the service is, whom to ask). Stored as `# @note:` comment lines at the top of the rule's file (Caddy ignores them), shown in the rules list (🗒️ with the note as a tooltip and its first lines on the card) and on the rule detail, found by the rules search and kept in JSON export/import. Both themes.
+- **Change your own password** — every signed-in user (Viewer, Editor, Admin) can change their password in **Settings → General** after entering the current one. The user's other sessions are signed out, the current one stays.
+- **Plural forms** ([#13](https://github.com/TomasZmek/cpm/issues/13)) — counts are now grammatically correct (e.g. *1 pravidlo / 3 pravidla / 5 pravidel*) in the rules list, certificates, wildcard migration, access log and import / bulk delete messages.
+
+## 🔒 Security
+
+- OpenTelemetry (an indirect dependency of the Docker client) updated from 1.35.0 to 1.47.0, fixing [GHSA-q7gw-24fr-5p69](https://github.com/advisories/GHSA-q7gw-24fr-5p69) (moderate; CPM does not use the affected attribute limits, but the module is in the binary).
+- GitHub Actions of third parties are pinned to commit SHAs.
+
+## 🔧 Under the hood
+
+- **CI** ([#27](https://github.com/TomasZmek/cpm/issues/27)) — every pull request and push to `develop` / `main` runs `gofmt`, `go vet`, `go test -race` and `govulncheck` (main module, `sdk/` and `modules/dockhand/`) and a Docker build. Dependabot watches Go modules, GitHub Actions and the Docker base image (PRs to `develop`).
+- Templates are reloaded from disk on every request only with the new env `CPM_DEV=true` (`make dev` sets it); before it was always on.
+- Removed unused code ([#26](https://github.com/TomasZmek/cpm/issues/26)).
+
+---
+
 # CPM v3.7.1 - Bug fixes
 
 Released 2026-11-11. Docker images: `perteus/caddy-ui:3.7.1` (Docker Hub), `ghcr.io/tomaszmek/cpm:3.7.1`; offline packages for amd64 and arm64 are attached to the GitHub release.

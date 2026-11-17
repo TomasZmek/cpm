@@ -232,6 +232,31 @@ func (h *Handler) UserUpdatePassword(c fiber.Ctx) error {
 	return redirectTo(c, "/settings/users")
 }
 
+// ChangeOwnPassword lets the signed-in user change their own password
+// (Settings → General). Other sessions of the user are signed out.
+func (h *Handler) ChangeOwnPassword(c fiber.Ctx) error {
+	const back = "/settings/general"
+	token := c.Cookies(utils.SessionCookieName)
+	if !h.authService.IsEnabled() || token == "" {
+		return redirectFlash(c, "warning", tl(c, "msg_own_password_no_auth"), back)
+	}
+	current := c.FormValue("current_password")
+	password := c.FormValue("new_password")
+	if password != c.FormValue("confirm_password") {
+		return redirectFlash(c, "error", tl(c, "msg_password_mismatch"), back)
+	}
+	if len(password) < services.MinPasswordLength {
+		return redirectFlash(c, "error", tl(c, "msg_password_too_short", services.MinPasswordLength), back)
+	}
+	if err := h.authService.ChangeOwnPassword(token, current, password); err != nil {
+		if errors.Is(err, services.ErrWrongPassword) {
+			return redirectFlash(c, "error", tl(c, "msg_password_wrong_current"), back)
+		}
+		return redirectFlash(c, "error", err.Error(), back)
+	}
+	return redirectFlash(c, "success", tl(c, "msg_password_updated"), back)
+}
+
 // ToggleAuth enables or disables authentication
 func (h *Handler) ToggleAuth(c fiber.Ctx) error {
 	enabled := c.FormValue("enabled") == "true" || c.FormValue("enabled") == "on"

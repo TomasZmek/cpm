@@ -280,6 +280,45 @@ func (a *AuthService) UpdatePassword(username, newPassword string) error {
 	return fmt.Errorf("user not found: %s", username)
 }
 
+// ErrWrongPassword is returned by ChangeOwnPassword when the current
+// password does not match.
+var ErrWrongPassword = errors.New("current password is wrong")
+
+// ChangeOwnPassword changes the password of the user signed in with the
+// session token, after checking the current password. The user's other
+// sessions are signed out; the session that made the change stays valid.
+func (a *AuthService) ChangeOwnPassword(token, current, newPassword string) error {
+	if len(newPassword) < MinPasswordLength {
+		return fmt.Errorf("password must be at least %d characters", MinPasswordLength)
+	}
+
+	a.mu.Lock()
+	defer a.mu.Unlock()
+
+	session, ok := a.sessions[token]
+	if !ok || time.Now().After(session.ExpiresAt) {
+		return fmt.Errorf("not signed in")
+	}
+	for _, user := range a.config.Users {
+		if user.Username != session.Username {
+			continue
+		}
+		if !user.CheckPassword(current) {
+			return ErrWrongPassword
+		}
+		if err := user.SetPassword(newPassword); err != nil {
+			return err
+		}
+		for t, s := range a.sessions {
+			if s.Username == user.Username && t != token {
+				delete(a.sessions, t)
+			}
+		}
+		return a.saveConfig()
+	}
+	return fmt.Errorf("user not found: %s", session.Username)
+}
+
 // UpdateRole updates a user's role
 func (a *AuthService) UpdateRole(username string, role models.Role) error {
 	if !role.IsValid() {

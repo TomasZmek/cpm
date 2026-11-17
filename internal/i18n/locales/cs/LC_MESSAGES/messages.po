@@ -82,8 +82,6 @@ msgstr "Upraveno"
 msgid "more"
 msgstr "další"
 
-msgid "rules"
-msgstr "pravidel"
 
 msgid "days"
 msgstr "dní"
@@ -426,8 +424,6 @@ msgstr "Heslo"
 msgid "certs_title"
 msgstr "SSL certifikáty"
 
-msgid "certs_count"
-msgstr "certifikátů"
 
 msgid "certs_domain"
 msgstr "Doména"
@@ -946,11 +942,7 @@ msgstr "Přeskočit, nastavit ručně"
 msgid "migrate_btn"
 msgstr "Migrovat"
 
-msgid "files"
-msgstr "souborů"
 
-msgid "certificates"
-msgstr "certifikátů"
 
 # TLS Certificate
 msgid "tls_certificate"
@@ -1266,14 +1258,10 @@ msgstr "Import byl vrácen, protože výsledná konfigurace není platná"
 msgid "msg_import_rollback_failed"
 msgstr "Import selhal a nepodařilo se ho plně vrátit. Obnovte caddy-config/backups/{0} v Nastavení → Záloha"
 
-msgid "msg_import_done"
-msgstr "Importováno pravidel: {0}."
 
 msgid "msg_import_backup_saved"
 msgstr "Záloha uložena do caddy-config/backups/{0}."
 
-msgid "msg_import_skipped"
-msgstr "Přeskočeno {0}: {1}"
 
 msgid "msg_fallback_rolled_back"
 msgstr "Změna fallbacku byla vrácena, protože Caddy konfiguraci odmítl"
@@ -1281,8 +1269,6 @@ msgstr "Změna fallbacku byla vrácena, protože Caddy konfiguraci odmítl"
 msgid "certs_bulk_all_warning"
 msgstr "Obnova mnoha certifikátů najednou může narazit na limity Let's Encrypt (např. 5 duplicitních certifikátů týdně). Wildcard certifikáty se přeskakují."
 
-msgid "msg_certs_bulk_failed"
-msgstr "{0} se nepodařilo smazat: {1}"
 
 msgid "discovery_status_help"
 msgstr "Zda je tento kontejner už propojený s pravidlem proxy"
@@ -1677,3 +1663,94 @@ msgstr "Soubor se nepodařilo načíst"
 
 msgid "msg_rules_import_failed"
 msgstr "Pravidla se nepodařilo importovat"
+
+# Rule notes
+msgid "sites_note"
+msgstr "Poznámka"
+
+msgid "note_hint"
+msgstr "Nepovinné, např. co je to za službu nebo koho se zeptat. Uloží se jako komentář v souboru pravidla; Caddy ji ignoruje."
+
+msgid "note_placeholder"
+msgstr "např. Home Assistant na NASu, před změnou se zeptat Petra"
+
+msgid "help_note"
+msgstr "Poznámka pro vás a ostatní správce. Zobrazí se v seznamu pravidel a v detailu pravidla a prohledává ji vyhledávání pravidel."
+
+msgid "sites_has_note"
+msgstr "Poznámka"
+
+# Own password
+msgid "my_password"
+msgstr "Moje heslo"
+
+msgid "my_password_desc"
+msgstr "Změna hesla, kterým se přihlašujete. Ostatní vaše přihlášení budou odhlášena."
+
+msgid "current_password"
+msgstr "Současné heslo"
+
+msgid "new_password"
+msgstr "Nové heslo"
+
+msgid "confirm_password"
+msgstr "Nové heslo znovu"
+
+msgid "change_password"
+msgstr "Změnit heslo"
+
+msgid "msg_password_mismatch"
+msgstr "Nová hesla se neshodují."
+
+msgid "msg_password_too_short"
+msgstr "Heslo musí mít alespoň {0} znaků."
+
+msgid "msg_password_wrong_current"
+msgstr "Současné heslo není správné."
+
+msgid "msg_own_password_no_auth"
+msgstr "Přihlašování je vypnuté, není co měnit."
+
+# Plural forms (i18n.TN / {{tn}}): msgid_plural is the key with "_plural"
+
+msgid "count_rules"
+msgid_plural "count_rules_plural"
+msgstr[0] "{0} pravidlo"
+msgstr[1] "{0} pravidla"
+msgstr[2] "{0} pravidel"
+
+msgid "count_certificates"
+msgid_plural "count_certificates_plural"
+msgstr[0] "{0} certifikát"
+msgstr[1] "{0} certifikáty"
+msgstr[2] "{0} certifikátů"
+
+msgid "count_files"
+msgid_plural "count_files_plural"
+msgstr[0] "{0} soubor"
+msgstr[1] "{0} soubory"
+msgstr[2] "{0} souborů"
+
+msgid "count_requests"
+msgid_plural "count_requests_plural"
+msgstr[0] "{0} požadavek"
+msgstr[1] "{0} požadavky"
+msgstr[2] "{0} požadavků"
+
+msgid "msg_import_done_n"
+msgid_plural "msg_import_done_n_plural"
+msgstr[0] "Importováno {0} pravidlo."
+msgstr[1] "Importována {0} pravidla."
+msgstr[2] "Importováno {0} pravidel."
+
+msgid "msg_import_skipped_n"
+msgid_plural "msg_import_skipped_n_plural"
+msgstr[0] "Přeskočeno {0} pravidlo: {1}"
+msgstr[1] "Přeskočena {0} pravidla: {1}"
+msgstr[2] "Přeskočeno {0} pravidel: {1}"
+
+msgid "msg_certs_bulk_failed_n"
+msgid_plural "msg_certs_bulk_failed_n_plural"
+msgstr[0] "{0} certifikát se nepodařilo smazat: {1}"
+msgstr[1] "{0} certifikáty se nepodařilo smazat: {1}"
+msgstr[2] "{0} certifikátů se nepodařilo smazat: {1}"

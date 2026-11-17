@@ -179,7 +179,7 @@ func (h *Handler) CertificatesRenewAll(c fiber.Ctx) error {
 
 	failedMsg := ""
 	if len(failed) > 0 {
-		failedMsg = " " + tl(c, "msg_certs_bulk_failed", len(failed), strings.Join(failed, ", "))
+		failedMsg = " " + tln(c, "msg_certs_bulk_failed_n", len(failed), strings.Join(failed, ", "))
 	}
 
 	result := h.caddyService.RestartForCertificates()
