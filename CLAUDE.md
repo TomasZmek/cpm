@@ -23,7 +23,7 @@ go build -o bin/cpm ./cmd/cpm
 # Run locally (requires caddy-config/ and caddy-data/ directories)
 ./bin/cpm
 
-# Hot reload dev (requires air)
+# Hot reload dev (requires air; sets CPM_DEV=true so templates reload from disk)
 make dev
 
 # Tests
@@ -165,13 +165,17 @@ On narrow screens both layouts switch the sidebar to an off-canvas drawer opened
 
 **A UI feature must be implemented in both themes.** Handlers pass the same data to both; only the markup differs. Themes are registered in `middleware/theme.go` (`AvailableThemes`, `themeOrder`).
 
+### Rule metadata comments
+
+A rule's file starts with metadata comments that the parser reads back: `# @note:` (one line per line of `Site.Note`, free text, max 2000 bytes), `# @tags:` and `# @tls:`. Comments cannot inject directives, so the note only rejects control characters.
+
 ### Flash messages
 
 Handlers call `setFlash(c, type, msg)` (`handlers/handlers.go`), which queues Fiber's built-in flash messages (`c.Redirect().With`, hex-encoded cookie, safe for any language), and **must then return `redirectTo(c, url)`** — the flash cookie is only written by the redirect; `redirectTo` answers HTMX requests with 200 + `HX-Redirect`. Page handlers read them with `getFlash(c)`, pass them as `FlashType` / `FlashMessage`, and `layouts/base.html` renders them. Use `tl(c, key, args...)` for translated messages.
 
 ## Tests
 
-Tests live next to the code (`*_test.go`): site validation (`models`), filename/domain validation, backup/import path traversal, auth rules and Docker stream demux (`services/security_test.go`), safe redirects (`handlers`). Run `go test ./...` and `go vet ./...` before committing; there is no CI yet. Before a release, scan for known vulnerabilities: `go install golang.org/x/vuln/cmd/govulncheck@latest && govulncheck ./...` (and `govulncheck -mode=binary <binary>` built with the Go version from the `Dockerfile`), and keep the Go version in `Dockerfile` / `Dockerfile.alpine` on the latest patch release.
+Tests live next to the code (`*_test.go`): site validation (`models`), filename/domain validation, backup/import path traversal, auth rules and Docker stream demux (`services/security_test.go`), safe redirects (`handlers`). Run `go test ./...` and `go vet ./...` before committing. The **CI** workflow (`.github/workflows/ci.yml`) runs `gofmt -s -l`, `go vet`, `go test -race` and `govulncheck` in the root module, `sdk/` and `modules/dockhand/` (add new separate modules to its matrix and to `.github/dependabot.yml`) plus a Docker build on every PR and push to `develop` / `main`. Before a release, scan for known vulnerabilities: `go install golang.org/x/vuln/cmd/govulncheck@latest && govulncheck ./...` (and `govulncheck -mode=binary <binary>` built with the Go version from the `Dockerfile`), and keep the Go version in `Dockerfile` / `Dockerfile.alpine` on the latest patch release.
 
 ## Commit convention
 
@@ -220,4 +224,4 @@ Translations use gettext PO format via `github.com/leonelquinteros/gotext`.
 
 A language is only offered in the UI (and accepted from cookie / `Accept-Language`) once it translates at least `MinCoverage` (95 %) of the English keys; incomplete languages stay hidden. Every new UI key must be added to en, cs and ko.
 
-**Plural strings** use `i18n.TN(lang, singular, plural, n)` in Go and `{{tn .Lang "singular" "plural" .Count}}` in templates.
+**Plural strings** use `i18n.TN(lang, key, key_plural, n, args...)` in Go (handlers: `tln(c, key, n, args...)`, `n` is `{0}`) and `{{tn .Lang "key" "key_plural" .Count .Count}}` in templates. In the PO files the entry has `msgid "key"`, `msgid_plural "key_plural"` and one `msgstr[i]` per plural form (cs 3, en 2, ko 1); `go test ./internal/i18n/` checks that en, cs and ko have all forms.
