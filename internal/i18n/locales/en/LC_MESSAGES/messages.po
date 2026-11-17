@@ -82,8 +82,6 @@ msgstr "Modified"
 msgid "more"
 msgstr "more"
 
-msgid "rules"
-msgstr "rules"
 
 msgid "days"
 msgstr "days"
@@ -426,8 +424,6 @@ msgstr "Password"
 msgid "certs_title"
 msgstr "SSL Certificates"
 
-msgid "certs_count"
-msgstr "certificates"
 
 msgid "certs_domain"
 msgstr "Domain"
@@ -946,11 +942,7 @@ msgstr "Skip, configure manually"
 msgid "migrate_btn"
 msgstr "Migrate"
 
-msgid "files"
-msgstr "files"
 
-msgid "certificates"
-msgstr "certificates"
 
 # TLS Certificate
 msgid "tls_certificate"
@@ -1308,14 +1300,10 @@ msgstr "Import was rolled back because the resulting configuration is invalid"
 msgid "msg_import_rollback_failed"
 msgstr "Import failed and could not be fully rolled back. Restore caddy-config/backups/{0} via Settings → Backup"
 
-msgid "msg_import_done"
-msgstr "Imported {0} rule(s)."
 
 msgid "msg_import_backup_saved"
 msgstr "Backup saved as caddy-config/backups/{0}."
 
-msgid "msg_import_skipped"
-msgstr "Skipped {0}: {1}"
 
 msgid "msg_fallback_rolled_back"
 msgstr "The fallback change was rolled back because Caddy rejected the configuration"
@@ -1323,8 +1311,6 @@ msgstr "The fallback change was rolled back because Caddy rejected the configura
 msgid "certs_bulk_all_warning"
 msgstr "Renewing many certificates at once can hit Let's Encrypt rate limits (e.g. 5 duplicate certificates per week). Wildcard certificates are skipped."
 
-msgid "msg_certs_bulk_failed"
-msgstr "{0} could not be deleted: {1}"
 
 msgid "msg_user_delete_self"
 msgstr "You cannot delete your own account"
@@ -1677,3 +1663,40 @@ msgstr "The file could not be read"
 
 msgid "msg_rules_import_failed"
 msgstr "Rules could not be imported"
+
+# Plural forms (i18n.TN / {{tn}}): msgid_plural is the key with "_plural"
+
+msgid "count_rules"
+msgid_plural "count_rules_plural"
+msgstr[0] "{0} rule"
+msgstr[1] "{0} rules"
+
+msgid "count_certificates"
+msgid_plural "count_certificates_plural"
+msgstr[0] "{0} certificate"
+msgstr[1] "{0} certificates"
+
+msgid "count_files"
+msgid_plural "count_files_plural"
+msgstr[0] "{0} file"
+msgstr[1] "{0} files"
+
+msgid "count_requests"
+msgid_plural "count_requests_plural"
+msgstr[0] "{0} request"
+msgstr[1] "{0} requests"
+
+msgid "msg_import_done_n"
+msgid_plural "msg_import_done_n_plural"
+msgstr[0] "Imported {0} rule."
+msgstr[1] "Imported {0} rules."
+
+msgid "msg_import_skipped_n"
+msgid_plural "msg_import_skipped_n_plural"
+msgstr[0] "Skipped {0} rule: {1}"
+msgstr[1] "Skipped {0} rules: {1}"
+
+msgid "msg_certs_bulk_failed_n"
+msgid_plural "msg_certs_bulk_failed_n_plural"
+msgstr[0] "{0} certificate could not be deleted: {1}"
+msgstr[1] "{0} certificates could not be deleted: {1}"

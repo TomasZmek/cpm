@@ -1,7 +1,7 @@
 <div class="page-header">
     <div class="page-header-title">
         <h1>🔀 {{t .Lang "sites_title"}}</h1>
-        <span class="badge">{{.TotalSites}} {{t .Lang "rules"}}</span>
+        <span class="badge">{{tn .Lang "count_rules" "count_rules_plural" .TotalSites .TotalSites}}</span>
     </div>
     <div class="page-header-actions">
         <button type="button" class="btn btn-secondary" onclick="openImportModal()">
