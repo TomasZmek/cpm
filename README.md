@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-3.7.1-blue" alt="Version">
+  <img src="https://img.shields.io/badge/version-3.8.0-blue" alt="Version">
   <img src="https://img.shields.io/badge/Go-1.26-00ADD8?logo=go" alt="Go">
   <img src="https://img.shields.io/badge/Docker-ready-2496ED?logo=docker" alt="Docker">
   <img src="https://img.shields.io/badge/platforms-amd64%20%7C%20arm64-lightgrey" alt="Platforms">
@@ -69,9 +69,9 @@
 ### Docker Hub / GitHub
 
 ```bash
-# Multi-arch image also on GitHub Container Registry: ghcr.io/tomaszmek/cpm:3.7.1
+# Multi-arch image also on GitHub Container Registry: ghcr.io/tomaszmek/cpm:3.8.0
 # Offline packages (docker load -i …): https://github.com/TomasZmek/cpm/releases
-docker pull perteus/caddy-ui:3.7.1
+docker pull perteus/caddy-ui:3.8.0
 docker pull perteus/caddy-ui:latest
 ```
 
@@ -94,7 +94,7 @@ services:
       - ./caddy-data:/data
 
   cpm:
-    image: perteus/caddy-ui:3.7.1
+    image: perteus/caddy-ui:3.8.0
     container_name: cpm
     ports:
       - "8501:8501"
@@ -124,7 +124,7 @@ services:
       - ./caddy-data:/data
 
   cpm:
-    image: perteus/caddy-ui:3.7.1
+    image: perteus/caddy-ui:3.8.0
     container_name: cpm
     privileged: true  # Required for Synology
     ports:
@@ -234,7 +234,7 @@ For Synology Docker, use `privileged: true` to allow Docker socket access:
 
 ```yaml
 cpm:
-  image: perteus/caddy-ui:3.7.1
+  image: perteus/caddy-ui:3.8.0
   privileged: true
   volumes:
     - /volume1/docker/caddy-config:/caddy-config
@@ -276,8 +276,8 @@ go build -o cpm ./cmd/cpm
 ### Docker Build
 
 ```bash
-docker build -t perteus/caddy-ui:3.7.1 --no-cache .
-docker push perteus/caddy-ui:3.7.1
+docker build -t perteus/caddy-ui:3.8.0 --no-cache .
+docker push perteus/caddy-ui:3.8.0
 docker push perteus/caddy-ui:latest
 ```
 
@@ -287,6 +287,7 @@ docker push perteus/caddy-ui:latest
 
 | Version | Date | Notes |
 |---------|------|-------|
+| **3.8.0** | 2026-11-17 | 🗒️ Notes for rules, change your own password, plural forms, CI; OpenTelemetry security update |
 | **3.7.1** | 2026-11-11 | 🐛 Bug fixes — saving a rule no longer changes its imports, form errors shown in the form, delete on rule detail |
 | **3.7.0** | 2026-11-10 | 📝 Access log per rule — requests, status and response times for each rule; Fiber v3 |
 | **3.6.0** | 2026-11-10 | ⚓ Dockhand module — backend status and discovery for containers on all Docker hosts |
@@ -305,6 +306,13 @@ docker push perteus/caddy-ui:latest
 | **3.0.1** | 2026-01 | 🔐 Wildcard SSL, migration tools, UI improvements |
 | **3.0.0** | 2026-01 | 🎉 Complete Go rewrite (794MB → 6MB) |
 | 2.2.1 | 2025-12 | Python version (deprecated) |
+
+### v3.8.0 - Rule notes
+- ✅ **Notes for rules** — optional multi-line note in the rule form, shown in the rules list and on the detail, found by the search
+- ✅ **Change your own password** in Settings → General (every role); your other sessions are signed out
+- 🌐 Counts are grammatically correct (*1 pravidlo / 3 pravidla / 5 pravidel*)
+- 🔒 OpenTelemetry 1.47.0 (GHSA-q7gw-24fr-5p69), GitHub Actions pinned to commits
+- 🔧 CI on every pull request (gofmt, vet, tests, govulncheck, Docker build), Dependabot
 
 ### v3.7.1 - Bug fixes
 - 🐛 **Saving a rule from the form** no longer adds `import cloudflare_dns` or removes custom imports (e.g. `import logging`)

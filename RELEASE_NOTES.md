@@ -1,4 +1,6 @@
-# CPM v3.8.0 - Unreleased
+# CPM v3.8.0 - Rule notes
+
+Released 2026-11-17. Docker images: `perteus/caddy-ui:3.8.0` (Docker Hub), `ghcr.io/tomaszmek/cpm:3.8.0`; offline packages for amd64 and arm64 are attached to the GitHub release.
 
 ## ✨ New Features
 
