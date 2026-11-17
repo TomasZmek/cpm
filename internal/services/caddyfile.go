@@ -68,19 +68,6 @@ func (m *CaddyfileManager) GetSiteDirectory(site *models.Site) string {
 	return filepath.Join(m.config.SitesDir, "standard")
 }
 
-// GetSiteFilename returns the filename with correct suffix for wildcard sites
-func (m *CaddyfileManager) GetSiteFilename(site *models.Site) string {
-	baseName := sanitizeFilename(site.PrimaryDomain())
-
-	if site.IsWildcard() {
-		// For wildcard sites, use pattern: name.domain.caddy
-		// e.g., home.perteus.cz.caddy
-		return baseName + ".caddy"
-	}
-
-	return baseName + ".caddy"
-}
-
 // GenerateCaddyfile generates the main Caddyfile with wildcard blocks
 func (m *CaddyfileManager) GenerateCaddyfile() (string, error) {
 	var lines []string
@@ -185,24 +172,6 @@ func (m *CaddyfileManager) generateWildcardBlock(wd models.WildcardDomain) strin
 	return strings.Join(lines, "\n")
 }
 
-// getInternalNetworks returns the internal networks from snippets config
-func (m *CaddyfileManager) getInternalNetworks() []string {
-	if m.snippetsService == nil {
-		return []string{"192.168.0.0/16", "172.16.0.0/12", "10.0.0.0/8"}
-	}
-
-	cfg, err := m.snippetsService.GetConfig()
-	if err != nil {
-		return []string{"192.168.0.0/16", "172.16.0.0/12", "10.0.0.0/8"}
-	}
-
-	if !cfg.InternalOnly.Enabled || len(cfg.InternalOnly.AllowedNetworks) == 0 {
-		return []string{}
-	}
-
-	return cfg.InternalOnly.AllowedNetworks
-}
-
 // SaveCaddyfile writes the generated Caddyfile to disk
 func (m *CaddyfileManager) SaveCaddyfile() error {
 	content, err := m.GenerateCaddyfile()
@@ -223,35 +192,6 @@ func (m *CaddyfileManager) SaveCaddyfile() error {
 
 	caddyfilePath := filepath.Join(m.config.ConfigDir, "Caddyfile")
 	return os.WriteFile(caddyfilePath, []byte(content), 0644)
-}
-
-// MigrateSiteToNewStructure moves a site file to the correct directory
-func (m *CaddyfileManager) MigrateSiteToNewStructure(site *models.Site) error {
-	if err := m.EnsureDirectoryStructure(); err != nil {
-		return err
-	}
-
-	newDir := m.GetSiteDirectory(site)
-	newFilename := m.GetSiteFilename(site)
-	newPath := filepath.Join(newDir, newFilename)
-
-	// Generate new content
-	site.AccessLog = m.AccessLogSettings().Enabled
-	content := site.ToCaddyfile()
-
-	// Write to new location
-	if err := os.WriteFile(newPath, []byte(content), 0644); err != nil {
-		return fmt.Errorf("failed to write site file: %w", err)
-	}
-
-	// Remove old file if it exists in different location
-	if site.Filepath != "" && site.Filepath != newPath {
-		if _, err := os.Stat(site.Filepath); err == nil {
-			os.Remove(site.Filepath)
-		}
-	}
-
-	return nil
 }
 
 // RegenerateCaddyfileForWildcard regenerates Caddyfile when wildcard config changes

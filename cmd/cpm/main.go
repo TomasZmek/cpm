@@ -126,7 +126,7 @@ func main() {
 		"replace": strings.ReplaceAll,
 		"sub":     func(a, b int) int { return a - b },
 		"eq":      func(a, b interface{}) bool { return a == b },
-	}, true) // reload templates from disk (development convenience)
+	}, cfg.DevMode) // CPM_DEV=true: reload templates from disk on every request
 
 	app := newApp(cfg, engine)
 

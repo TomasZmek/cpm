@@ -26,7 +26,7 @@ run: build
 
 # Development mode with hot reload (requires air)
 dev:
-	@air
+	@CPM_DEV=true air
 
 # Run tests
 test:

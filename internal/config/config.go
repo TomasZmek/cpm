@@ -26,6 +26,9 @@ type Config struct {
 	// Theme
 	Theme string
 
+	// DevMode reloads templates from disk on every request (CPM_DEV=true).
+	DevMode bool
+
 	// Reverse proxy in front of CPM (e.g. Caddy). TrustedProxies lists who may
 	// set X-Forwarded-* headers: "private", "loopback", IPs or CIDRs, comma
 	// separated; "none" disables it. TrustedOrigins are extra origins
@@ -48,6 +51,7 @@ func Load(version, buildDate string) (*Config, error) {
 		ContainerName:  getEnv("CONTAINER_NAME", "caddy"),
 		DefaultIP:      getEnv("DEFAULT_IP", "192.168.1.1"),
 		Theme:          getEnv("THEME", "classic"),
+		DevMode:        getEnvBool("CPM_DEV", false),
 		TrustedProxies: getEnv("TRUSTED_PROXIES", "private,loopback"),
 		TrustedOrigins: splitList(os.Getenv("TRUSTED_ORIGINS")),
 		Version:        version,
