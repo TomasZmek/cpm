@@ -1,3 +1,17 @@
+# CPM v3.8.1 - Unreleased
+
+## 🔒 Security
+
+- Go updated from 1.26.11 to **1.27.4** (`Dockerfile`, `Dockerfile.alpine`, CI) — required by the updated dependencies below.
+- Go modules updated: `golang.org/x/crypto` 0.59.0 (a tagged release instead of a pseudo-version), Docker client `github.com/moby/moby/client` 0.6.3 and `moby/api` 1.57.0, `gofiber/template/html` 3.1.1, `gotext` 1.8.0.
+- GitHub Actions updated to their current major versions (checkout v7, setup-go v6, Docker actions v4/v7, dockerhub-description v5), still pinned to commit SHAs where they were before.
+
+## 🔧 Under the hood
+
+- CI installs Go 1.27: `govulncheck` reads the Go version of the installed toolchain, so with Go 1.26 installed it could not check the Go 1.27 standard library that `go.mod` now requires.
+
+---
+
 # CPM v3.8.0 - Rule notes
 
 Released 2026-11-17. Docker images: `perteus/caddy-ui:3.8.0` (Docker Hub), `ghcr.io/tomaszmek/cpm:3.8.0`; offline packages for amd64 and arm64 are attached to the GitHub release.

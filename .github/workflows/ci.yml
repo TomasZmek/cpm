@@ -33,7 +33,7 @@ jobs:
       - uses: actions/setup-go@v6
         with:
           # Latest patch release, as in the Dockerfile
-          go-version: "1.26.x"
+          go-version: "1.27.x"
           cache-dependency-path: ${{ matrix.dir }}/go.mod
 
       - name: gofmt

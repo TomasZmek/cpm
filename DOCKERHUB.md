@@ -11,7 +11,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/version-3.8.0-blue" alt="Version">
-  <img src="https://img.shields.io/badge/Go-1.26-00ADD8?logo=go" alt="Go">
+  <img src="https://img.shields.io/badge/Go-1.27-00ADD8?logo=go" alt="Go">
   <img src="https://img.shields.io/badge/image_size-~6MB-green" alt="Image Size">
   <img src="https://img.shields.io/badge/platforms-amd64%20%7C%20arm64-lightgrey" alt="Platforms">
 </p>

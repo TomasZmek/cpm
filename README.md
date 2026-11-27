@@ -11,7 +11,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/version-3.8.0-blue" alt="Version">
-  <img src="https://img.shields.io/badge/Go-1.26-00ADD8?logo=go" alt="Go">
+  <img src="https://img.shields.io/badge/Go-1.27-00ADD8?logo=go" alt="Go">
   <img src="https://img.shields.io/badge/Docker-ready-2496ED?logo=docker" alt="Docker">
   <img src="https://img.shields.io/badge/platforms-amd64%20%7C%20arm64-lightgrey" alt="Platforms">
   <img src="https://img.shields.io/badge/image_size-~6MB-green" alt="Image Size">
@@ -261,7 +261,7 @@ POST /api/v1/reload   # Reload Caddy configuration
 ## 🏗️ Building from Source
 
 ```bash
-# Prerequisites: Go 1.26
+# Prerequisites: Go 1.27
 
 git clone https://github.com/TomasZmek/cpm.git
 cd cpm
