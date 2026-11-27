@@ -40,7 +40,7 @@ Version is authoritative in `cmd/cpm/main.go` constants `Version` and `BuildDate
 
 ## Tech stack
 
-- **Go 1.26** (module: `github.com/TomasZmek/cpm`)
+- **Go 1.27** (module: `github.com/TomasZmek/cpm`)
 - **Fiber v3** — HTTP framework (`fiber.Ctx` is an interface: handlers take `c fiber.Ctx`; redirects are `c.Redirect().To()`, view bindings `c.ViewBind()`, the fasthttp context `c.RequestCtx()`)
 - **gofiber/template/html** — HTML template engine (Go `html/template`-compatible)
 - **HTMX** — frontend interactivity (no build step, CDN)
