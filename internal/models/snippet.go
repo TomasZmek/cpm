@@ -1,5 +1,7 @@
 package models
 
+import "sort"
+
 // SnippetConfig represents the configuration for all snippets
 type SnippetConfig struct {
 	CloudflareDNS   CloudflareDNSConfig   `json:"cloudflare_dns"`
@@ -52,6 +54,16 @@ type RateLimitConfig struct {
 type BasicAuthConfig struct {
 	Enabled bool              `json:"enabled"`
 	Users   map[string]string `json:"users"` // username -> bcrypt hash
+}
+
+// Usernames returns the basic auth usernames, sorted.
+func (b BasicAuthConfig) Usernames() []string {
+	names := make([]string, 0, len(b.Users))
+	for name := range b.Users {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+	return names
 }
 
 // DefaultSnippetConfig returns default configuration

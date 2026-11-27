@@ -329,7 +329,91 @@
         </form>
     </div>
 
+    {{/* ---------- Basic Auth ---------- */}}
+    <div class="snipc-card" data-snippet="basic_auth">
+        <form action="/snippets/basic_auth" method="POST" hx-boost="true">
+            <input type="hidden" name="_csrf" value="{{.CSRFToken}}">
+            <div class="snipc-header">
+                <div class="snipc-info">
+                    <span class="snipc-icon">🔐</span>
+                    <span class="snipc-titles">
+                        <span class="snipc-name">{{t .Lang "snippets_basic_auth"}}</span>
+                        <span class="snipc-sub">{{t .Lang "snippets_enable_basic_auth"}}</span>
+                    </span>
+                    <span class="snipc-status {{if .Config.BasicAuth.Enabled}}on{{else}}off{{end}}" data-status>
+                        {{if .Config.BasicAuth.Enabled}}{{t .Lang "snippets_enabled"}}{{else}}{{t .Lang "snippets_disabled"}}{{end}}
+                    </span>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" name="enabled" data-card-toggle {{if .Config.BasicAuth.Enabled}}checked{{end}}>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+            <div class="snipc-foot">
+                <span></span>
+                <button type="submit" class="btn btn-primary btn-sm">{{t .Lang "save"}}</button>
+            </div>
+        </form>
+
+        {{/* Users can be managed while the snippet is off, so they are outside the toggled body */}}
+        <div class="snipc-body">
+            <div class="snipc-fg">
+                <label>{{t .Lang "snippets_basic_auth_users"}}</label>
+                {{$users := .Config.BasicAuth.Usernames}}
+                {{if $users}}
+                <ul class="snipc-users">
+                    {{range $users}}
+                    <li>
+                        <span class="snipc-user">👤 {{.}}</span>
+                        <button type="button" class="btn btn-sm btn-danger"
+                                name="username" value="{{.}}"
+                                hx-post="/snippets/basic_auth/users/delete"
+                                hx-confirm="{{t $.Lang "snippets_basic_auth_confirm_remove"}} {{.}}?">
+                            🗑️ {{t $.Lang "delete"}}
+                        </button>
+                    </li>
+                    {{end}}
+                </ul>
+                {{else}}
+                <div class="snipc-help snipc-warn">{{t .Lang "snippets_basic_auth_no_users"}}</div>
+                {{end}}
+            </div>
+
+            <form action="/snippets/basic_auth/users" method="POST" hx-boost="true" class="snipc-adduser">
+                <input type="hidden" name="_csrf" value="{{.CSRFToken}}">
+                <div class="snipc-fr">
+                    <div class="snipc-fg">
+                        <label for="basic_auth_username">{{t .Lang "snippets_basic_auth_username"}}</label>
+                        <input type="text" id="basic_auth_username" name="username" required
+                               maxlength="64" pattern="[A-Za-z0-9._@\-]+" autocomplete="off">
+                    </div>
+                    <div class="snipc-fg">
+                        <label for="basic_auth_password">{{t .Lang "snippets_basic_auth_password"}}</label>
+                        <input type="password" id="basic_auth_password" name="password" required
+                               minlength="8" maxlength="72" autocomplete="new-password">
+                    </div>
+                </div>
+                <div class="snipc-help">{{t .Lang "snippets_basic_auth_password_hint" 8 72}}</div>
+                <div>
+                    <button type="submit" class="btn btn-primary btn-sm">➕ {{t .Lang "snippets_basic_auth_add"}}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
 </div>
+
+<style>
+.snipc-users { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.snipc-users li {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 8px 12px; background: var(--surface-2);
+    border: 1px solid var(--border); border-radius: 8px;
+}
+.snipc-user { font-size: 13.5px; color: var(--text); overflow-wrap: anywhere; min-width: 0; }
+.snipc-warn { color: var(--warning, #f59e0b); }
+.snipc-adduser { display: flex; flex-direction: column; gap: 12px; margin: 0; }
+</style>
 
 <script>
 (function () {

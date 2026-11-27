@@ -47,10 +47,10 @@
 | Feature | Description |
 |---------|-------------|
 | 📊 **Dashboard** | System overview, stats, alerts, backend status (running / stopped / reachable), quick actions |
-| 🔀 **Proxy Rules** | Visual editor for reverse proxy rules, container picker |
+| 🔀 **Proxy Rules** | Visual editor for reverse proxy rules, container picker; changes Caddy rejects are rolled back automatically |
 | 📥 **Caddyfile Import** | Import existing site blocks (lossless, with backup and rollback) |
 | 🔐 **Wildcard SSL** | Manage wildcard certificates with DNS challenge |
-| ⚙️ **Snippets** | Cloudflare DNS, security headers, rate limiting |
+| ⚙️ **Snippets** | Cloudflare DNS, security headers, rate limiting, basic auth with user management |
 | 📜 **Certificates** | SSL overview with expiration warnings, bulk renewal |
 | 📄 **Logs** | Access log of requests per rule (status, latency, client) with 24 h stats, plus parsed Caddy logs with level filter and search |
 | 👥 **Multi-User** | Role-based access (Admin, Editor, Viewer) |

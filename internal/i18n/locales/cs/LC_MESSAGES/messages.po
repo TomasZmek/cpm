@@ -751,26 +751,14 @@ msgstr "Kontejner Caddy „{0}“ nemá proměnnou prostředí CF_API_TOKEN, Cad
 msgid "snippets_use_env_hint"
 msgstr "Když je zapnuto, token se čte z proměnné CF_API_TOKEN kontejneru Caddy a pole níže se ignoruje."
 
-msgid "msg_snippet_reload_failed"
-msgstr "Snippet aktualizován, ale reload selhal"
-
 msgid "msg_rule_created_name"
 msgstr "Pravidlo '{0}' bylo úspěšně vytvořeno"
-
-msgid "msg_rule_create_reload_failed"
-msgstr "Pravidlo vytvořeno, ale reload selhal"
 
 msgid "msg_rule_updated_name"
 msgstr "Pravidlo '{0}' bylo úspěšně aktualizováno"
 
-msgid "msg_rule_update_reload_failed"
-msgstr "Pravidlo aktualizováno, ale reload selhal"
-
 msgid "msg_rule_deleted_name"
 msgstr "Pravidlo '{0}' bylo úspěšně smazáno"
-
-msgid "msg_rule_delete_reload_failed"
-msgstr "Pravidlo smazáno, ale reload selhal"
 
 msgid "msg_wildcard_unavailable"
 msgstr "Wildcard služba není dostupná"
@@ -783,9 +771,6 @@ msgstr "Wildcard doména již existuje"
 
 msgid "msg_wildcard_add_failed"
 msgstr "Nepodařilo se přidat wildcard doménu"
-
-msgid "msg_wildcard_config_failed"
-msgstr "Doména přidána, ale aktualizace Caddy konfigurace selhala"
 
 msgid "msg_wildcard_info_failed"
 msgstr "Nepodařilo se získat informace o migraci"
@@ -801,12 +786,6 @@ msgstr "Migrace dokončena s chybami"
 
 msgid "msg_wildcard_delete_failed"
 msgstr "Nepodařilo se smazat wildcard doménu"
-
-msgid "msg_wildcard_config_update_failed"
-msgstr "Doména odstraněna, ale aktualizace Caddy konfigurace selhala"
-
-msgid "msg_wildcard_reload_failed_delete"
-msgstr "Doména odstraněna, ale Caddy reload selhal"
 
 msgid "msg_backup_reloaded"
 msgstr "Záloha obnovena a Caddy reloadován"
@@ -1262,9 +1241,6 @@ msgstr "Import selhal a nepodařilo se ho plně vrátit. Obnovte caddy-config/ba
 msgid "msg_import_backup_saved"
 msgstr "Záloha uložena do caddy-config/backups/{0}."
 
-
-msgid "msg_fallback_rolled_back"
-msgstr "Změna fallbacku byla vrácena, protože Caddy konfiguraci odmítl"
 
 msgid "certs_bulk_all_warning"
 msgstr "Obnova mnoha certifikátů najednou může narazit na limity Let's Encrypt (např. 5 duplicitních certifikátů týdně). Wildcard certifikáty se přeskakují."
@@ -1754,3 +1730,57 @@ msgid_plural "msg_certs_bulk_failed_n_plural"
 msgstr[0] "{0} certifikát se nepodařilo smazat: {1}"
 msgstr[1] "{0} certifikáty se nepodařilo smazat: {1}"
 msgstr[2] "{0} certifikátů se nepodařilo smazat: {1}"
+
+msgid "msg_change_rolled_back"
+msgstr "Změna nebyla uložena, protože Caddy konfiguraci odmítl. Předchozí konfigurace byla obnovena"
+
+msgid "msg_change_rollback_failed"
+msgstr "Caddy konfiguraci odmítl a obnovení předchozí konfigurace selhalo. Zkontrolujte konfigurační soubory"
+
+msgid "snippets_enable_basic_auth"
+msgstr "Vyžadovat jméno a heslo (HTTP basic auth)"
+
+msgid "snippets_basic_auth_users"
+msgstr "Uživatelé"
+
+msgid "snippets_basic_auth_no_users"
+msgstr "Zatím žádní uživatelé. Přidejte aspoň jednoho, jinak pravidla tento snippet nemohou použít."
+
+msgid "snippets_basic_auth_username"
+msgstr "Uživatelské jméno"
+
+msgid "snippets_basic_auth_password"
+msgstr "Heslo"
+
+msgid "snippets_basic_auth_password_hint"
+msgstr "{0}–{1} znaků, ukládá se jen jako bcrypt hash. Zadáním existujícího jména se nastaví nové heslo."
+
+msgid "snippets_basic_auth_add"
+msgstr "Přidat uživatele"
+
+msgid "snippets_basic_auth_confirm_remove"
+msgstr "Odebrat uživatele"
+
+msgid "msg_basic_auth_username_invalid"
+msgstr "Neplatné uživatelské jméno: použijte 1–64 písmen, číslic, teček, pomlček, podtržítek nebo @"
+
+msgid "msg_basic_auth_password_length"
+msgstr "Heslo musí mít {0} až {1} znaků"
+
+msgid "msg_basic_auth_save_failed"
+msgstr "Uložení uživatelů basic auth selhalo"
+
+msgid "msg_basic_auth_user_added"
+msgstr "Uživatel {0} byl přidán"
+
+msgid "msg_basic_auth_user_updated"
+msgstr "Heslo uživatele {0} bylo změněno"
+
+msgid "msg_basic_auth_user_removed"
+msgstr "Uživatel {0} byl odebrán"
+
+msgid "msg_basic_auth_last_user"
+msgstr "Posledního uživatele nelze odebrat, dokud je basic auth zapnutý. Nejdřív snippet vypněte."
+
+msgid "msg_basic_auth_user_not_found"
+msgstr "Uživatel nenalezen"

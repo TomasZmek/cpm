@@ -76,17 +76,25 @@ func (h *Handler) WildcardAdd(c fiber.Ctx) error {
 		APIToken: apiToken,
 	}
 
-	if err := h.wildcardService.AddDomain(wildcard); err != nil {
+	// Add the domain, regenerate the wildcard config, validate and reload;
+	// if Caddy rejects it, the domain is not added (#23).
+	result, err := h.caddyService.ApplyChange(func() error {
+		if err := h.wildcardService.AddDomain(wildcard); err != nil {
+			return err
+		}
+		return h.regenerateWildcardConfig()
+	})
+	if err != nil {
 		log.Printf("Error adding wildcard domain: %v", err)
 		setFlash(c, "error", tl(c, "msg_wildcard_add_failed")+": "+err.Error())
 		return redirectTo(c, "/settings/wildcard")
 	}
-
-	// Regenerate wildcard Caddy config
-	if err := h.regenerateWildcardConfig(); err != nil {
-		log.Printf("Error regenerating wildcard config: %v", err)
-		setFlash(c, "warning", tl(c, "msg_wildcard_config_failed")+": "+err.Error())
+	if !result.Success && !result.DockerUnreachable {
+		setFlash(c, "error", applyErrorMessage(c, result))
 		return redirectTo(c, "/settings/wildcard")
+	}
+	if result.DockerUnreachable {
+		setFlash(c, "warning", result.Error)
 	}
 
 	// Warn early if the token is expected from an env var the Caddy container does not have
@@ -156,8 +164,12 @@ func (h *Handler) WildcardMigrateExecute(c fiber.Ctx) error {
 	var migratedCount, deletedCount int
 	var errors []string
 
-	// 2. Migrate site configs
-	if migrateSites {
+	// 2. Migrate site configs, validate and reload. If Caddy rejects the
+	// result, the rules are restored and the certificates are kept (#23).
+	result, _ := h.caddyService.ApplyChange(func() error {
+		if !migrateSites {
+			return nil
+		}
 		info, _ := h.wildcardService.GetMigrationInfo(domain, h.config.SitesDir, h.config.DataDir)
 		for _, siteFile := range info.MatchingSites {
 			sitePath := filepath.Join(h.config.SitesDir, "standard", siteFile)
@@ -168,6 +180,14 @@ func (h *Handler) WildcardMigrateExecute(c fiber.Ctx) error {
 				migratedCount++
 			}
 		}
+		return nil
+	})
+	if !result.Success && !result.DockerUnreachable {
+		setFlash(c, "error", applyErrorMessage(c, result))
+		return redirectTo(c, "/settings/wildcard/migrate/"+url.PathEscape(domain))
+	}
+	if result.DockerUnreachable {
+		errors = append(errors, "Caddy reload: "+result.Error)
 	}
 
 	// 3. Delete old certificates
@@ -181,12 +201,6 @@ func (h *Handler) WildcardMigrateExecute(c fiber.Ctx) error {
 				deletedCount++
 			}
 		}
-	}
-
-	// 4. Reload Caddy
-	result := h.caddyService.Reload()
-	if !result.Success {
-		errors = append(errors, "Caddy reload: "+result.Error)
 	}
 
 	// Build result message
@@ -209,25 +223,20 @@ func (h *Handler) WildcardDelete(c fiber.Ctx) error {
 	domain := c.Params("domain")
 	log.Printf("WildcardDelete: domain=%s", domain)
 
-	if err := h.wildcardService.DeleteDomain(domain); err != nil {
+	// Delete, regenerate, validate and reload; if Caddy rejects the result,
+	// the domain is kept (#23).
+	result, err := h.caddyService.ApplyChange(func() error {
+		if err := h.wildcardService.DeleteDomain(domain); err != nil {
+			return err
+		}
+		return h.regenerateWildcardConfig()
+	})
+	if err != nil {
 		log.Printf("Error deleting wildcard domain: %v", err)
 		setFlash(c, "error", tl(c, "msg_wildcard_delete_failed")+": "+err.Error())
 		return redirectTo(c, "/settings/wildcard")
 	}
-
-	// Regenerate wildcard Caddy config
-	if err := h.regenerateWildcardConfig(); err != nil {
-		log.Printf("Error regenerating wildcard config after delete: %v", err)
-		setFlash(c, "warning", tl(c, "msg_wildcard_config_update_failed"))
-	} else {
-		// Reload Caddy
-		result := h.caddyService.Reload()
-		if !result.Success {
-			setFlash(c, "warning", tl(c, "msg_wildcard_reload_failed_delete"))
-		} else {
-			setFlash(c, "success", tl(c, "wildcard_deleted"))
-		}
-	}
+	applyFlash(c, result, tl(c, "wildcard_deleted"))
 
 	return redirectTo(c, "/settings/wildcard")
 }

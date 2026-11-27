@@ -191,7 +191,7 @@ func (m *CaddyfileManager) SaveCaddyfile() error {
 	}
 
 	caddyfilePath := filepath.Join(m.config.ConfigDir, "Caddyfile")
-	return os.WriteFile(caddyfilePath, []byte(content), 0644)
+	return writeConfigFile(caddyfilePath, []byte(content), 0644)
 }
 
 // RegenerateCaddyfileForWildcard regenerates Caddyfile when wildcard config changes

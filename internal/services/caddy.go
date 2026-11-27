@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/TomasZmek/cpm/internal/config"
@@ -25,6 +26,12 @@ type ReloadResult struct {
 	// DockerUnreachable is set when Caddy could not be contacted at all, i.e.
 	// the configuration was neither validated nor rejected.
 	DockerUnreachable bool
+	// RolledBack is set by ApplyChange when Caddy rejected the change and
+	// the previous configuration files were restored.
+	RolledBack bool
+	// RollbackError is set by ApplyChange when restoring the previous
+	// configuration failed; the rejected files may still be on disk.
+	RollbackError string
 }
 
 // CaddyService handles Caddy configuration management
@@ -33,6 +40,11 @@ type CaddyService struct {
 	dockerService    *DockerService
 	parser           *ParserService
 	caddyfileManager *CaddyfileManager
+	// reloadFn replaces ReloadWithValidation in ApplyChange (tests).
+	reloadFn func() *ReloadResult
+	// changeMu serialises ApplyChange, so a rollback cannot undo a
+	// concurrent change made after its snapshot.
+	changeMu sync.Mutex
 }
 
 // NewCaddyService creates a new Caddy service
@@ -262,7 +274,7 @@ func (c *CaddyService) CreateSite(site *models.Site) error {
 	content := site.ToCaddyfile()
 
 	// Write file
-	if err := os.WriteFile(site.Filepath, []byte(content), 0644); err != nil {
+	if err := writeConfigFile(site.Filepath, []byte(content), 0644); err != nil {
 		return fmt.Errorf("failed to write site file: %w", err)
 	}
 
@@ -304,7 +316,7 @@ func (c *CaddyService) UpdateSite(site *models.Site) error {
 	content := site.ToCaddyfile()
 
 	// Write to new location
-	if err := os.WriteFile(newFilepath, []byte(content), 0644); err != nil {
+	if err := writeConfigFile(newFilepath, []byte(content), 0644); err != nil {
 		return fmt.Errorf("failed to write site file: %w", err)
 	}
 
@@ -348,7 +360,7 @@ func (c *CaddyService) UpdateSiteRaw(filename, content string) error {
 		targetPath = filepath.Join(dir, filename+".caddy")
 	}
 
-	if err := os.WriteFile(targetPath, []byte(content), 0644); err != nil {
+	if err := writeConfigFile(targetPath, []byte(content), 0644); err != nil {
 		return fmt.Errorf("failed to write site file: %w", err)
 	}
 
@@ -532,14 +544,14 @@ func (c *CaddyService) SaveFallback(content string) (rollback func() error, err 
 
 	rollback = func() error {
 		if fbErr == nil {
-			if err := os.WriteFile(fallbackPath, oldFallback, 0644); err != nil {
+			if err := writeConfigFile(fallbackPath, oldFallback, 0644); err != nil {
 				return err
 			}
 		} else {
 			os.Remove(fallbackPath)
 		}
 		if mainErr == nil {
-			return os.WriteFile(mainPath, oldMain, 0644)
+			return writeConfigFile(mainPath, oldMain, 0644)
 		}
 		return nil
 	}
@@ -547,7 +559,7 @@ func (c *CaddyService) SaveFallback(content string) (rollback func() error, err 
 	if err := os.MkdirAll(c.config.SitesDir, 0755); err != nil {
 		return nil, err
 	}
-	if err := os.WriteFile(fallbackPath, []byte(content), 0644); err != nil {
+	if err := writeConfigFile(fallbackPath, []byte(content), 0644); err != nil {
 		return nil, err
 	}
 
@@ -555,7 +567,7 @@ func (c *CaddyService) SaveFallback(content string) (rollback func() error, err 
 	if mainErr == nil {
 		updated := ensureImportLine(string(oldMain), FallbackImport, "FALLBACK")
 		if updated != string(oldMain) {
-			if err := os.WriteFile(mainPath, []byte(updated), 0644); err != nil {
+			if err := writeConfigFile(mainPath, []byte(updated), 0644); err != nil {
 				_ = rollback()
 				return nil, err
 			}
@@ -600,7 +612,7 @@ func (c *CaddyService) SaveErrorPage(code int, content string) error {
 		return err
 	}
 	filepath := filepath.Join(dir, fmt.Sprintf("%d.html", code))
-	return os.WriteFile(filepath, []byte(content), 0644)
+	return writeConfigFile(filepath, []byte(content), 0644)
 }
 
 // GetAllTags returns all unique tags from all sites

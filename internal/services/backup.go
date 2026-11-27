@@ -120,7 +120,7 @@ func (b *BackupService) SaveBackupToDisk() (string, error) {
 	}
 	path := filepath.Join(dir, filename)
 	// 0600: the archive contains API tokens
-	if err := os.WriteFile(path, data, 0600); err != nil {
+	if err := writeConfigFile(path, data, 0600); err != nil {
 		return "", fmt.Errorf("failed to write backup: %w", err)
 	}
 	return path, nil
@@ -422,7 +422,7 @@ func (b *BackupService) extractFile(f *zip.File, targetPath string) error {
 	if strings.HasSuffix(targetPath, ".json") {
 		perm = 0600 // may contain DNS API tokens
 	}
-	return os.WriteFile(targetPath, content, perm)
+	return writeConfigFile(targetPath, content, perm)
 }
 
 // assertInsideDir returns an error if target does not resolve to a path inside base,

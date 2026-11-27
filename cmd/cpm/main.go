@@ -228,6 +228,8 @@ func setupRoutes(app *fiber.App, h *handlers.Handler, authService *services.Auth
 
 	// Snippets
 	protected.Get("/snippets", h.SnippetsList)
+	protected.Post("/snippets/basic_auth/users", edit, h.BasicAuthUserAdd)
+	protected.Post("/snippets/basic_auth/users/delete", edit, h.BasicAuthUserDelete)
 	protected.Post("/snippets/:name", edit, h.SnippetUpdate)
 
 	// Certificates

@@ -271,21 +271,23 @@ func (h *Handler) ImportRules(c fiber.Ctx) error {
 
 	skipExisting := c.FormValue("skip_existing") == "on"
 
-	imported, skipped, err := h.backupService.ImportRules(data, h.caddyService, skipExisting)
+	// Import, validate and reload; if Caddy rejects the imported rules, the
+	// whole import is undone (#23).
+	var imported, skipped int
+	result, err := h.caddyService.ApplyChange(func() error {
+		var err error
+		imported, skipped, err = h.backupService.ImportRules(data, h.caddyService, skipExisting)
+		return err
+	})
 	if err != nil {
 		return redirectFlash(c, "error", tl(c, "msg_rules_import_failed")+": "+err.Error(), "/settings?tab=backup")
 	}
 
-	// Reload Caddy
-	if imported > 0 {
-		h.caddyService.ReloadWithValidation()
-	}
-
+	done := tl(c, "msg_import_result", imported)
 	if skipped > 0 {
-		setFlash(c, "success", tl(c, "msg_import_result_with_skip", imported, skipped))
-	} else {
-		setFlash(c, "success", tl(c, "msg_import_result", imported))
+		done = tl(c, "msg_import_result_with_skip", imported, skipped)
 	}
+	applyFlash(c, result, done)
 
 	return redirectTo(c, "/settings?tab=backup")
 }

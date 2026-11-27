@@ -115,7 +115,7 @@ func (c *CaddyService) SyncAccessLogImports() (restore func(), err error) {
 	var changed []saved
 	restore = func() {
 		for _, s := range changed {
-			_ = os.WriteFile(s.path, s.content, 0644)
+			_ = writeConfigFile(s.path, s.content, 0644)
 		}
 	}
 	for _, f := range files {
@@ -130,7 +130,7 @@ func (c *CaddyService) SyncAccessLogImports() (restore func(), err error) {
 		if !ok {
 			continue
 		}
-		if err := os.WriteFile(f, []byte(updated), 0644); err != nil {
+		if err := writeConfigFile(f, []byte(updated), 0644); err != nil {
 			return restore, fmt.Errorf("write %s: %w", filepath.Base(f), err)
 		}
 		changed = append(changed, saved{f, data})
