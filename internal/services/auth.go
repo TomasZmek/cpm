@@ -90,7 +90,7 @@ func (a *AuthService) saveConfig() error {
 		return fmt.Errorf("failed to create config directory: %w", err)
 	}
 
-	return os.WriteFile(a.configPath, content, 0600)
+	return writeConfigFile(a.configPath, content, 0600)
 }
 
 // IsEnabled returns whether authentication is enabled

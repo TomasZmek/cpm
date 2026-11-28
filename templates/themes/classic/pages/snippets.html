@@ -263,4 +263,81 @@
             </form>
         </div>
     </div>
+
+    <!-- Basic Auth -->
+    <div class="snippet-card" x-data="{ expanded: false }">
+        <div class="snippet-card-header" @click="expanded = !expanded">
+            <div class="snippet-info">
+                <span class="snippet-icon">🔐</span>
+                <span class="snippet-name">{{t .Lang "snippets_basic_auth"}}</span>
+                <span class="snippet-status {{if .Config.BasicAuth.Enabled}}enabled{{else}}disabled{{end}}">
+                    {{if .Config.BasicAuth.Enabled}}{{t .Lang "snippets_enabled"}}{{else}}{{t .Lang "snippets_disabled"}}{{end}}
+                </span>
+            </div>
+            <span class="expand-icon" :class="{ 'rotated': expanded }">▼</span>
+        </div>
+
+        <div class="snippet-card-body" x-show="expanded" x-collapse>
+            <form action="/snippets/basic_auth" method="POST" hx-boost="true">
+                <input type="hidden" name="_csrf" value="{{.CSRFToken}}">
+                <label class="toggle-label">
+                    <span class="toggle-text">{{t .Lang "snippets_enable_basic_auth"}}</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" name="enabled" {{if .Config.BasicAuth.Enabled}}checked{{end}}>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </label>
+                <button type="submit" class="btn btn-primary btn-sm mt-4">{{t .Lang "save"}}</button>
+            </form>
+
+            <h4 class="mt-4">{{t .Lang "snippets_basic_auth_users"}}</h4>
+            {{$users := .Config.BasicAuth.Usernames}}
+            {{if $users}}
+            <ul class="basic-auth-users">
+                {{range $users}}
+                <li>
+                    <span class="basic-auth-username">👤 {{.}}</span>
+                    <button type="button" class="btn btn-sm btn-danger"
+                            name="username" value="{{.}}"
+                            hx-post="/snippets/basic_auth/users/delete"
+                            hx-confirm="{{t $.Lang "snippets_basic_auth_confirm_remove"}} {{.}}?">
+                        🗑️ {{t $.Lang "delete"}}
+                    </button>
+                </li>
+                {{end}}
+            </ul>
+            {{else}}
+            <div class="alert alert-warning">{{t .Lang "snippets_basic_auth_no_users"}}</div>
+            {{end}}
+
+            <form action="/snippets/basic_auth/users" method="POST" hx-boost="true" class="mt-4">
+                <input type="hidden" name="_csrf" value="{{.CSRFToken}}">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="basic_auth_username">{{t .Lang "snippets_basic_auth_username"}}</label>
+                        <input type="text" id="basic_auth_username" name="username" required
+                               maxlength="64" pattern="[A-Za-z0-9._@\-]+" autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label for="basic_auth_password">{{t .Lang "snippets_basic_auth_password"}}</label>
+                        <input type="password" id="basic_auth_password" name="password" required
+                               minlength="8" maxlength="72" autocomplete="new-password">
+                    </div>
+                </div>
+                <small class="form-help">{{t .Lang "snippets_basic_auth_password_hint" 8 72}}</small>
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary btn-sm">➕ {{t .Lang "snippets_basic_auth_add"}}</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
+
+<style>
+.basic-auth-users { list-style: none; padding: 0; margin: 0.5rem 0 0; }
+.basic-auth-users li {
+    display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
+    padding: 0.5rem 0; border-bottom: 1px solid var(--border-color, #e5e7eb);
+}
+.basic-auth-username { overflow-wrap: anywhere; min-width: 0; }
+</style>

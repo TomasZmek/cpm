@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"errors"
 	"net/netip"
 	"regexp"
 	"strconv"
@@ -105,27 +106,24 @@ func (h *Handler) SnippetUpdate(c fiber.Ctx) error {
 
 	case "basic_auth":
 		cfg.BasicAuth.Enabled = c.FormValue("enabled") == "on"
-		// User management is done separately
+		// Users are managed with BasicAuthUserAdd / BasicAuthUserDelete
 
 	default:
 		return c.Status(fiber.StatusBadRequest).SendString("Unknown snippet: " + snippetName)
 	}
 
-	if err := h.snippetsService.SaveConfig(cfg); err != nil {
+	// Save, validate and reload; a change Caddy rejects is undone (#23)
+	result, err := h.caddyService.ApplyChange(func() error { return h.snippetsService.SaveConfig(cfg) })
+	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
 	}
-
-	// Reload Caddy
-	result := h.caddyService.ReloadWithValidation()
 	switch {
-	case !result.Success && envWarning != "":
-		setFlash(c, "warning", envWarning+" "+tl(c, "msg_snippet_reload_failed")+": "+result.Error)
-	case !result.Success:
-		setFlash(c, "warning", tl(c, "msg_snippet_reload_failed")+": "+result.Error)
-	case envWarning != "":
+	case !result.Success && !result.DockerUnreachable && envWarning != "":
+		setFlash(c, "error", envWarning+" "+applyErrorMessage(c, result))
+	case result.Success && envWarning != "":
 		setFlash(c, "warning", envWarning)
 	default:
-		setFlash(c, "success", tl(c, "msg_snippet_updated", snippetName))
+		applyFlash(c, result, tl(c, "msg_snippet_updated", snippetName))
 	}
 
 	return redirectTo(c, "/snippets")
@@ -186,4 +184,59 @@ func formInt(c fiber.Ctx, key string, defaultVal int) int {
 		}
 	}
 	return defaultVal
+}
+
+// BasicAuthUserAdd adds a user to the basic_auth snippet, or sets a new
+// password for an existing one (TomasZmek/cpm#41).
+func (h *Handler) BasicAuthUserAdd(c fiber.Ctx) error {
+	username := strings.TrimSpace(c.FormValue("username"))
+	password := c.FormValue("password")
+
+	if err := services.ValidateBasicAuthUsername(username); err != nil {
+		setFlash(c, "error", tl(c, "msg_basic_auth_username_invalid"))
+		return redirectTo(c, "/snippets")
+	}
+	if err := services.ValidateBasicAuthPassword(password); err != nil {
+		setFlash(c, "error", tl(c, "msg_basic_auth_password_length", services.BasicAuthMinPassword, services.BasicAuthMaxPassword))
+		return redirectTo(c, "/snippets")
+	}
+
+	var created bool
+	result, err := h.caddyService.ApplyChange(func() error {
+		var err error
+		created, err = h.snippetsService.AddBasicAuthUser(username, password)
+		return err
+	})
+	if err != nil {
+		setFlash(c, "error", tl(c, "msg_basic_auth_save_failed")+": "+err.Error())
+		return redirectTo(c, "/snippets")
+	}
+	key := "msg_basic_auth_user_updated"
+	if created {
+		key = "msg_basic_auth_user_added"
+	}
+	applyFlash(c, result, tl(c, key, username))
+	return redirectTo(c, "/snippets")
+}
+
+// BasicAuthUserDelete removes a user of the basic_auth snippet.
+func (h *Handler) BasicAuthUserDelete(c fiber.Ctx) error {
+	username := c.FormValue("username")
+
+	result, err := h.caddyService.ApplyChange(func() error {
+		return h.snippetsService.RemoveBasicAuthUser(username)
+	})
+	switch {
+	case errors.Is(err, services.ErrBasicAuthLastUser):
+		setFlash(c, "error", tl(c, "msg_basic_auth_last_user"))
+		return redirectTo(c, "/snippets")
+	case errors.Is(err, services.ErrBasicAuthUserNotFound):
+		setFlash(c, "error", tl(c, "msg_basic_auth_user_not_found"))
+		return redirectTo(c, "/snippets")
+	case err != nil:
+		setFlash(c, "error", tl(c, "msg_basic_auth_save_failed")+": "+err.Error())
+		return redirectTo(c, "/snippets")
+	}
+	applyFlash(c, result, tl(c, "msg_basic_auth_user_removed", username))
+	return redirectTo(c, "/snippets")
 }

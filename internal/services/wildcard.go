@@ -88,7 +88,7 @@ func (s *WildcardService) SaveConfig(config *models.WildcardConfig) error {
 	}
 
 	// 0600: the file contains DNS provider API tokens
-	if err := os.WriteFile(s.configPath, data, 0600); err != nil {
+	if err := writeConfigFile(s.configPath, data, 0600); err != nil {
 		log.Printf("Error writing wildcard config: %v", err)
 		return err
 	}
@@ -364,7 +364,7 @@ func (s *WildcardService) MigrateSiteConfig(sitePath string, domain string) erro
 	}
 
 	// Write back
-	if err := os.WriteFile(sitePath, []byte(modified), 0644); err != nil {
+	if err := writeConfigFile(sitePath, []byte(modified), 0644); err != nil {
 		return err
 	}
 

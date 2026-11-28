@@ -753,26 +753,14 @@ msgstr "Caddy 컨테이너 \"{0}\"에 CF_API_TOKEN 환경 변수가 없어 Caddy
 msgid "snippets_use_env_hint"
 msgstr "켜면 토큰을 Caddy 컨테이너의 CF_API_TOKEN 변수에서 읽으며 아래 입력란은 무시됩니다."
 
-msgid "msg_snippet_reload_failed"
-msgstr "코드 조각이 업데이트되었지만 재로드에 실패했습니다"
-
 msgid "msg_rule_created_name"
 msgstr "규칙 '{0}'이(가) 성공적으로 생성되었습니다"
-
-msgid "msg_rule_create_reload_failed"
-msgstr "규칙이 생성되었지만 재로드에 실패했습니다"
 
 msgid "msg_rule_updated_name"
 msgstr "규칙 '{0}'이(가) 성공적으로 업데이트되었습니다"
 
-msgid "msg_rule_update_reload_failed"
-msgstr "규칙이 업데이트되었지만 재로드에 실패했습니다"
-
 msgid "msg_rule_deleted_name"
 msgstr "규칙 '{0}'이(가) 성공적으로 삭제되었습니다"
-
-msgid "msg_rule_delete_reload_failed"
-msgstr "규칙이 삭제되었지만 재로드에 실패했습니다"
 
 msgid "msg_wildcard_unavailable"
 msgstr "와일드카드 서비스를 사용할 수 없습니다"
@@ -785,9 +773,6 @@ msgstr "와일드카드 도메인이 이미 존재합니다"
 
 msgid "msg_wildcard_add_failed"
 msgstr "와일드카드 도메인 추가에 실패했습니다"
-
-msgid "msg_wildcard_config_failed"
-msgstr "도메인이 추가되었지만 Caddy 설정 업데이트에 실패했습니다"
 
 msgid "msg_wildcard_info_failed"
 msgstr "마이그레이션 정보를 가져오는 데 실패했습니다"
@@ -803,12 +788,6 @@ msgstr "마이그레이션이 오류와 함께 완료되었습니다"
 
 msgid "msg_wildcard_delete_failed"
 msgstr "와일드카드 도메인 삭제에 실패했습니다"
-
-msgid "msg_wildcard_config_update_failed"
-msgstr "도메인이 제거되었지만 Caddy 설정 업데이트에 실패했습니다"
-
-msgid "msg_wildcard_reload_failed_delete"
-msgstr "도메인이 제거되었지만 Caddy 재로드에 실패했습니다"
 
 msgid "msg_backup_reloaded"
 msgstr "백업이 복구되고 Caddy가 재로드되었습니다"
@@ -1307,9 +1286,6 @@ msgid "msg_import_backup_saved"
 msgstr "백업이 caddy-config/backups/{0}에 저장되었습니다."
 
 
-msgid "msg_fallback_rolled_back"
-msgstr "Caddy가 구성을 거부하여 대체 규칙 변경이 되돌려졌습니다"
-
 msgid "certs_bulk_all_warning"
 msgstr "많은 인증서를 한 번에 갱신하면 Let's Encrypt 속도 제한(예: 주당 중복 인증서 5개)에 걸릴 수 있습니다. 와일드카드 인증서는 건너뜁니다."
 
@@ -1742,3 +1718,57 @@ msgstr[0] "규칙 {0}개 건너뜀: {1}"
 msgid "msg_certs_bulk_failed_n"
 msgid_plural "msg_certs_bulk_failed_n_plural"
 msgstr[0] "인증서 {0}개를 삭제하지 못했습니다: {1}"
+
+msgid "msg_change_rolled_back"
+msgstr "Caddy가 구성을 거부하여 변경 사항이 저장되지 않았습니다. 이전 구성이 복원되었습니다"
+
+msgid "msg_change_rollback_failed"
+msgstr "Caddy가 구성을 거부했으며 이전 구성 복원에 실패했습니다. 구성 파일을 확인하세요"
+
+msgid "snippets_enable_basic_auth"
+msgstr "사용자 이름과 비밀번호 요구 (HTTP 기본 인증)"
+
+msgid "snippets_basic_auth_users"
+msgstr "사용자"
+
+msgid "snippets_basic_auth_no_users"
+msgstr "아직 사용자가 없습니다. 최소 한 명을 추가해야 규칙에서 이 스니펫을 사용할 수 있습니다."
+
+msgid "snippets_basic_auth_username"
+msgstr "사용자 이름"
+
+msgid "snippets_basic_auth_password"
+msgstr "비밀번호"
+
+msgid "snippets_basic_auth_password_hint"
+msgstr "{0}–{1}자, bcrypt 해시로만 저장됩니다. 기존 사용자 이름을 입력하면 새 비밀번호가 설정됩니다."
+
+msgid "snippets_basic_auth_add"
+msgstr "사용자 추가"
+
+msgid "snippets_basic_auth_confirm_remove"
+msgstr "사용자 제거"
+
+msgid "msg_basic_auth_username_invalid"
+msgstr "잘못된 사용자 이름: 문자, 숫자, 점, 대시, 밑줄 또는 @를 1–64자로 사용하세요"
+
+msgid "msg_basic_auth_password_length"
+msgstr "비밀번호는 {0}~{1}자여야 합니다"
+
+msgid "msg_basic_auth_save_failed"
+msgstr "기본 인증 사용자 저장에 실패했습니다"
+
+msgid "msg_basic_auth_user_added"
+msgstr "사용자 {0}이(가) 추가되었습니다"
+
+msgid "msg_basic_auth_user_updated"
+msgstr "사용자 {0}의 비밀번호가 변경되었습니다"
+
+msgid "msg_basic_auth_user_removed"
+msgstr "사용자 {0}이(가) 제거되었습니다"
+
+msgid "msg_basic_auth_last_user"
+msgstr "기본 인증이 활성화된 동안에는 마지막 사용자를 제거할 수 없습니다. 먼저 스니펫을 비활성화하세요."
+
+msgid "msg_basic_auth_user_not_found"
+msgstr "사용자를 찾을 수 없습니다"

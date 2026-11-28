@@ -1,5 +1,14 @@
 # CPM v3.8.1 - Unreleased
 
+## ✨ New Features
+
+- **Basic auth users in the UI** ([#41](https://github.com/TomasZmek/cpm/issues/41)) — **Snippets → Basic Authentication** now lists the users of the `basic_auth` snippet and lets Editors add a user (or set a new password by adding an existing name) and remove one. Passwords are stored only as bcrypt hashes; usernames are limited to letters, digits, `. _ @ -` so they cannot inject directives into `snippets.caddy`. The last user cannot be removed while the snippet is enabled, and rules are offered the snippet only once it has a user. Both themes.
+
+## 🐛 Bug Fixes
+
+- **Rejected changes are rolled back** ([#23](https://github.com/TomasZmek/cpm/issues/23)) — saving, editing or deleting a rule, changing a snippet or its users, adding / deleting / migrating a wildcard domain, the fallback rule and the JSON rules import now validate the result with Caddy and, when Caddy rejects it, restore all configuration files to their previous state. Before, the invalid file stayed on disk, so every later reload failed too. The rule form is shown again with what was entered and Caddy's error. If Docker is unreachable, the change is kept unvalidated as before.
+- Wildcard migration deletes the old certificates only after Caddy accepted the migrated rules.
+
 ## 🔒 Security
 
 - Go updated from 1.26.11 to **1.27.4** (`Dockerfile`, `Dockerfile.alpine`, CI) — required by the updated dependencies below.
@@ -8,6 +17,7 @@
 
 ## 🔧 Under the hood
 
+- Configuration files are written via a temp file + rename, so a crash or full disk never leaves a half-written file. `Caddyfile` and `snippets.caddy` are still written in place, because the example `docker-compose.yml` bind-mounts them into the Caddy container as single files.
 - CI installs Go 1.27: `govulncheck` reads the Go version of the installed toolchain, so with Go 1.26 installed it could not check the Go 1.27 standard library that `go.mod` now requires.
 
 ---

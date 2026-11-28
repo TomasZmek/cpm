@@ -2,6 +2,7 @@ package services
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -132,7 +133,7 @@ func (s *SnippetsService) SaveConfig(cfg *models.SnippetConfig) error {
 	}
 
 	// 0600: the file may contain the Cloudflare API token
-	if err := os.WriteFile(s.configPath, content, 0600); err != nil {
+	if err := writeConfigFile(s.configPath, content, 0600); err != nil {
 		return fmt.Errorf("failed to write config: %w", err)
 	}
 
@@ -251,12 +252,18 @@ func (s *SnippetsService) GenerateSnippetsFile(cfg *models.SnippetConfig) error 
 		lines = append(lines, "")
 	}
 
-	// Basic Auth
-	if cfg.BasicAuth.Enabled && len(cfg.BasicAuth.Users) > 0 {
+	// Basic Auth. Users are sorted so the file does not change between
+	// saves, and entries that could break out of the block (hand-edited
+	// config) are skipped.
+	if users := cfg.BasicAuth.Usernames(); cfg.BasicAuth.Enabled && len(users) > 0 {
 		lines = append(lines, "# --- BASIC AUTHENTICATION ---")
 		lines = append(lines, "(basic_auth) {")
 		lines = append(lines, "    basic_auth {")
-		for username, hash := range cfg.BasicAuth.Users {
+		for _, username := range users {
+			hash := cfg.BasicAuth.Users[username]
+			if ValidateBasicAuthUsername(username) != nil || !isBcryptHash(hash) {
+				continue
+			}
 			lines = append(lines, fmt.Sprintf("        %s %s", username, hash))
 		}
 		lines = append(lines, "    }")
@@ -293,7 +300,7 @@ func (s *SnippetsService) GenerateSnippetsFile(cfg *models.SnippetConfig) error 
 	content := strings.Join(lines, "\n")
 	snippetsPath := filepath.Join(s.config.ConfigDir, "snippets.caddy")
 
-	return os.WriteFile(snippetsPath, []byte(content), 0644)
+	return writeConfigFile(snippetsPath, []byte(content), 0644)
 }
 
 // CloudflareDNSEnvPlaceholder is the Caddy placeholder used when the token
@@ -393,40 +400,105 @@ func (s *SnippetsService) GetAvailableSnippets() ([]string, error) {
 	if cfg.RateLimit.Enabled {
 		available = append(available, "rate_limit")
 	}
-	if cfg.BasicAuth.Enabled {
+	// Without users the (basic_auth) snippet is not generated, so rules must
+	// not be offered to import it.
+	if cfg.BasicAuth.Enabled && len(cfg.BasicAuth.Users) > 0 {
 		available = append(available, "basic_auth")
 	}
 
 	return available, nil
 }
 
-// AddBasicAuthUser adds a new basic auth user
-func (s *SnippetsService) AddBasicAuthUser(username, password string) error {
+// Basic auth users of the (basic_auth) snippet (TomasZmek/cpm#41)
+
+var (
+	// ErrBasicAuthUsername is returned for a username that is not allowed.
+	ErrBasicAuthUsername = errors.New("invalid username")
+	// ErrBasicAuthPassword is returned for a password of the wrong length.
+	ErrBasicAuthPassword = errors.New("invalid password length")
+	// ErrBasicAuthUserNotFound is returned when removing an unknown user.
+	ErrBasicAuthUserNotFound = errors.New("user not found")
+	// ErrBasicAuthLastUser is returned when removing the last user while the
+	// snippet is enabled: without users Caddy has no (basic_auth) snippet and
+	// every rule importing it would fail to load.
+	ErrBasicAuthLastUser = errors.New("cannot remove the last user while basic auth is enabled")
+)
+
+// Basic auth password limits. bcrypt only uses the first 72 bytes.
+const (
+	BasicAuthMinPassword = 8
+	BasicAuthMaxPassword = 72
+)
+
+// basicAuthUsernameRegex: the username is written unquoted into
+// snippets.caddy ("username hash"), so only characters that cannot end the
+// token, open a block or start a comment/placeholder are allowed.
+var basicAuthUsernameRegex = regexp.MustCompile(`^[A-Za-z0-9._@-]{1,64}$`)
+
+// ValidateBasicAuthUsername reports whether name can be used as a basic
+// auth username.
+func ValidateBasicAuthUsername(name string) error {
+	if !basicAuthUsernameRegex.MatchString(name) {
+		return ErrBasicAuthUsername
+	}
+	return nil
+}
+
+// ValidateBasicAuthPassword checks the password length.
+func ValidateBasicAuthPassword(password string) error {
+	if len(password) < BasicAuthMinPassword || len(password) > BasicAuthMaxPassword {
+		return ErrBasicAuthPassword
+	}
+	return nil
+}
+
+// isBcryptHash reports whether hash looks like a bcrypt hash, the only
+// format CPM writes; anything else is skipped when generating the snippet.
+func isBcryptHash(hash string) bool {
+	return strings.HasPrefix(hash, "$2") && !strings.ContainsAny(hash, " \t\r\n{}#\"")
+}
+
+// AddBasicAuthUser adds a basic auth user, or sets a new password for an
+// existing one; created reports which. The password is stored only as a
+// bcrypt hash.
+func (s *SnippetsService) AddBasicAuthUser(username, password string) (created bool, err error) {
+	if err := ValidateBasicAuthUsername(username); err != nil {
+		return false, err
+	}
+	if err := ValidateBasicAuthPassword(password); err != nil {
+		return false, err
+	}
 	cfg, err := s.GetConfig()
 	if err != nil {
-		return err
+		return false, err
 	}
 
-	// Hash password with bcrypt
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), 12)
 	if err != nil {
-		return fmt.Errorf("failed to hash password: %w", err)
+		return false, fmt.Errorf("failed to hash password: %w", err)
 	}
 
 	if cfg.BasicAuth.Users == nil {
 		cfg.BasicAuth.Users = make(map[string]string)
 	}
-
+	_, exists := cfg.BasicAuth.Users[username]
 	cfg.BasicAuth.Users[username] = string(hash)
 
-	return s.SaveConfig(cfg)
+	return !exists, s.SaveConfig(cfg)
 }
 
-// RemoveBasicAuthUser removes a basic auth user
+// RemoveBasicAuthUser removes a basic auth user. The last user cannot be
+// removed while the snippet is enabled (ErrBasicAuthLastUser).
 func (s *SnippetsService) RemoveBasicAuthUser(username string) error {
 	cfg, err := s.GetConfig()
 	if err != nil {
 		return err
+	}
+	if _, ok := cfg.BasicAuth.Users[username]; !ok {
+		return ErrBasicAuthUserNotFound
+	}
+	if cfg.BasicAuth.Enabled && len(cfg.BasicAuth.Users) == 1 {
+		return ErrBasicAuthLastUser
 	}
 
 	delete(cfg.BasicAuth.Users, username)

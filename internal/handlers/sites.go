@@ -150,20 +150,21 @@ func (h *Handler) SiteCreate(c fiber.Ctx) error {
 		return h.renderSiteForm(c, site, true, tl(c, "msg_rule_port_required"))
 	}
 
-	// Create site
-	if err := h.caddyService.CreateSite(site); err != nil {
+	// Create the rule, validate and reload; a rule Caddy rejects is removed
+	// again and the form is shown with the error (#23).
+	result, err := h.caddyService.ApplyChange(func() error { return h.caddyService.CreateSite(site) })
+	if err != nil || (!result.Success && !result.DockerUnreachable) {
 		// CreateSite may have set a filename derived from the domain.
 		site.Filename, site.Filepath = "", ""
-		return h.renderSiteForm(c, site, true, siteFormError(c, site, err))
+		msg := ""
+		if err != nil {
+			msg = siteFormError(c, site, err)
+		} else {
+			msg = applyErrorMessage(c, result)
+		}
+		return h.renderSiteForm(c, site, true, msg)
 	}
-
-	// Reload Caddy
-	result := h.caddyService.ReloadWithValidation()
-	if !result.Success {
-		setFlash(c, "warning", tl(c, "msg_rule_create_reload_failed")+": "+result.Error)
-	} else {
-		setFlash(c, "success", tl(c, "msg_rule_created_name", site.PrimaryDomain()))
-	}
+	applyFlash(c, result, tl(c, "msg_rule_created_name", site.PrimaryDomain()))
 
 	// HTMX redirect
 	return redirectTo(c, "/sites")
@@ -204,11 +205,10 @@ func (h *Handler) SiteUpdate(c fiber.Ctx) error {
 	}
 
 	// Check for raw mode
-	if rawContent := c.FormValue("raw_content"); rawContent != "" {
-		if err := h.caddyService.UpdateSiteRaw(filename, rawContent); err != nil {
-			site.RawContent = rawContent
-			return h.renderSiteForm(c, site, false, siteFormError(c, site, err))
-		}
+	var change func() error
+	rawContent := c.FormValue("raw_content")
+	if rawContent != "" {
+		change = func() error { return h.caddyService.UpdateSiteRaw(filename, rawContent) }
 	} else {
 		// Update from form
 		site.Domains = services.CleanDomains(c.FormValue("domains"))
@@ -236,18 +236,27 @@ func (h *Handler) SiteUpdate(c fiber.Ctx) error {
 		if len(site.Domains) == 0 {
 			return h.renderSiteForm(c, site, false, tl(c, "msg_rule_domain_required"))
 		}
-		if err := h.caddyService.UpdateSite(site); err != nil {
-			return h.renderSiteForm(c, site, false, siteFormError(c, site, err))
-		}
+		change = func() error { return h.caddyService.UpdateSite(site) }
 	}
 
-	// Reload Caddy
-	result := h.caddyService.ReloadWithValidation()
-	if !result.Success {
-		setFlash(c, "warning", tl(c, "msg_rule_update_reload_failed")+": "+result.Error)
-	} else {
-		setFlash(c, "success", tl(c, "msg_rule_updated_name", site.PrimaryDomain()))
+	// Save, validate and reload; a change Caddy rejects is undone and the
+	// form is shown again with what was entered (#23).
+	oldPath := site.Filepath
+	result, err := h.caddyService.ApplyChange(change)
+	if err != nil || (!result.Success && !result.DockerUnreachable) {
+		site.Filepath = oldPath
+		if rawContent != "" {
+			site.RawContent = rawContent
+		}
+		msg := ""
+		if err != nil {
+			msg = siteFormError(c, site, err)
+		} else {
+			msg = applyErrorMessage(c, result)
+		}
+		return h.renderSiteForm(c, site, false, msg)
 	}
+	applyFlash(c, result, tl(c, "msg_rule_updated_name", site.PrimaryDomain()))
 
 	return redirectTo(c, "/sites")
 }
@@ -262,18 +271,12 @@ func (h *Handler) SiteDelete(c fiber.Ctx) error {
 		return redirectTo(c, "/sites")
 	}
 
-	if err := h.caddyService.DeleteSite(filename); err != nil {
+	result, err := h.caddyService.ApplyChange(func() error { return h.caddyService.DeleteSite(filename) })
+	if err != nil {
 		setFlash(c, "error", tl(c, "msg_rule_delete_failed")+": "+err.Error())
 		return redirectTo(c, "/sites")
 	}
-
-	// Reload Caddy
-	result := h.caddyService.ReloadWithValidation()
-	if !result.Success {
-		setFlash(c, "warning", tl(c, "msg_rule_delete_reload_failed")+": "+result.Error)
-	} else {
-		setFlash(c, "success", tl(c, "msg_rule_deleted_name", site.PrimaryDomain()))
-	}
+	applyFlash(c, result, tl(c, "msg_rule_deleted_name", site.PrimaryDomain()))
 
 	return redirectTo(c, "/sites")
 }

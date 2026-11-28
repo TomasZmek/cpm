@@ -82,13 +82,13 @@ func (c *CaddyService) ImportFromMainCaddyfile() (*ImportResult, error) {
 	}
 	updated = ensureStandardSitesImport(updated)
 
-	if err := os.WriteFile(mainPath, []byte(updated), 0644); err != nil {
+	if err := writeConfigFile(mainPath, []byte(updated), 0644); err != nil {
 		_ = rollbackSites()
 		return nil, fmt.Errorf("failed to update the main Caddyfile: %w", err)
 	}
 
 	res.Rollback = func() error {
-		if err := os.WriteFile(mainPath, original, 0644); err != nil {
+		if err := writeConfigFile(mainPath, original, 0644); err != nil {
 			return err
 		}
 		return rollbackSites()
@@ -117,7 +117,7 @@ func (c *CaddyService) ImportContent(content string) (*ImportResult, error) {
 	rollbackSites := rollbackFiles(written)
 	res.Rollback = func() error {
 		if snippetsExisted {
-			if err := os.WriteFile(snippetsPath, originalSnippets, 0644); err != nil {
+			if err := writeConfigFile(snippetsPath, originalSnippets, 0644); err != nil {
 				return err
 			}
 		} else {
@@ -172,7 +172,7 @@ func (c *CaddyService) saveImportedSites(sites []*models.Site) (*ImportResult, [
 		}
 
 		dest := filepath.Join(standardDir, filename+".caddy")
-		if err := os.WriteFile(dest, []byte(content+"\n"), 0644); err != nil {
+		if err := writeConfigFile(dest, []byte(content+"\n"), 0644); err != nil {
 			res.Failed = append(res.Failed, fmt.Sprintf("%s (%v)", domain, err))
 			continue
 		}
@@ -232,7 +232,7 @@ func (c *CaddyService) copyCustomSnippets(source, snippetsPath, existingSnippets
 
 	updated := strings.TrimRight(existingSnippets, "\n") + "\n\n# --- CUSTOM SNIPPETS (preserved by CPM) ---\n" +
 		strings.Join(blocks, "\n\n") + "\n"
-	if err := os.WriteFile(snippetsPath, []byte(updated), 0644); err != nil {
+	if err := writeConfigFile(snippetsPath, []byte(updated), 0644); err != nil {
 		return fmt.Errorf("failed to write snippets: %w", err)
 	}
 	return nil

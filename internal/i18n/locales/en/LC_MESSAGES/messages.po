@@ -751,26 +751,14 @@ msgstr "The Caddy container \"{0}\" has no CF_API_TOKEN environment variable, so
 msgid "snippets_use_env_hint"
 msgstr "When enabled, the token is read from the CF_API_TOKEN variable of the Caddy container and the field below is ignored."
 
-msgid "msg_snippet_reload_failed"
-msgstr "Snippet updated but reload failed"
-
 msgid "msg_rule_created_name"
 msgstr "Rule '{0}' created successfully"
-
-msgid "msg_rule_create_reload_failed"
-msgstr "Rule created but reload failed"
 
 msgid "msg_rule_updated_name"
 msgstr "Rule '{0}' updated successfully"
 
-msgid "msg_rule_update_reload_failed"
-msgstr "Rule updated but reload failed"
-
 msgid "msg_rule_deleted_name"
 msgstr "Rule '{0}' deleted successfully"
-
-msgid "msg_rule_delete_reload_failed"
-msgstr "Rule deleted but reload failed"
 
 msgid "msg_wildcard_unavailable"
 msgstr "Wildcard service not available"
@@ -783,9 +771,6 @@ msgstr "Wildcard domain already exists"
 
 msgid "msg_wildcard_add_failed"
 msgstr "Failed to add wildcard domain"
-
-msgid "msg_wildcard_config_failed"
-msgstr "Domain added but failed to update Caddy config"
 
 msgid "msg_wildcard_info_failed"
 msgstr "Failed to get migration info"
@@ -801,12 +786,6 @@ msgstr "Migration completed with errors"
 
 msgid "msg_wildcard_delete_failed"
 msgstr "Failed to delete wildcard domain"
-
-msgid "msg_wildcard_config_update_failed"
-msgstr "Domain removed but failed to update Caddy config"
-
-msgid "msg_wildcard_reload_failed_delete"
-msgstr "Domain removed but Caddy reload failed"
 
 msgid "msg_backup_reloaded"
 msgstr "Backup restored and Caddy reloaded"
@@ -1305,9 +1284,6 @@ msgid "msg_import_backup_saved"
 msgstr "Backup saved as caddy-config/backups/{0}."
 
 
-msgid "msg_fallback_rolled_back"
-msgstr "The fallback change was rolled back because Caddy rejected the configuration"
-
 msgid "certs_bulk_all_warning"
 msgstr "Renewing many certificates at once can hit Let's Encrypt rate limits (e.g. 5 duplicate certificates per week). Wildcard certificates are skipped."
 
@@ -1747,3 +1723,57 @@ msgid "msg_certs_bulk_failed_n"
 msgid_plural "msg_certs_bulk_failed_n_plural"
 msgstr[0] "{0} certificate could not be deleted: {1}"
 msgstr[1] "{0} certificates could not be deleted: {1}"
+
+msgid "msg_change_rolled_back"
+msgstr "The change was not saved because Caddy rejected the configuration. The previous configuration was restored"
+
+msgid "msg_change_rollback_failed"
+msgstr "Caddy rejected the configuration and restoring the previous configuration failed. Check the configuration files"
+
+msgid "snippets_enable_basic_auth"
+msgstr "Require a username and password (HTTP basic auth)"
+
+msgid "snippets_basic_auth_users"
+msgstr "Users"
+
+msgid "snippets_basic_auth_no_users"
+msgstr "No users yet. Add at least one user, otherwise rules cannot use this snippet."
+
+msgid "snippets_basic_auth_username"
+msgstr "Username"
+
+msgid "snippets_basic_auth_password"
+msgstr "Password"
+
+msgid "snippets_basic_auth_password_hint"
+msgstr "{0}–{1} characters, stored only as a bcrypt hash. Adding an existing username sets a new password."
+
+msgid "snippets_basic_auth_add"
+msgstr "Add user"
+
+msgid "snippets_basic_auth_confirm_remove"
+msgstr "Remove user"
+
+msgid "msg_basic_auth_username_invalid"
+msgstr "Invalid username: use 1–64 letters, digits, dots, dashes, underscores or @"
+
+msgid "msg_basic_auth_password_length"
+msgstr "The password must have {0} to {1} characters"
+
+msgid "msg_basic_auth_save_failed"
+msgstr "Saving basic auth users failed"
+
+msgid "msg_basic_auth_user_added"
+msgstr "User {0} added"
+
+msgid "msg_basic_auth_user_updated"
+msgstr "Password of user {0} changed"
+
+msgid "msg_basic_auth_user_removed"
+msgstr "User {0} removed"
+
+msgid "msg_basic_auth_last_user"
+msgstr "The last user cannot be removed while basic auth is enabled. Disable the snippet first."
+
+msgid "msg_basic_auth_user_not_found"
+msgstr "User not found"

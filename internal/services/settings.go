@@ -123,7 +123,7 @@ func (s *SettingsService) Save(settings *models.AppSettings) error {
 		return err
 	}
 
-	if err := os.WriteFile(s.path, data, 0644); err != nil {
+	if err := writeConfigFile(s.path, data, 0644); err != nil {
 		return err
 	}
 

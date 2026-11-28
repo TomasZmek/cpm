@@ -27,23 +27,15 @@ func (h *Handler) FallbackCreate(c fiber.Ctx) error {
 // saveFallback writes the fallback, validates and reloads Caddy, and restores
 // the previous state when the new configuration is rejected (#32).
 func (h *Handler) saveFallback(c fiber.Ctx, content, successKey string) error {
-	rollback, err := h.caddyService.SaveFallback(content)
+	result, err := h.caddyService.ApplyChange(func() error {
+		_, err := h.caddyService.SaveFallback(content)
+		return err
+	})
 	if err != nil {
 		return redirectFlash(c, "error", err.Error(), "/settings/caddy")
 	}
-
-	result := h.caddyService.ReloadWithValidation()
-	switch {
-	case result.Success:
-		return redirectFlash(c, "success", tl(c, successKey), "/settings/caddy")
-	case result.DockerUnreachable:
-		return redirectFlash(c, "warning", tl(c, successKey)+" "+result.Error, "/settings/caddy")
-	default:
-		if rbErr := rollback(); rbErr != nil {
-			return redirectFlash(c, "error", rbErr.Error(), "/settings/caddy")
-		}
-		return redirectFlash(c, "warning", tl(c, "msg_fallback_rolled_back")+": "+result.Error, "/settings/caddy")
-	}
+	applyFlash(c, result, tl(c, successKey))
+	return redirectTo(c, "/settings/caddy")
 }
 
 // ErrorPageSave saves a custom error page (403 or 404).
